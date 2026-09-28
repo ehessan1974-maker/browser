@@ -119,3 +119,15 @@ Work Log:
 
 Stage Summary:
 - All core interactions browser-verified end-to-end. Two fixes applied during verification (mobile menu contrast, duplicate-year titles). Site is production-ready for preview.
+
+---
+Task ID: 6
+Agent: orchestrator (Z.ai Code)
+Task: GitHub export preparation
+
+Work Log:
+- Verified repo state: branch `main`, all Barq files committed (2 prior auto-commits), no remotes, no gh CLI, no tokens in env.
+- Security cleanup: removed `.env`, `.zscripts/dev.pid`, `db/custom.db` from tracking; extended `.gitignore` (.env, .env.*, *.pid, db/*.db); committed as ec89106.
+
+Stage Summary:
+- Repo is push-ready: clean tree, 107 tracked files, secrets excluded. Awaiting user GitHub username + PAT (repo scope) + repo name to create remote and push.
