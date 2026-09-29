@@ -13,6 +13,8 @@ export type Platform = {
   arch: string;
   /** Real installer URL on the stable GitHub release */
   url: string;
+  /** نسخ ثانوية (مثل 32-bit أو ويندوز 7) — روابط صغيرة تحت زر التنزيل */
+  alts?: { label: string; file: string; size: string; url: string }[];
   featured?: boolean;
 };
 
@@ -38,10 +40,24 @@ export const platforms: Platform[] = [
     os: "ويندوز",
     logo: "windows",
     file: "Barq-Setup-1.0.0-x64.exe",
-    size: "‎‎~95MB",
-    req: "Windows 10 أو أحدث",
+    size: "‎‎~78MB",
+    req: "Windows 10/11 — 64 أو 32 بت",
     arch: "x64 · مثبّت",
     url: `${STABLE}/Barq-Setup-1.0.0-x64.exe`,
+    alts: [
+      {
+        label: "نسخة 32-bit",
+        file: "Barq-Setup-1.0.0-ia32.exe",
+        size: "‎~75MB",
+        url: `${STABLE}/Barq-Setup-1.0.0-ia32.exe`,
+      },
+      {
+        label: "نسخة ويندوز 7 — 32-bit",
+        file: "Barq-Setup-win7-1.0.0-ia32.exe",
+        size: "‎~75MB",
+        url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.exe`,
+      },
+    ],
   },
   {
     key: "macos",

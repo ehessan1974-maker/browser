@@ -19,13 +19,16 @@ jobs:
         include:
           - os: windows-latest
             target: win
-            artifact: "Barq-Setup-1.0.0-x64.exe"
+            artifact: Barq-Windows
+            artifact_path: "desktop/dist/*.exe"
           - os: macos-latest
             target: mac
-            artifact: "Barq-1.0.0.dmg"
+            artifact: Barq-macOS
+            artifact_path: "desktop/dist/Barq-1.0.0.dmg"
           - os: ubuntu-latest
             target: linux
-            artifact: "Barq-1.0.0.AppImage"
+            artifact: Barq-Linux
+            artifact_path: "desktop/dist/Barq-1.0.0.AppImage"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -50,11 +53,39 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: desktop/dist/${{ matrix.artifact }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
+
+  build-win7:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps with Electron 22 (last version supporting Windows 7)
+        working-directory: desktop
+        run: npm install --no-save electron@22.3.27 --no-audit --no-fund
+
+      - name: Build 32-bit installer for Windows 7
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --win --ia32 --publish never --config.artifactName='Barq-Setup-win7-${version}-ia32.${ext}'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Barq-Windows7
+          path: desktop/dist/*.exe
           if-no-files-found: error
 
   release:
-    needs: build
+    needs: [build, build-win7]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

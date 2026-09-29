@@ -32,10 +32,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": ["x64", "ia32"]
         }
       ],
-      "artifactName": "Barq-Setup-${version}-x64.${ext}"
+      "artifactName": "Barq-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,

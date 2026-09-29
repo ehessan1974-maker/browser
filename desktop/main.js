@@ -50,6 +50,11 @@ function scheduleStats() {
   }, 250);
 }
 
+// Electron ≥27 يوفّر navigationHistory؛ نسخة ويندوز 7 (Electron 22) توفر الدوال على webContents مباشرة
+function navHistory(wc) {
+  return wc.navigationHistory ?? wc;
+}
+
 function navState() {
   let url = "";
   let canBack = false;
@@ -57,8 +62,8 @@ function navState() {
   if (view && !view.webContents.isDestroyed()) {
     const wc = view.webContents;
     url = wc.getURL() || "";
-    canBack = wc.navigationHistory.canGoBack();
-    canFwd = wc.navigationHistory.canGoForward();
+    canBack = navHistory(wc).canGoBack();
+    canFwd = navHistory(wc).canGoForward();
   }
   const isHome = url.startsWith("file://");
   return {
@@ -197,13 +202,15 @@ ipcMain.on("barq:navigate", (_e, raw) => {
   if (url) navigate(url);
 });
 ipcMain.on("barq:back", () => {
-  if (view && view.webContents.navigationHistory.canGoBack()) {
-    view.webContents.navigationHistory.goBack();
+  if (view && !view.webContents.isDestroyed()) {
+    const h = navHistory(view.webContents);
+    if (h.canGoBack()) h.goBack();
   }
 });
 ipcMain.on("barq:forward", () => {
-  if (view && view.webContents.navigationHistory.canGoForward()) {
-    view.webContents.navigationHistory.goForward();
+  if (view && !view.webContents.isDestroyed()) {
+    const h = navHistory(view.webContents);
+    if (h.canGoForward()) h.goForward();
   }
 });
 ipcMain.on("barq:reload", () => {

@@ -456,6 +456,26 @@ export function DownloadView() {
                         </a>
                       </Button>
 
+                      {platform.alts?.map((alt) => (
+                        <a
+                          key={alt.file}
+                          href={alt.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition hover:text-emerald-300"
+                          title={alt.file}
+                        >
+                          <DownloadIcon
+                            className="h-3 w-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                          {alt.label}
+                          <span dir="ltr" className="font-display">
+                            ({alt.size})
+                          </span>
+                        </a>
+                      ))}
+
                       {isDownloading && (
                         <div
                           className="absolute inset-x-0 bottom-0 h-1"
