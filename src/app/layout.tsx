@@ -23,6 +23,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
   title: "برق — متصفح خفيف للسرعة والخصوصية والأتمتة",
   description:
     "متصفح برق: تشغيل شبه فوري، تحميل صفحات في 85 مللي ثانية، استهلاك 30MB فقط من الذاكرة، وحجب تلقائي لأكثر من 3,500 متعقّب. مصمّم ليتكامل مع الأتمتة ووكلاء الذكاء الاصطناعي.",

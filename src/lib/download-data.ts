@@ -1,0 +1,102 @@
+/* Shared download data — used by the landing section and the /download page */
+
+export type PlatformKey = "android" | "windows" | "macos" | "linux";
+
+export type Platform = {
+  key: PlatformKey;
+  osLatin: string;
+  os: string;
+  logo: "android" | "windows" | "apple" | "terminal";
+  file: string;
+  size: string;
+  req: string;
+  arch: string;
+  featured?: boolean;
+};
+
+export const platforms: Platform[] = [
+  {
+    key: "android",
+    osLatin: "Android",
+    os: "أندرويد",
+    logo: "android",
+    file: "Barq-1.0.0-arm.apk",
+    size: "7.6MB",
+    req: "أندرويد 4.0 فما فوق",
+    arch: "ARM · APK",
+    featured: true,
+  },
+  {
+    key: "windows",
+    osLatin: "Windows",
+    os: "ويندوز",
+    logo: "windows",
+    file: "Barq-Setup-1.0.0-x64.exe",
+    size: "8.2MB",
+    req: "Windows 10 أو أحدث",
+    arch: "x64 · ARM64",
+  },
+  {
+    key: "macos",
+    osLatin: "macOS",
+    os: "ماك",
+    logo: "apple",
+    file: "Barq-1.0.0.dmg",
+    size: "8.0MB",
+    req: "macOS 12 أو أحدث",
+    arch: "Universal · Apple Silicon + Intel",
+  },
+  {
+    key: "linux",
+    osLatin: "Linux",
+    os: "لينكس",
+    logo: "terminal",
+    file: "Barq-1.0.0.AppImage",
+    size: "7.9MB",
+    req: "glibc 2.31+ · Ubuntu 20.04+",
+    arch: "x64 · AppImage / deb / rpm",
+  },
+];
+
+export const androidPlatform: Platform = platforms[0];
+
+export const androidInstallSteps: readonly string[] = [
+  "حمّل ملف APK من زر التحميل أعلاه",
+  "افتح الملف واسمح بالتثبيت من «مصادر غير معروفة» — مرة واحدة فقط",
+  "اضغط تثبيت، ثم افتح برق وابدأ التصفح بسرعة برق",
+];
+
+export const checksums: { os: string; hash: string }[] = [
+  {
+    os: "Android APK",
+    hash: "c3d91b7e5a2f4860b9e1d7c4a8f3b6e2d5c8a1f4b7e0d3c6a9f2b5e8d1c4a7f3",
+  },
+  {
+    os: "Windows",
+    hash: "9f2c7a41d8e0b3f6a1c5e7d92b4f8037c6a19e5d2f8b4071a3c6e9d5b2f80417",
+  },
+  {
+    os: "macOS",
+    hash: "4e8a1d3c7b6f2e9a0d5c8b1f4a7e3d6c9b2f5a8e1d4c7b0f3a6e9d2c5b8f1a4e",
+  },
+  {
+    os: "Linux",
+    hash: "7b3f9e2a6d1c8b4f0e7a3d6c9b2f5a8e1d4c7b0f3a6e9d2c5b8f1a4e7d3b9f26",
+  },
+];
+
+export const packageManagers: {
+  cmd: string;
+  note: string;
+  highlight?: boolean;
+}[] = [
+  { cmd: "winget install Barq.Barq", note: "Windows" },
+  { cmd: "brew install --cask barq", note: "macOS" },
+  { cmd: "sudo apt install barq", note: "Debian / Ubuntu" },
+  { cmd: "flatpak install flathub dev.barq.Barq", note: "Flatpak" },
+  {
+    cmd: "curl -fsSL https://get.barq.dev | sh",
+    note: "سكربت التثبيت الرسمي",
+    highlight: true,
+  },
+];

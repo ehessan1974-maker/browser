@@ -86,7 +86,7 @@ export function Hero() {
                 </span>{" "}
                 متاح الآن —{" "}
                 <span dir="ltr" className="font-display">
-                  Windows · macOS · Linux
+                  Android · Windows · macOS · Linux
                 </span>
               </span>
             </motion.div>
@@ -135,7 +135,7 @@ export function Hero() {
                 size="lg"
                 className="rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300"
               >
-                <a href="#download">
+                <a href="/download">
                   <Download className="h-4 w-4" aria-hidden="true" />
                   حمّل برق مجانًا
                 </a>

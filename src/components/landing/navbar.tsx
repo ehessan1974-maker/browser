@@ -94,7 +94,7 @@ export function Navbar() {
             asChild
             className="hidden rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300 md:inline-flex"
           >
-            <a href="#download">
+            <a href="/download">
               <Download className="h-4 w-4" aria-hidden="true" />
               حمّل مجانًا
             </a>
@@ -144,7 +144,7 @@ export function Navbar() {
               asChild
               className="mt-2 w-full rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300"
             >
-              <a href="#download" onClick={closeMenu}>
+              <a href="/download" onClick={closeMenu}>
                 <Download className="h-4 w-4" aria-hidden="true" />
                 حمّل مجانًا
               </a>

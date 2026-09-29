@@ -194,3 +194,21 @@ Work Log:
 Stage Summary:
 - Download page (feat commit 1a49e0f) is now live on github.com/ehessan1974-maker/browser
 - Remote URL remains token-free; future pushes need a fresh inline token or user credentials
+
+---
+Task ID: 8
+Agent: Z.ai main
+Task: Standalone shareable download page (/download) with Android-first APK download (Android 4.0+), for WhatsApp sharing
+
+Work Log:
+- Created shared modules: src/lib/download-data.ts (platforms with android FIRST/featured, checksums incl. APK, package managers, install steps), src/components/download/platform-logos.tsx (Android/Windows/Apple/Terminal SVG logos), copy-button.tsx, use-simulated-download.ts hook (state machine + auto completion toast)
+- Created /download route: src/app/download/page.tsx (Arabic metadata + OpenGraph with /og-download.png) + download-view.tsx (client): UA-based OS detection via useSyncExternalStore (hydration-safe, lint-compliant), smart hint (Android detected → "النسخة المناسبة جاهزة", iOS → "نسخة iOS قريبًا + أرسل APK لجهاز أندرويد", desktop → detected platform), giant APK download button with progress, 3 numbered Android install steps (APK/مصادر غير معروفة), 4 platform cards with "لجهازك" recommended badge, trust chips, SHA-256 details, sticky footer
+- Landing #download section refactored to shared data: featured Android strip + 3 desktop cards; navbar & hero buttons now link to /download; hero availability chip updated to Android · Windows · macOS · Linux
+- Generated public/og-download.png (1200×630) via agent-browser screenshot of a branded HTML for WhatsApp link preview
+- layout.tsx: metadataBase from NEXT_PUBLIC_SITE_URL (fallback localhost)
+- Verified E2E via agent-browser: desktop UA → "بنظام لينكس" + recommended badge; Pixel 5 emulation → "بنظام أندرويد" + full-width CTA; iPhone 14 → iOS message; download click → progress → اكتمل toast; main page navbar navigates to /download; zero console errors; lint clean
+
+Stage Summary:
+- Shareable URL /download is live (main route untouched and verified)
+- Android-first download experience with Android 4.0+ compatibility messaging
+- Push to GitHub with inline token (commit after this log)
