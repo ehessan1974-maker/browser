@@ -318,3 +318,28 @@ Stage Summary:
 - 6 ملفات على release stable: APK 12KB · x64.exe 78MB (E33) · ia32.exe 72.5MB (E33) · win7-ia32.exe 62MB (E22) · dmg 94MB · AppImage 103MB
 - لابتوب المستخدم (ويندوز 32-bit) مدعوم بحالتَي ويندوز 10/11 وويندوز 7
 - منJs متوافق مع كلا إصداري Electron — بنية CI واحدة تنتج كل النسخ تلقائيًا
+
+---
+Task ID: 13
+Agent: orchestrator (Z.ai Code)
+Task: إصلاح بلاغ تجميد نسخة 32-bit — استقرار الأجهزة القديمة
+
+Work Log:
+- بلاغ المستخدم: "نسخة ال 32 بت علقت لي الكومبيوتر وماقدرت أخرج منها لحتى طفيت الكومبيوتر بشكل إجباري" — تجميد كامل يتطلب إيقافًا إجباريًا.
+- التشخيص: السبب الأشهر لتجميد Electron على عتاد 32-bit قديم هو تسريع GPU (كروت قديمة لا تتحمل Chromium الحديث)، مع احتمال مساهمته: عزل المواقع (يضاعف العمليات/الذاكرة) وفتح نسخ متعددة من التطبيق بالخطأ.
+- الإصلاح في `desktop/main.js` (قبل app.whenReady):
+  - `app.disableHardwareAcceleration()` — رندر بالمعالج بدل كرت الشاشة.
+  - `process-per-site` + `renderer-process-limit=2` + `disable-features=site-per-process,IsolateOrigins` — عمليات أقل = ذاكرة أقل.
+  - `app.requestSingleInstanceLock()` — نسخة واحدة فقط؛ النقر المتكرر يركّز النافذة القائمة بدل فتح نسخ جديدة.
+- الإصلاح في المثبّتات (`desktop/package.json` + `electron-builder.win7.yml`):
+  - `oneClick: false` + `allowToChangeInstallationDirectory: true` — تثبيت موجّه.
+  - `runAfterFinish: false` — لا تشغيل تلقائي بعد التثبيت (يمنع مفاجأة التشغيل الثقيل فورًا).
+- إعادة تسمية النسخة في `src/lib/download-data.ts`: "نسخة خفيفة 32-bit — ويندوز 7 أو جهاز قديم" مع تصحيح الحجم ~62MB.
+- رفع commit 793d822 بالتوكن الجديد (ghp_xslx…Locb) بعد انتهاء صلاحية السابق.
+- مراقبة CI: run #4 Build Desktop Apps + run #13 Pages على رأس 793d822.
+
+Stage Summary:
+- كل مثبّتات release `stable` ستعاد بناؤها بالحماية الجديدة؛ روابط `releases/download/stable/...` ثابتة ولم تتغير.
+- الإرشاد للمستخدم: إن كان الابتوب ويندوز 7 أو RAM ≤ 4GB فالنسخة الصحيحة `Barq-Setup-win7-1.0.0-ia32.exe` (Electron 22، أخف وأقدم محركًا)؛ وإن ويندوز 10/11 32-bit فـ `Barq-Setup-1.0.0-ia32.exe` الجديدة.
+- النسخة المعطلة سابقًا كانت من commit أقدم قبل تعطيل GPU — إعادة التثبيت فوقها تكفي (المثبّت الجديد يستبدلها).
+- تذكير: حذف التوكن من GitHub Settings → Developer settings → Personal access tokens.
