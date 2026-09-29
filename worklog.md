@@ -144,3 +144,20 @@ Work Log:
 
 Stage Summary:
 - Full project published to GitHub; secrets (.env, db, pid) excluded from history pushed.
+
+---
+Task ID: 6-b (verification round)
+Agent: Z.ai main
+Task: Verify GitHub push state after user's question about excluded files (.env, db/custom.db, *.pid, logs)
+
+Work Log:
+- Explained to user why .env / db / pid / logs must NOT be pushed (GitHub secret-scanning bots, binary churn, machine-specific artifacts)
+- Confirmed src/ never imports @/lib/db → app runs fully without the excluded files; DB is re-creatable via schema + `bun run db:push`
+- Ran `git push -u origin main` → "Everything up-to-date"
+- Verified remote refs/heads/main (5ab21b0) == local HEAD (5ab21b0) via git ls-remote
+- Stripped token from remote URL; verified no `ghp_` token remains in .git/config or any tracked file
+
+Stage Summary:
+- Push to https://github.com/ehessan1974-maker/browser.git CONFIRMED in sync (commit 5ab21b0)
+- Repo is clean: no secrets, no binaries, no runtime artifacts in history
+- Reminded user to revoke the PAT from GitHub settings
