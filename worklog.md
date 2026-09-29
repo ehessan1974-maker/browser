@@ -212,3 +212,4 @@ Stage Summary:
 - Shareable URL /download is live (main route untouched and verified)
 - Android-first download experience with Android 4.0+ compatibility messaging
 - Push to GitHub with inline token (commit after this log)
+- NOTE: push of 93850cc FAILED — GitHub rejects the PAT ("Invalid username or token"; likely auto-revoked by GitHub secret scanning). Commit is safe locally; 4 commits pending push. Need fresh token from user (or user pushes manually).
