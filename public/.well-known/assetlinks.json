@@ -1,10 +1,8 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.ehessan1974.barq",
-      "sha256_cert_fingerprints": ["0000000000000000000000000000000000000000000000000000000000000000"]
-    }
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.ehessan1974.barq",
+    "sha256_cert_fingerprints": ["a17c58cdb03a144597f9992f25920f870aa4b68d00a3b0368f39e00fbadf5c07"]
   }
-]
+}]
