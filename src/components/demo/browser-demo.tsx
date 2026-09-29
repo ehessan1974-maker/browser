@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { buildPage } from "@/lib/barq-data";
 import type { BrowseError, BrowsePage, BrowseResponse } from "@/lib/barq-types";
 import MockPage from "@/components/demo/mock-page";
 import PrivacyPanel, { type DemoSession } from "@/components/demo/privacy-panel";
@@ -228,11 +229,39 @@ export default function BrowserDemo() {
           finish();
           if ((seqRef.current.get(tabId) ?? 0) !== seq) return; // stale
           if (err instanceof DOMException && err.name === "AbortError") return;
-          setTabs((prev) =>
-            prev.map((t) =>
-              t.id === tabId ? { ...t, status: "error" as const, error: "unexpected", page: null } : t,
-            ),
-          );
+          // Static-hosting fallback (GitHub Pages has no server API):
+          // build the simulated page locally so the demo keeps working.
+          try {
+            const page = buildPage(target);
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === tabId
+                  ? {
+                      ...t,
+                      status: "ready" as const,
+                      url: page.url,
+                      title: truncateText(page.title, 24),
+                      hue: page.hue,
+                      page,
+                      error: undefined,
+                    }
+                  : t,
+              ),
+            );
+            setAddress(page.url);
+            setSession((prev) => ({
+              pages: prev.pages + 1,
+              blocked: prev.blocked + page.totalBlocked,
+              ads: prev.ads + page.adsRemoved,
+              dataKb: prev.dataKb + page.dataSavedKb,
+            }));
+          } catch {
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === tabId ? { ...t, status: "error" as const, error: "unexpected", page: null } : t,
+              ),
+            );
+          }
           setLoadingBlocked(0);
         });
     },

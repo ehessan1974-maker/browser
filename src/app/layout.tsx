@@ -22,6 +22,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// GitHub Pages serves the site under /browser — asset metadata needs the prefix.
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
@@ -40,7 +43,7 @@ export const metadata: Metadata = {
     "tracker blocking",
   ],
   icons: {
-    icon: "/barq.svg",
+    icon: `${BASE_PATH}/barq.svg`,
   },
   openGraph: {
     title: "برق — تصفّح أسرع. أخفّ. أكثر خصوصية.",
