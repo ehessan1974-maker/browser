@@ -213,3 +213,24 @@ Stage Summary:
 - Android-first download experience with Android 4.0+ compatibility messaging
 - Push to GitHub with inline token (commit after this log)
 - NOTE: push of 93850cc FAILED — GitHub rejects the PAT ("Invalid username or token"; likely auto-revoked by GitHub secret scanning). Commit is safe locally; 4 commits pending push. Need fresh token from user (or user pushes manually).
+
+---
+Task ID: 8
+Agent: main (Z.ai Code)
+Task: تشغيل git push ورفع الـ 5 commits المعلّقة (منها صفحة /download المستقلة) إلى GitHub بعد تجديد التوكن
+
+Work Log:
+- فحص git status: 5 commits ahead + 100 ملف بتغيير صلاحيات فقط (mode 100644→100755، ضوضاء بيئة)
+- إخفاء الضوضاء بـ git config core.fileMode false (بدون تلويث التاريخ)
+- محاولة رفع بالتوكن القديم → فشل (Invalid username or token — المستخدم ألغاه، وهذا صحيح أمنيًا)
+- شرح خطوات إنشاء PAT جديد على المستخدم (scopes: repo، صلاحية 90 يوم)
+- استلام التوكن الجديد ورفع inline: git push https://user:TOKEN@github.com/... main → نجح (1a49e0f..0d3a396)
+- تحقق git ls-remote: الريموت = 0d3a396 = المحلي ✓
+- git fetch origin لتحديث فهرس التتبع → main...origin/main نظيفة بلا انحراف
+- تأكيد أن التوكن غير مخزن في .git/config أو أي ملف (rg "ghp_") ✓
+
+Stage Summary:
+- GitHub متزامن بالكامل مع المحلي: أحدث commit مرفوع 0d3a396
+- صفحة /download المستقلة (Android-first، OG tags لواتساب) صارت على GitHub
+- التوكن يُستخدم inline فقط ولا يُخزن — يُنصح المستخدم بحذفه بعد انتهاء الحاجة
+- الخطوة التالية المقترحة: نشر الموقع (مثل Vercel) للحصول على رابط حي مثل https://DOMAIN/download لمشاركته على واتساب
