@@ -1,0 +1,36 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.ehessan1974.barq'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.ehessan1974.barq"
+        minSdk 14          // Android 4.0 — كما وعدنا
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile rootProject.file('barq-release.keystore')
+            storePassword System.getenv('BARQ_STORE_PASS') ?: 'barq123456'
+            keyAlias 'barq'
+            keyPassword System.getenv('BARQ_KEY_PASS') ?: 'barq123456'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lint {
+        abortOnError false
+    }
+}
+
+// Zero external dependencies — pure android.* APIs for the smallest possible APK.

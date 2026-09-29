@@ -1,0 +1,92 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "worklog.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 11 (AGP 7.4)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Setup Gradle 7.6
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "7.6"
+
+      - name: Ensure stable signing keystore (generated once, then committed)
+        run: |
+          if [ ! -f android/barq-release.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore android/barq-release.keystore \
+              -alias barq -keyalg RSA -keysize 2048 -validity 10950 \
+              -storepass barq123456 -keypass barq123456 \
+              -dname "CN=Barq Browser, OU=Barq, O=ehessan1974-maker, L=Damascus, C=SY"
+            git config user.name "barq-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add android/barq-release.keystore
+            git commit -m "chore: add android signing keystore [skip ci]"
+            git push
+          fi
+
+      - name: Build signed APK
+        run: gradle -p android assembleRelease --no-daemon
+
+      - name: Extract signing SHA-256 fingerprint
+        id: fp
+        run: |
+          SHA=$(keytool -list -v \
+            -keystore android/barq-release.keystore \
+            -alias barq -storepass barq123456 \
+            | grep 'SHA256:' | head -1 \
+            | sed 's/.*SHA256: *//' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Write assetlinks.json (App Links verification)
+        run: |
+          mkdir -p public/.well-known
+          cat > public/.well-known/assetlinks.json <<EOF
+          [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+              "namespace": "android_app",
+              "package_name": "com.ehessan1974.barq",
+              "sha256_cert_fingerprints": ["${{ steps.fp.outputs.sha }}"]
+            }
+          }]
+          EOF
+
+      - name: Commit assetlinks if changed
+        run: |
+          if [[ -n "$(git status --porcelain public/.well-known)" ]]; then
+            git config user.name "barq-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add public/.well-known/assetlinks.json
+            git commit -m "chore: publish assetlinks fingerprint [skip ci]"
+            git push
+          fi
+
+      - name: Publish APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk barq-android.apk
+          TAG="barq-v1.0.${{ github.run_number }}"
+          gh release create "$TAG" barq-android.apk \
+            --title "برق $TAG — أندرويد" \
+            --notes "متصفح برق لأندرويد — متوافق مع أندرويد 4.0 فما فوق.
+          ثبّته مرة واحدة، وتصبح روابط برق تفتح التطبيق مباشرة بدون أي متصفح."

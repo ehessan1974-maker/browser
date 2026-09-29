@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- أيقونة برق: دائرة خضراء بصاعقة بيضاء مبسطة (بدون صور خارجية) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/barq_green" />
+        </shape>
+    </item>
+    <!-- جسم الصاعقة العلوي -->
+    <item
+        android:bottom="30dp"
+        android:left="26dp"
+        android:right="34dp"
+        android:top="14dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+    <!-- جسم الصاعقة السفلي (معاكس) -->
+    <item
+        android:bottom="14dp"
+        android:left="34dp"
+        android:right="26dp"
+        android:top="30dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

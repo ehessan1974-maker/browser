@@ -56,6 +56,22 @@ const OS_LABELS: Record<DetectedOS, string> = {
 const noopSubscribe = (): (() => void) => () => {};
 const getServerOS = (): DetectedOS => "unknown";
 
+/* ---------- Real download & deep-link targets ---------- */
+
+// GitHub Actions publishes a signed APK on every push — this stable URL
+// always points to the latest release asset.
+const REAL_APK_URL =
+  "https://github.com/ehessan1974-maker/browser/releases/latest/download/barq-android.apk";
+
+// barq:// deep link: opens the installed app directly. If it is not
+// installed, Chrome falls back to the encoded URL instead of erroring.
+const BARQ_INTENT_URL =
+  "intent://open#Intent;scheme=barq;package=com.ehessan1974.barq;S.browser_fallback_url=https%3A%2F%2Fehessan1974-maker.github.io%2Fbrowser%2F;end";
+
+// Raw <a> tags ignore Next's basePath — prefix manually for GitHub Pages.
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const homeHref = `${BASE_PATH}/`;
+
 /* ---------- Small helpers ---------- */
 
 function Ltr({ children }: { children: React.ReactNode }) {
@@ -97,7 +113,7 @@ export function DownloadView() {
       <header className="sticky top-0 z-40 border-b border-white/5 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-4xl items-center justify-between px-4 sm:px-6">
           <a
-            href="/"
+            href={homeHref}
             className="flex items-center gap-2.5"
             aria-label="برق — الصفحة الرئيسية"
           >
@@ -118,7 +134,7 @@ export function DownloadView() {
             size="sm"
             className="gap-1.5 text-muted-foreground hover:text-foreground"
           >
-            <a href="/">
+            <a href={homeHref}>
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               الموقع الرئيسي
             </a>
@@ -245,39 +261,63 @@ export function DownloadView() {
                   </div>
 
                   <Button
-                    type="button"
-                    onClick={() => start(android)}
+                    asChild
                     disabled={isBusy || isAndroidDone}
                     aria-label={`تنزيل برق لأندرويد — الملف ${android.file} بحجم ${android.size}`}
                     className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-400 px-8 text-base font-extrabold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60 sm:w-auto"
                   >
-                    {isAndroidDownloading ? (
-                      <>
-                        <Loader2
-                          className="h-5 w-5 animate-spin"
-                          aria-hidden="true"
-                        />
-                        جارٍ التنزيل{" "}
-                        <span dir="ltr" className="font-display">
-                          {Math.round(progress)}%
-                        </span>
-                      </>
-                    ) : isAndroidDone ? (
-                      <>
-                        <Check className="h-5 w-5" aria-hidden="true" />
-                        اكتمل التنزيل — افتح الملف لتثبيته
-                      </>
-                    ) : (
-                      <>
-                        <DownloadIcon
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
-                        تنزيل لأندرويد
-                      </>
-                    )}
+                    <a
+                      href={REAL_APK_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        if (!isBusy && !isAndroidDone) start(android);
+                      }}
+                    >
+                      {isAndroidDownloading ? (
+                        <>
+                          <Loader2
+                            className="h-5 w-5 animate-spin"
+                            aria-hidden="true"
+                          />
+                          جارٍ التنزيل{" "}
+                          <span dir="ltr" className="font-display">
+                            {Math.round(progress)}%
+                          </span>
+                        </>
+                      ) : isAndroidDone ? (
+                        <>
+                          <Check className="h-5 w-5" aria-hidden="true" />
+                          اكتمل التنزيل — افتح الملف لتثبيته
+                        </>
+                      ) : (
+                        <>
+                          <DownloadIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                          تنزيل لأندرويد
+                        </>
+                      )}
+                    </a>
                   </Button>
                 </div>
+
+                {/* Deep link — users with برق installed open it directly, no browser */}
+                {detected === "android" && (
+                  <p className="mt-4 text-center">
+                    <a
+                      href={BARQ_INTENT_URL}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 underline-offset-4 transition hover:text-emerald-200 hover:underline"
+                    >
+                      <Smartphone
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      />
+                      عندك برق مثبّت؟ افتحه الآن مباشرة
+                    </a>
+                  </p>
+                )}
 
                 {/* Progress bar */}
                 {isAndroidDownloading && (
@@ -532,7 +572,7 @@ export function DownloadView() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href="/"
+              href={homeHref}
               className="transition hover:text-emerald-300"
             >
               الصفحة الرئيسية

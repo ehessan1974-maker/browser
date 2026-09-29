@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DeviceDefault متوافق مع أندرويد 4.0+ بدون مكتبات خارجية -->
+    <style name="BarqTheme" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/barq_bg</item>
+    </style>
+</resources>
