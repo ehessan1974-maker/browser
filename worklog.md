@@ -234,3 +234,27 @@ Stage Summary:
 - صفحة /download المستقلة (Android-first، OG tags لواتساب) صارت على GitHub
 - التوكن يُستخدم inline فقط ولا يُخزن — يُنصح المستخدم بحذفه بعد انتهاء الحاجة
 - الخطوة التالية المقترحة: نشر الموقع (مثل Vercel) للحصول على رابط حي مثل https://DOMAIN/download لمشاركته على واتساب
+
+---
+Task ID: 9
+Agent: main (Z.ai Code)
+Task: نشر برق على GitHub Pages برابط حي قابل للمشاركة (بأسلوب مستودع prayer-times)
+
+Work Log:
+- اختبار توكن جديد → API يعمل ✓ / فحص prayer-times: has_pages=true بنمط legacy (HTML ثابت) — برق يحتاج نمط workflow
+- next.config.ts: بناء ساكن شرطي (STATIC_EXPORT=1 → output:export + basePath:/browser + trailingSlash + images unoptimized) والوضع الافتراضي بقي standalone
+- package.json: فصل build (next build فقط) عن build:standalone (cp المنطق القديم)
+- layout.tsx: أيقونة بـ NEXT_PUBLIC_BASE_PATH prefix
+- download/page.tsx: og:image بالبادئة → تضاعفت على الحي (/browser/browser/) → أصلحت: صور og تُحل من metadataBase تلقائيًا فيكفي "/og-download.png"
+- browser-demo.tsx: fallback محلي بـ buildPage() عند فشل /api/browse (لا سيرفر على Pages)
+- .github/workflows/deploy-pages.yml: bun + rm -rf src/app/api + STATIC_EXPORT=1 + configure-pages(enablement:true) + upload/deploy-pages
+- تفعيل Pages عبر API: POST /pages {"build_type":"workflow"} ✓
+- رفعتان daf8103 و31d0629 → تشغيلان ناجحان للـ workflow (36596359066، 36596721530)
+- تحقق حي: 200 للرئيسية و/download/ وog-download.png، og tags صحيحة، twitter:card موجود
+- agent-browser 390px: العنوان صحيح، زر APK يعمل (تقدم → toast اكتمال)، صفر أخطاء كونسول
+
+Stage Summary:
+- الموقع الحي: https://ehessan1974-maker.github.io/browser/
+- صفحة التحميل للمشاركة: https://ehessan1974-maker.github.io/browser/download/
+- كل push إلى main يعيد النشر تلقائيًا
+- النسخة الحية بلا API سيرفري — العروض التجريبية تعمل عبر fallback محلي
