@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { DownloadView } from "@/components/download/download-view";
 
-// GitHub Pages asset prefix (empty locally / on the dev server).
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
 export const metadata: Metadata = {
   title: "تحميل برق لأندرويد — APK مجاني متوافق مع أندرويد 4.0+",
   description:
@@ -19,7 +16,9 @@ export const metadata: Metadata = {
     url: "/download",
     images: [
       {
-        url: `${BASE_PATH}/og-download.png`,
+        // Resolved against metadataBase (…/browser) — Next joins the pathname
+        // automatically, so a plain root path yields /browser/og-download.png.
+        url: "/og-download.png",
         width: 1200,
         height: 630,
         alt: "حمّل برق — متصفح خفيف للسرعة والخصوصية",
