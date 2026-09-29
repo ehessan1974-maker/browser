@@ -300,3 +300,21 @@ Stage Summary:
 - برق الآن متصفح مكتبي حقيقي مثل كروم/إيدج: نوافذ exe/dmg/AppImage من https://github.com/ehessan1974-maker/browser/releases/tag/stable
 - روابط تنزيل ثابتة أبدية: barq-android.apk · Barq-Setup-1.0.0-x64.exe · Barq-1.0.0.dmg · Barq-1.0.0.AppImage
 - سلسلة CI ذاتية: تعديل desktop/** → مثبّتات جديدة؛ تعديل android/** → APK؛ تعديل الموقع → Pages
+
+---
+Task ID: 12
+Agent: main (Z.ai Code)
+Task: دعم ويندوز 32-bit + ويندوز 7 لابتوب المستخدم — مثبّتات إضافية وإصلاح build
+
+Work Log:
+- desktop/package.json: البناء ثنائي المعمارية x64 + ia32 → Barq-Setup-1.0.0-{x64,ia32}.exe
+- download-data/download-view: نوع alts[] — بطاقة ويندوز تعرض رابط "نسخة 32-bit" + "نسخة ويندوز 7 — 32-bit" تحت زر التنزيل
+- أول تشغيل: مهمة win7 فشلت منطقيًا — --ia32 تجاهُل (إعداد arch بـ package.json يغلبه) وأنتج مثبّتًا مزدوجًا 150MB باسم افتراضي، وملفات Electron 22 طغت بنفس الأسماء على نسخ Electron 33 في stable
+- الإصلاح: desktop/electron-builder.win7.yml — إعداد مستقل كامل (ia32 فقط + artifactName بـ win7) + glob رفع دقيق Barq-Setup-win7-*.exe + خطوة حذف الأصول القديمة الخاطئة من release job
+- main.js: shim navHistory(wc) — توافق navigationHistory (Electron 27+) مع canGoBack مباشرة (Electron 22 لويندوز 7)
+- تحقق من سجلات CI: electron=22.327 ✓، الملف بالاسم الصحيح، الأصول الست حية 200، الأصول الخاطئة حُذفت
+
+Stage Summary:
+- 6 ملفات على release stable: APK 12KB · x64.exe 78MB (E33) · ia32.exe 72.5MB (E33) · win7-ia32.exe 62MB (E22) · dmg 94MB · AppImage 103MB
+- لابتوب المستخدم (ويندوز 32-bit) مدعوم بحالتَي ويندوز 10/11 وويندوز 7
+- منJs متوافق مع كلا إصداري Electron — بنية CI واحدة تنتج كل النسخ تلقائيًا
