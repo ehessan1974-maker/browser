@@ -17,6 +17,16 @@ const HOME_FILE = path.join(__dirname, "chrome", "home.html");
 const CHROME_H = 56;
 const SEARCH_URL = "https://duckduckgo.com/?q=";
 
+/* ------------------- استقرار الأجهزة القديمة / 32-bit ------------------- */
+
+// تسريع الرسوميات على كروت الشاشة القديمة سبب شائع لتجميد الويندوز — نستخدم المعالج بدلًا منه
+app.disableHardwareAcceleration();
+
+// عمليات أقل = ذاكرة أقل: موقع واحد لكل عملية، حد أقصى للعمليات، بلا عزل مواقع (يضاعف الذاكرة)
+app.commandLine.appendSwitch("process-per-site");
+app.commandLine.appendSwitch("renderer-process-limit", "2");
+app.commandLine.appendSwitch("disable-features", "site-per-process,IsolateOrigins");
+
 let win = null;
 let view = null;
 let blockedTotal = 0;
@@ -145,51 +155,63 @@ function layout() {
   });
 }
 
-app.whenReady().then(() => {
-  // حظر المتعقبات قبل أي اتصال
-  const ses = session.defaultSession;
-  ses.webRequest.onBeforeRequest({ urls: ["*://*/*"] }, (details, cb) => {
-    if (details.resourceType !== "mainFrame" && isBlocked(details.url)) {
-      blockedTotal += 1;
-      blockedCurrent += 1;
-      scheduleStats();
-      cb({ cancel: true });
-      return;
+// نسخة واحدة فقط من برق — النقر المتكرر على الأيقونة لا يفتح نسخًا إضافية (سبب رئيسي لامتلاء الذاكرة)
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (win && !win.isDestroyed()) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
     }
-    cb({});
   });
 
-  win = new BrowserWindow({
-    width: 1280,
-    height: 840,
-    minWidth: 780,
-    minHeight: 560,
-    title: "برق",
-    backgroundColor: "#0c1210",
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, "chrome", "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
+  app.whenReady().then(() => {
+    // حظر المتعقبات قبل أي اتصال
+    const ses = session.defaultSession;
+    ses.webRequest.onBeforeRequest({ urls: ["*://*/*"] }, (details, cb) => {
+      if (details.resourceType !== "mainFrame" && isBlocked(details.url)) {
+        blockedTotal += 1;
+        blockedCurrent += 1;
+        scheduleStats();
+        cb({ cancel: true });
+        return;
+      }
+      cb({});
+    });
 
-  win.loadFile(path.join(__dirname, "chrome", "ui.html"));
+    win = new BrowserWindow({
+      width: 1280,
+      height: 840,
+      minWidth: 780,
+      minHeight: 560,
+      title: "برق",
+      backgroundColor: "#0c1210",
+      autoHideMenuBar: true,
+      webPreferences: {
+        preload: path.join(__dirname, "chrome", "preload.js"),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
 
-  view = new BrowserView({
-    webPreferences: { contextIsolation: true, sandbox: true },
-  });
-  win.addBrowserView(view);
-  attachViewEvents();
-  layout();
-  win.on("resize", layout);
-  win.on("closed", () => {
-    win = null;
-  });
+    win.loadFile(path.join(__dirname, "chrome", "ui.html"));
 
-  goHome();
-  pushStats();
-});
+    view = new BrowserView({
+      webPreferences: { contextIsolation: true, sandbox: true },
+    });
+    win.addBrowserView(view);
+    attachViewEvents();
+    layout();
+    win.on("resize", layout);
+    win.on("closed", () => {
+      win = null;
+    });
+
+    goHome();
+    pushStats();
+  });
+}
 
 app.on("window-all-closed", () => {
   app.quit();

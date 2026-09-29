@@ -18,6 +18,8 @@ win:
       arch:
         - ia32
 nsis:
-  oneClick: true
+  oneClick: false
   perMachine: false
+  allowToChangeInstallationDirectory: true
+  runAfterFinish: false
   deleteAppDataOnUninstall: true

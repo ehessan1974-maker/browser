@@ -52,9 +52,9 @@ export const platforms: Platform[] = [
         url: `${STABLE}/Barq-Setup-1.0.0-ia32.exe`,
       },
       {
-        label: "نسخة ويندوز 7 — 32-bit",
+        label: "نسخة خفيفة 32-bit — ويندوز 7 أو جهاز قديم",
         file: "Barq-Setup-win7-1.0.0-ia32.exe",
-        size: "‎~75MB",
+        size: "‎~62MB",
         url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.exe`,
       },
     ],
