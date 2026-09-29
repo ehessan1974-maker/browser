@@ -1,0 +1,23 @@
+# إعداد بناء نسخة ويندوز 7 — Electron 22 (آخر إصدار يدعم ويندوز 7)
+# يُستخدم حصريًا في مهمة build-win7 داخل .github/workflows/build-desktop.yml
+# ملف إعدادات مستقل كامل حتى لا تتسرب إعدادات package.json (المعمارية المزدوجة) إلى هذا البناء
+appId: com.ehessan1974.barq
+productName: Barq
+copyright: برق — متصفح خفيف
+directories:
+  output: dist
+files:
+  - main.js
+  - trackers.js
+  - chrome/**
+  - package.json
+artifactName: "Barq-Setup-win7-${version}-ia32.${ext}"
+win:
+  target:
+    - target: nsis
+      arch:
+        - ia32
+nsis:
+  oneClick: true
+  perMachine: false
+  deleteAppDataOnUninstall: true
