@@ -279,3 +279,24 @@ Stage Summary:
 - assetlinks.json حية بالبصمة الصحيحة → روابط الموقع تفتح تطبيق برق مباشرة بعد تثبيته (بدون متصفح)
 - barq://open يفتح التطبيق مع fallback آمن
 - سلسلة CI ذاتية: تعديل android/** → APK جديد + release؛ تعديل موقع → Pages فقط
+
+---
+Task ID: 11
+Agent: main (Z.ai Code)
+Task: برق كتطبيقات سطح مكتب حقيقية (ويندوز/ماك/لينكس) — Electron + حظر شبكي حقيقي + نشر تلقائي في release مستقر
+
+Work Log:
+- (الجلسة السابقة) بناء desktop/ كامل: main.js (نافذة BrowserWindow + BrowserView، شريط أدوات عربي RTL بارتفاع 56px، شريط عنوان/بحث ذكي: URL أو بحث DuckDuckGo)، chrome/{ui.html,ui.js,preload.js} (شريط أدوات بـ contextIsolation، عداد حظر حي current/total)، home.html (صفحة بداية)، trackers.js (~130 نطاق متعقّب/إعلاني)
+- حظر حقيقي على مستوى الشبكة: session.webRequest.onBeforeRequest يلغي طلبات المتعقبات (غير mainFrame) قبل حدوثها — نوافذ منبثقة تُدمج في نفس العرض، لا صلاحيات حساسة افتراضيًا، روابط mailto عبر التطبيق الافتراضي
+- electron-builder: NSIS x64 لويندوز (Barq-Setup-1.0.0-x64.exe ~78MB)، DMG arm64 للماك (Barq-1.0.0.dmg ~94MB)، AppImage للينكس (Barq-1.0.0.AppImage ~103MB) — أحجام صادقة معلنة في الواجهة
+- workflow build-desktop.yml: مصفوفة 3 منصات → artifacts → release job يرفع الكل إلى release ثابت باسم stable (--clobber) — روابط أبدية عبر releases/download/stable/<file>
+- توحيد release المستقر: build-android.yml عدّل ليرفع APK إلى نفس stable، وdownload-data.ts يشير للروابط الثابتة الأربعة بأحجام حقيقية
+- download-view.tsx: أزرار المنصات الثلاث أصبحت anchors حقيقية (target=_blank) مع محاكاة التقدم وإبقاء toast الاكتمال
+- (هذه الجلسة) مراجعة كاملة + lint نظيف + إنشاء release stable مسبقًا عبر API (منع سباق إنشاء متوازٍ) + رفع c08caab بالتوكن
+- CI: Build Desktop ✅ / Build Android ✅ / Pages ✅ — الملفات الأربعة في stable والروابط الحية 200
+- E2E: صفحة /download تعرض الروابط الحقيقية، النقر يفتح رابط الملف الصحيح بتبويب جديد، حالة التقدم+اكتمال تعملان، صفر أخطاء كونسول
+
+Stage Summary:
+- برق الآن متصفح مكتبي حقيقي مثل كروم/إيدج: نوافذ exe/dmg/AppImage من https://github.com/ehessan1974-maker/browser/releases/tag/stable
+- روابط تنزيل ثابتة أبدية: barq-android.apk · Barq-Setup-1.0.0-x64.exe · Barq-1.0.0.dmg · Barq-1.0.0.AppImage
+- سلسلة CI ذاتية: تعديل desktop/** → مثبّتات جديدة؛ تعديل android/** → APK؛ تعديل الموقع → Pages
