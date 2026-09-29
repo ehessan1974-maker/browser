@@ -6,7 +6,7 @@ import Features from "@/components/landing/features";
 import Automation from "@/components/landing/automation";
 import Comparison from "@/components/landing/comparison";
 import Privacy from "@/components/landing/privacy";
-import Cta from "@/components/landing/cta";
+import Download from "@/components/landing/download";
 import Footer from "@/components/landing/footer";
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
         <Automation />
         <Comparison />
         <Privacy />
-        <Cta />
+        <Download />
       </main>
       <Footer />
     </div>

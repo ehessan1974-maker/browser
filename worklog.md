@@ -161,3 +161,22 @@ Stage Summary:
 - Push to https://github.com/ehessan1974-maker/browser.git CONFIRMED in sync (commit 5ab21b0)
 - Repo is clean: no secrets, no binaries, no runtime artifacts in history
 - Reminded user to revoke the PAT from GitHub settings
+
+---
+Task ID: 7
+Agent: Z.ai main
+Task: Build a full download page for Barq browser (user request: "اعمل صفحة تحميل للبرنامج")
+
+Work Log:
+- Replaced simple CTA section (cta.tsx, deleted) with full download page component at src/components/landing/download.tsx — same #download anchor so navbar/hero links still work
+- Platform cards (Windows/macOS/Linux): brand SVG logos (Simple Icons paths), arch badges, file name + size rows, download buttons with simulated progress (1.5s) and 3-state machine (idle → downloading % → done)
+- Package-manager terminal (LTR): winget/brew/apt/flatpak + official curl script, each with copy button and OS chip; changelog card v1.0.0-beta
+- Requirements grid + SHA-256 checksums with full-hash copy; FAQ accordion (4 questions, shadcn Accordion); final trust strip (بدون تسجيل · بدون بريد · 8.2MB)
+- Toasts via existing radix useToast system; graceful destructive toast when clipboard blocked
+- Fixed build error: lucide `Download` icon name collided with component name → aliased as DownloadIcon
+- Verified E2E via agent-browser: desktop 1280px (render, progress 37%, done state + completion toast, copy fallback toast, FAQ aria-expanded=true + content visible, footer natural) and mobile 390px (stacked cards, touch targets, download 32% + toast, other buttons disabled during download); zero console errors; lint clean
+
+Stage Summary:
+- Download page live on main route at #download; cta.tsx removed; page.tsx updated
+- All interactions browser-verified on desktop + mobile
+- NOT pushed to GitHub (token revoked as instructed) — commit pending locally
