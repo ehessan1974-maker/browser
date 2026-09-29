@@ -258,3 +258,24 @@ Stage Summary:
 - صفحة التحميل للمشاركة: https://ehessan1974-maker.github.io/browser/download/
 - كل push إلى main يعيد النشر تلقائيًا
 - النسخة الحية بلا API سيرفري — العروض التجريبية تعمل عبر fallback محلي
+
+---
+Task ID: 10
+Agent: main (Z.ai Code)
+Task: برق كتطبيق أندرويد مستقل — APK حقيقي مبني بـ CI + App Links + barq:// deep link
+
+Work Log:
+- مشروع أندرويد كامل في android/ (AGP 7.4.2, Gradle 7.6, JDK 11): MainActivity بـ WebView، minSdk 14 (أندرويد 4.0)، صفر تبعيات خارجية → APK بـ 11KB
+- AndroidManifest: intent-filters لـ barq:// + App Links autoVerify لـ ehessan1974-maker.github.io/browser
+- workflow build-android.yml: keystore ثابت (يُولد مرة ويُ committing) → assembleRelease موقّع → استخراج SHA-256 → كتابة public/.well-known/assetlinks.json → GitHub Release
+- download-view.tsx: زر التنزيل أصبح anchor حقيقي → releases/latest/download/barq-android.apk + محاكاة تقدم + رابط "افتحه مباشرة" (intent:// مع browser_fallback_url) يظهر لأجهزة أندرويد فقط + إصلاح 3 روابط href="/" كسرت على Pages
+- أول تشغيل: نجح فورًا — release barq-v1.0.1، keystore وassetlinks اcommitta بـ [skip ci] → منع Pages من التحديث
+- الإصلاح: workflow_dispatch لـ Pages (204) + مشغلات paths (android/**) + إزالة [skip ci] من assetlinks commit → البصمة الحقيقية a17c58… حية على Pages ✓
+- إصدار barq-v1.0.2 نُشر تلقائيًا بعد تعديل الـ workflow — السلسلة تعمل ذاتيًا
+- تحقق حي: زر التنزيل يشير للـ APK الفعلي (200)، الصفحة سليمة، صفر أخطاء
+
+Stage Summary:
+- APK حقيقي موقّع: https://github.com/ehessan1974-maker/browser/releases/latest/download/barq-android.apk (11KB)
+- assetlinks.json حية بالبصمة الصحيحة → روابط الموقع تفتح تطبيق برق مباشرة بعد تثبيته (بدون متصفح)
+- barq://open يفتح التطبيق مع fallback آمن
+- سلسلة CI ذاتية: تعديل android/** → APK جديد + release؛ تعديل موقع → Pages فقط
