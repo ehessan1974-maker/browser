@@ -180,3 +180,17 @@ Stage Summary:
 - Download page live on main route at #download; cta.tsx removed; page.tsx updated
 - All interactions browser-verified on desktop + mobile
 - NOT pushed to GitHub (token revoked as instructed) — commit pending locally
+
+---
+Task ID: 7-b
+Agent: Z.ai main
+Task: Push download-page commit to GitHub (user confirmed token still valid)
+
+Work Log:
+- Pushed commit 1a49e0f via inline token URL (token used once in the push command, never persisted)
+- Verified remote refs/heads/main == 1a49e0f (in sync with local)
+- Verified .git/config contains no token (remote URL stays clean)
+
+Stage Summary:
+- Download page (feat commit 1a49e0f) is now live on github.com/ehessan1974-maker/browser
+- Remote URL remains token-free; future pushes need a fresh inline token or user credentials
