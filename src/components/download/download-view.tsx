@@ -58,10 +58,8 @@ const getServerOS = (): DetectedOS => "unknown";
 
 /* ---------- Real download & deep-link targets ---------- */
 
-// GitHub Actions publishes a signed APK on every push — this stable URL
-// always points to the latest release asset.
-const REAL_APK_URL =
-  "https://github.com/ehessan1974-maker/browser/releases/latest/download/barq-android.apk";
+// كل ملفات التثبيت الحقيقية منشورة على release المستقر (تبنيها CI)
+// وتربطها data المنصات عبر platform.url.
 
 // barq:// deep link: opens the installed app directly. If it is not
 // installed, Chrome falls back to the encoded URL instead of erroring.
@@ -267,7 +265,7 @@ export function DownloadView() {
                     className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-400 px-8 text-base font-extrabold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60 sm:w-auto"
                   >
                     <a
-                      href={REAL_APK_URL}
+                      href={android.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => {
@@ -415,13 +413,20 @@ export function DownloadView() {
                         </span>
                       </div>
                       <Button
-                        type="button"
-                        onClick={() => start(platform)}
+                        asChild
                         disabled={isBusy || isDone}
                         aria-label={`تنزيل برق لنظام ${platform.os} — الملف ${platform.file}`}
                         className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60"
                       >
-                        {isDownloading ? (
+                        <a
+                          href={platform.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => {
+                            if (!isBusy && !isDone) start(platform);
+                          }}
+                        >
+                          {isDownloading ? (
                           <>
                             <Loader2
                               className="h-4 w-4 animate-spin"
@@ -448,6 +453,7 @@ export function DownloadView() {
                             تنزيل
                           </>
                         )}
+                        </a>
                       </Button>
 
                       {isDownloading && (

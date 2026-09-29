@@ -11,8 +11,13 @@ export type Platform = {
   size: string;
   req: string;
   arch: string;
+  /** Real installer URL on the stable GitHub release */
+  url: string;
   featured?: boolean;
 };
+
+const STABLE =
+  "https://github.com/ehessan1974-maker/browser/releases/download/stable";
 
 export const platforms: Platform[] = [
   {
@@ -20,10 +25,11 @@ export const platforms: Platform[] = [
     osLatin: "Android",
     os: "أندرويد",
     logo: "android",
-    file: "Barq-1.0.0-arm.apk",
-    size: "7.6MB",
+    file: "barq-android.apk",
+    size: "‎12KB",
     req: "أندرويد 4.0 فما فوق",
-    arch: "ARM · APK",
+    arch: "APK · كل المعالجات",
+    url: `${STABLE}/barq-android.apk`,
     featured: true,
   },
   {
@@ -32,9 +38,10 @@ export const platforms: Platform[] = [
     os: "ويندوز",
     logo: "windows",
     file: "Barq-Setup-1.0.0-x64.exe",
-    size: "8.2MB",
+    size: "‎‎~95MB",
     req: "Windows 10 أو أحدث",
-    arch: "x64 · ARM64",
+    arch: "x64 · مثبّت",
+    url: `${STABLE}/Barq-Setup-1.0.0-x64.exe`,
   },
   {
     key: "macos",
@@ -42,9 +49,10 @@ export const platforms: Platform[] = [
     os: "ماك",
     logo: "apple",
     file: "Barq-1.0.0.dmg",
-    size: "8.0MB",
+    size: "‎‎~90MB",
     req: "macOS 12 أو أحدث",
-    arch: "Universal · Apple Silicon + Intel",
+    arch: "Apple Silicon · صورة تثبيت",
+    url: `${STABLE}/Barq-1.0.0.dmg`,
   },
   {
     key: "linux",
@@ -52,9 +60,10 @@ export const platforms: Platform[] = [
     os: "لينكس",
     logo: "terminal",
     file: "Barq-1.0.0.AppImage",
-    size: "7.9MB",
-    req: "glibc 2.31+ · Ubuntu 20.04+",
-    arch: "x64 · AppImage / deb / rpm",
+    size: "‎‎~100MB",
+    req: "Ubuntu 20.04+ أو ما يعادلها",
+    arch: "x64 · AppImage",
+    url: `${STABLE}/Barq-1.0.0.AppImage`,
   },
 ];
 

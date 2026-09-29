@@ -81,13 +81,13 @@ jobs:
             git push
           fi
 
-      - name: Publish APK to GitHub Releases
+      - name: Publish APK to stable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp android/app/build/outputs/apk/release/app-release.apk barq-android.apk
-          TAG="barq-v1.0.${{ github.run_number }}"
-          gh release create "$TAG" barq-android.apk \
-            --title "برق $TAG — أندرويد" \
-            --notes "متصفح برق لأندرويد — متوافق مع أندرويد 4.0 فما فوق.
-          ثبّته مرة واحدة، وتصبح روابط برق تفتح التطبيق مباشرة بدون أي متصفح."
+          gh release view stable >/dev/null 2>&1 || \
+            gh release create stable \
+              --title "برق — التنزيلات المستقرة" \
+              --notes "أحدث ملفات تنزيل برق لكل المنصات: أندرويد APK · ويندوز EXE · ماك DMG · لينكس AppImage. الروابط الثابتة عبر releases/download/stable/<اسم الملف>."
+          gh release upload stable barq-android.apk --clobber

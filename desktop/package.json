@@ -1,0 +1,62 @@
+{
+  "name": "barq-desktop",
+  "productName": "Barq",
+  "version": "1.0.0",
+  "description": "برق — متصفح خفيف للسرعة والخصوصية وحظر المتعقبات",
+  "main": "main.js",
+  "author": "ehessan1974-maker",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:linux": "electron-builder --linux --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.ehessan1974.barq",
+    "productName": "Barq",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "trackers.js",
+      "chrome/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Barq-Setup-${version}-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "artifactName": "Barq-${version}.${ext}",
+      "category": "public.app-category.productivity",
+      "identity": null
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "artifactName": "Barq-${version}.${ext}",
+      "category": "Network"
+    }
+  }
+}

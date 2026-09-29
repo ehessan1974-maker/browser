@@ -1,0 +1,78 @@
+name: Build Desktop Apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/build-desktop.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            artifact: "Barq-Setup-1.0.0-x64.exe"
+          - os: macos-latest
+            target: mac
+            artifact: "Barq-1.0.0.dmg"
+          - os: ubuntu-latest
+            target: linux
+            artifact: "Barq-1.0.0.AppImage"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Build (${{ matrix.target }})
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --${{ matrix.target }} --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: desktop/dist/${{ matrix.artifact }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: rel
+          merge-multiple: true
+
+      - name: Upload to stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la rel/
+          gh release view stable >/dev/null 2>&1 || \
+            gh release create stable \
+              --title "برق — التنزيلات المستقرة" \
+              --notes "أحدث ملفات تنزيل برق لكل المنصات: أندرويد APK · ويندوز EXE · ماك DMG · لينكس AppImage. الروابط الثابتة عبر releases/download/stable/<اسم الملف>."
+          gh release upload stable rel/* --clobber

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'" />
+<title>برق</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: #0c1210; color: #e7f0ec;
+    display: flex; align-items: center; gap: 8px;
+    height: 56px; padding: 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    user-select: none;
+  }
+  button {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04);
+    color: #a7bdb4; font-size: 15px; cursor: pointer; display: grid; place-items: center;
+  }
+  button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
+  button:disabled { opacity: .35; cursor: default; }
+  button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  form { flex: 1 1 auto; display: flex; align-items: center; }
+  input {
+    width: 100%; height: 36px; border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.1); outline: none;
+    background: rgba(0,0,0,.35); color: #e7f0ec;
+    padding: 0 16px; font-size: 13.5px; direction: ltr; text-align: left;
+    font-family: Consolas, monospace;
+  }
+  input:focus { border-color: rgba(52,211,153,.55); box-shadow: 0 0 0 2px rgba(52,211,153,.15); }
+  .shield {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
+    height: 34px; padding: 0 12px; border-radius: 17px;
+    border: 1px solid rgba(52,211,153,.25); background: rgba(52,211,153,.08);
+    color: #34d399; font-size: 12.5px; font-weight: 700; cursor: default;
+    direction: ltr;
+  }
+  .shield svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .logo { flex: 0 0 auto; font-weight: 800; font-size: 15px; color: #34d399; padding: 0 2px; }
+</style>
+</head>
+<body>
+  <span class="logo">⚡ برق</span>
+
+  <button id="back" title="رجوع" aria-label="رجوع">
+    <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+  <button id="fwd" title="تقدّم" aria-label="تقدّم">
+    <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+  <button id="reload" title="تحديث" aria-label="تحديث">
+    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></svg>
+  </button>
+  <button id="home" title="صفحة البداية" aria-label="صفحة البداية">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
+  </button>
+
+  <form id="go">
+    <input id="url" type="text" spellcheck="false"
+      placeholder="اكتب عنوانًا أو ابحث… مثال: wikipedia.org" aria-label="العنوان أو البحث" />
+  </form>
+
+  <span class="shield" id="shield" title="متعقّبات محجوبة في هذه الصفحة / الجلسة">
+    <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+    <span id="count">0</span>
+  </span>
+
+  <script src="ui.js"></script>
+</body>
+</html>
