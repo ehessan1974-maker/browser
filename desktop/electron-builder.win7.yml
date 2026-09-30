@@ -18,10 +18,10 @@ win:
       arch:
         - ia32
     # نسخة محمولة ZIP — بدون تثبيت نهائيًا: استخراج وتشغيل مباشرة، أنسب حل للأجهزة الهشة
+    # (بدون artifactName هنا — المخطط لا يقبله داخل عنصر الهدف؛ يرث الاسم المشترك ويتغير ext تلقائيًا)
     - target: zip
       arch:
         - ia32
-      artifactName: "Barq-Portable-win7-${version}-ia32.${ext}"
 nsis:
   oneClick: false
   perMachine: false

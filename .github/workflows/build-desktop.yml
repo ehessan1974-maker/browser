@@ -83,7 +83,7 @@ jobs:
           name: Barq-Windows7
           path: |
             desktop/dist/Barq-Setup-win7-*.exe
-            desktop/dist/Barq-Portable-win7-*.zip
+            desktop/dist/Barq-Setup-win7-*.zip
           if-no-files-found: error
 
   release:

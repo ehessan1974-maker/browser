@@ -47,9 +47,9 @@ export const platforms: Platform[] = [
     alts: [
       {
         label: "الأنسب للأجهزة الهشة — ZIP محمول بدون تثبيت",
-        file: "Barq-Portable-win7-1.0.0-ia32.zip",
+        file: "Barq-Setup-win7-1.0.0-ia32.zip",
         size: "‎~58MB",
-        url: `${STABLE}/Barq-Portable-win7-1.0.0-ia32.zip`,
+        url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.zip`,
       },
       {
         label: "نسخة خفيفة 32-bit — ويندوز 7 أو جهاز قديم",
