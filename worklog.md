@@ -364,3 +364,24 @@ Stage Summary:
 - state: blocké — انتظار توكن من المستخدم لرفع fc12c4b وبناء ZIP في CI.
 - بعد الرفع: مراقبة run الجديد، التحقق من ظهور Barq-Portable-win7-1.0.0-ia32.zip في release stable (HTTP 200)، ثم إرشاد المستخدم له.
 - meanwhile: المستخدم يُوجَّه لاستخدام الموقع من متصفحه مباشرة (بلا تثبيت) كحل فوري آمن.
+
+---
+Task ID: 13c
+Agent: orchestrator (Z.ai Code)
+Task: إصلاح فشل CI وإطلاق النسخة المحمولة ZIP — اكتمل بنجاح
+
+Work Log:
+- تشخيص المستخدم الحاسم: "علق الجهاز مجرد ضغطت مرتين على البرنامج لأقوم بتثبيه" — التجميد يحدث لحظة تشغيل المثبّت NSIS نفسه (ليس التصفح/التشغيل). الحل الصحيح إذًا: نسخة بلا مثبّت نهائيًا.
+- فشل CI السابق (run #5, head bb5a293): جلب سجلات job فاشل → الخطأ الحقيقي: "configuration.win.target[1] has an unknown property 'artifactName'" — مخطط electron-builder 25.1.8 يرفض artifactName داخل عنصر مصفوفة win.target (العناصر تقبل target/arch فقط).
+- الإصلاح (commit 44eea04):
+  - electron-builder.win7.yml: حذف artifactName من عنصر zip → يرث الاسم المشترك Barq-Setup-win7-${version}-ia32.${ext} فينتج Barq-Setup-win7-1.0.0-ia32.zip.
+  - build-desktop.yml: تحديث glob الرفع إلى desktop/dist/Barq-Setup-win7-*.zip ليطابق.
+  - download-data.ts: تحديث file/url للـ ZIP إلى الاسم الجديد (replace_all).
+- CI (run #6, head 44eea04): success كامل. release stable محدث 01:47Z: ZIP المحمول 84.2MB + كل المثبّتات أُعيد بناؤها بحدود الذاكرة الجديدة.
+- تحقق نهائي بلا توكن: روابط ZIP وexe العامة كلاهما HTTP 200. Pages نشر الروابط الجديدة (ZIP أولًا).
+
+Stage Summary:
+- النسخة المحمولة حية: releases/download/stable/Barq-Setup-win7-1.0.0-ia32.zip (200) — بلا مثبّت: فك ضغط → تشغيل Barq.exe مباشرة.
+- الرابط الأول في صفحة التنزيل الآن "الأنسب للأجهزة الهشة — ZIP محمول بدون تثبيت".
+- كل أصول release stable مبنية بـ: تعطيل GPU + سقف V8 256MB/عملية + كاش قرص 32MB + عمليات أقل + نسخة واحدة + لا تشغيل تلقائي.
+- درس مسجل: لا تضع artifactName داخل عناصر win.target — استخدم الاسم المشترك أو قسم الهدف المستقل.
