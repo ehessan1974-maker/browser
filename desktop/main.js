@@ -26,6 +26,10 @@ app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("process-per-site");
 app.commandLine.appendSwitch("renderer-process-limit", "2");
 app.commandLine.appendSwitch("disable-features", "site-per-process,IsolateOrigins");
+// سقف ذاكرة V8 لكل عملية (256MB) — يمنع نمو الذاكرة بلا حدود على الأجهزة القديمة
+app.commandLine.appendSwitch("js-flags", "--max-old-space-size=256");
+// كاش قرص صغير (32MB) — الكاش الكبير على الأقراص الميكانيكية القديمة يسبب تجمدًا واضحًا
+app.commandLine.appendSwitch("disk-cache-size", "33554432");
 
 let win = null;
 let view = null;

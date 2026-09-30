@@ -77,11 +77,13 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npx electron-builder --win --publish never --config electron-builder.win7.yml
 
-      - name: Upload artifact
+      - name: Upload artifacts (installer + portable zip)
         uses: actions/upload-artifact@v4
         with:
           name: Barq-Windows7
-          path: desktop/dist/Barq-Setup-win7-*.exe
+          path: |
+            desktop/dist/Barq-Setup-win7-*.exe
+            desktop/dist/Barq-Portable-win7-*.zip
           if-no-files-found: error
 
   release:
