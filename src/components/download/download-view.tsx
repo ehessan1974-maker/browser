@@ -476,6 +476,17 @@ export function DownloadView() {
                         </a>
                       ))}
 
+                      {platform.key === "windows" && (
+                        <p className="mt-3 rounded-md border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+                          إن حَظَر كروم التنزيل وظهر تحذير «اتصال غير آمن»:
+                          اضغط <kbd className="font-display">Ctrl</kbd>+
+                          <kbd className="font-display">J</kbd> لفتح التنزيلات
+                          ثم زر <span className="text-amber-300">«الاحتفاظ»</span>{" "}
+                          وأكّد بـ«الاحتفاظ على أي حال» — التحذير احترازي فقط
+                          لأن الملف بلا توقيع رقمي، والرابط مشفّر بالكامل.
+                        </p>
+                      )}
+
                       {isDownloading && (
                         <div
                           className="absolute inset-x-0 bottom-0 h-1"
