@@ -46,19 +46,19 @@ export const platforms: Platform[] = [
     url: `${STABLE}/Barq-Setup-1.0.0-x64.exe`,
     alts: [
       {
-        label: "الأنسب للأجهزة الهشة — ZIP محمول بدون تثبيت",
+        label: "الأنسب لجهازك — ZIP محمول بدون تثبيت (ويندوز 7 أو 10)",
         file: "Barq-Setup-win7-1.0.0-ia32.zip",
         size: "‎~58MB",
         url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.zip`,
       },
       {
-        label: "نسخة خفيفة 32-bit — ويندوز 7 أو جهاز قديم",
+        label: "نسخة خفيفة 32-bit — لويندوز 7 وويندوز 10",
         file: "Barq-Setup-win7-1.0.0-ia32.exe",
         size: "‎~62MB",
         url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.exe`,
       },
       {
-        label: "نسخة 32-bit — ويندوز 10/11 فقط",
+        label: "نسخة 32-bit حديثة — أداء أسرع على ويندوز 10/11",
         file: "Barq-Setup-1.0.0-ia32.exe",
         size: "‎~75MB",
         url: `${STABLE}/Barq-Setup-1.0.0-ia32.exe`,
