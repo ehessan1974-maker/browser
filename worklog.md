@@ -385,3 +385,20 @@ Stage Summary:
 - الرابط الأول في صفحة التنزيل الآن "الأنسب للأجهزة الهشة — ZIP محمول بدون تثبيت".
 - كل أصول release stable مبنية بـ: تعطيل GPU + سقف V8 256MB/عملية + كاش قرص 32MB + عمليات أقل + نسخة واحدة + لا تشغيل تلقائي.
 - درس مسجل: لا تضع artifactName داخل عناصر win.target — استخدم الاسم المشترك أو قسم الهدف المستقل.
+
+---
+Task ID: 13d
+Agent: Z.ai Code (main)
+Task: متابعة مسار إصلاح ويندوز على جهاز المستخدم (لابتوب ضعيف 32-bit) بعد فشل DISM بـ 0x800f081f
+
+Work Log:
+- نفّذ المستخدم إعادة تعيين كاش Windows Update كاملة: net stop (wuauserv/cryptSvc/bits/msiserver) ثم ren SoftwareDistribution → SoftwareDistribution.old وren catroot2 → catroot2.old ثم إعادة تشغيل الخدمات الأربعة — كلها نجحت
+- أُعيد تشغيل DISM /Online /Cleanup-Image /RestoreHealth → فشل مجددًا بـ 0x800f081f (The source files could not be found)
+- الاستنتاج: قناة Windows Update على الجهاز لا تقدّم ملفات الإصلاح — المشتبه الأول: سياسة تحوّل التحديثات لخادم WSUS غير موجود (سبب شائع معروف لهذا الخطأ)؛ المشتبه الثاني: قناة WU معطوبة فعليًا
+- الخطوة المعطاة للمستخدم: فحص سريع `reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /s` — إن وُجدت UseWUServer/WUServer ⇒ إبطال التحويل بأوامر reg add؛ إن خلا المفتاح ⇒ الانتقال لخطة ISO ويندوز 10 22H2 نسخة x86 كمصدر نظيف: `DISM /Online /Cleanup-Image /RestoreHealth /Source:esd:X:\sources\install.esd:1 /LimitAccess` (أو wim حسب محتوى ISO)
+
+Stage Summary:
+- العتاد سليم بالكامل (قرص FUJITSU MHZ2250BH = OK، ذاكرة Event 1101 بلا أخطاء) — الضرر محصور في ملفات ويندوز نتيجة الإطفاءات الإجبارية المتكررة
+- حالة الإصلاح: sfc أكد ملفات متضررة عاجز عن إصلاحها؛ DISM فشل مرتين بـ 0x800f081f (قبل وبعد إعادة تعيين كاش WU)
+- برق مجمد عمدًا ومكتمل (release stable بكل الأصول ومنها win7-ia32.zip المحمولة 84.2MB) حتى إتمام إصلاح ويندوز
+- معلّقات: رفع commitين محليين (ملاحظة كروم + تسميات download-data.ts) عند توفر توكن جديد؛ تذكير المستخدم بحذف التوكن ghp_JfGq…؛ نسخ احتياطي للملفات على فلاش؛ محاولة برق ختامية مراقبة (قاعدة انتظار 10 دقائق بلا إطفاء إجباري)
