@@ -1,0 +1,849 @@
+C:\WINDOWS\system32>powershell -NoProfile -Command "Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' | Select DisplayName, Publisher, InstallLocation, UninstallString | Format-List"
+
+
+DisplayName     : 7-Zip 24.09
+Publisher       : Igor Pavlov
+InstallLocation : C:\Program Files\7-Zip\
+UninstallString : "C:\Program Files\7-Zip\Uninstall.exe"
+
+DisplayName     : Visual Studio Build Tools 2022
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft Visual Studio\2022\BuildTools
+UninstallString : "C:\Program Files\Microsoft Visual Studio\Installer\setup.exe" uninstall --installPath "C:\Program
+                  Files\Microsoft Visual Studio\2022\BuildTools"
+
+DisplayName     : Call of Duty 2
+Publisher       :
+InstallLocation : D:\Call of Duty 2\
+UninstallString : "D:\Call of Duty 2\unins000.exe"
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     : DeskPins
+Publisher       : Elias Fotinis
+InstallLocation : D:\تنزيلات\Programs\DeskPins
+UninstallString : "D:\تنزيلات\Programs\DeskPins\uninst.exe"
+
+DisplayName     : EasyBCD 2.4
+Publisher       : NeoSmart Technologies
+InstallLocation : C:\Program Files\NeoSmart Technologies\EasyBCD
+UninstallString : C:\Program Files\NeoSmart Technologies\EasyBCD\uninstall.exe
+
+DisplayName     : Google Chrome
+Publisher       : Google LLC
+InstallLocation : C:\Program Files\Google\Chrome\Application
+UninstallString : "C:\Program Files\Google\Chrome\Application\154.0.8037.58\Installer\setup.exe" --uninstall
+                  --channel=stable --system-level --verbose-logging
+
+DisplayName     : Intel(R) Graphics Media Accelerator Driver
+Publisher       : Intel Corporation
+InstallLocation : C:\WINDOWS\SYSTEM32\DRIVERSTORE\FILEREPOSITORY\KIT19760.INF_X86_2F76F73C6DB99051\
+UninstallString : C:\WINDOWS\system32\igxpun.exe -uninstall
+
+DisplayName     : Internet Download Manager
+Publisher       : Tonec Inc.
+InstallLocation :
+UninstallString : C:\Program Files\Internet Download Manager\Uninstall.exe
+
+DisplayName     : ‏‏Microsoft Edge
+Publisher       : ‏‏Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft\Edge\Application
+UninstallString : "C:\Program Files\Microsoft\Edge\Application\154.0.4258.48\Installer\setup.exe" --uninstall --msedge
+                  --channel=stable --system-level --verbose-logging
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     : Microsoft Edge WebView2 Runtime
+Publisher       : ‏‏Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft\EdgeWebView\Application
+UninstallString : "C:\Program Files\Microsoft\EdgeWebView\Application\154.0.4258.37\Installer\setup.exe" --uninstall
+                  --msedgewebview --system-level --verbose-logging
+
+DisplayName     : Microsoft SQL Server 2005
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\Program Files\Microsoft SQL Server\90\Setup Bootstrap\ARPWrapper.exe" /Remove
+
+DisplayName     :
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Windows\System32\
+UninstallString : "C:\Windows\System32\mspaint.exe" /uninstall
+
+DisplayName     :
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Windows\System32\
+UninstallString : "C:\Windows\System32\mstsc.exe" /uninstall
+
+DisplayName     : NIUBI Partition Editor Free Edition V9.9.2
+Publisher       : NIUBI Technology Co., Ltd.
+InstallLocation :
+UninstallString : C:\Program Files\NIUBISoft\NIUBI Partition Editor Free Edition\uninst.exe
+
+DisplayName     : Microsoft OneDrive
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\Program Files\Microsoft OneDrive\26.168.0830.0006\OneDriveSetup.exe"  /uninstall  /allusers
+
+DisplayName     : Microsoft Office Professional Plus 2019 - ar-sa
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft Office
+UninstallString : "C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" scenario=install
+                  scenariosubtype=ARP sourcetype=None productstoremove=ProPlus2019Retail.16_ar-sa_x-none culture=ar-sa
+                  version.16=16.0
+
+DisplayName     :
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Windows\System32\
+UninstallString : "C:\Windows\System32\SnippingTool.exe" /uninstall
+
+DisplayName     : Stella 3.0
+Publisher       : The Stella team
+InstallLocation : C:\Program Files\Stella\
+UninstallString : "C:\Program Files\Stella\unins000.exe"
+
+DisplayName     : Synaptics Pointing Device Driver
+Publisher       : Synaptics Incorporated
+InstallLocation : C:\Program Files\Synaptics\SynTP
+UninstallString : rundll32.exe "C:\Program Files\Synaptics\SynTP\SynISDLL.dll",standAloneUninstall
+
+DisplayName     : TurboTop 2.8
+Publisher       : Savard Software
+InstallLocation : C:\Program Files\TurboTop\
+UninstallString : "C:\Program Files\TurboTop\unins000.exe"
+
+DisplayName     : VLC media player
+Publisher       : VideoLAN
+InstallLocation : C:\Program Files\VideoLAN\VLC
+UninstallString : "C:\Program Files\VideoLAN\VLC\uninstall.exe"
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     : WinRAR 7.01 (32-بت)
+Publisher       : win.rar GmbH
+InstallLocation : C:\Program Files\WinRAR
+UninstallString : C:\Program Files\WinRAR\uninstall.exe
+
+DisplayName     : DiagnosticsHub_CollectionService
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{0088A052-0730-422B-A315-5C3A3BD272FE}
+
+DisplayName     : Universal CRT Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{0343A2EB-5CCA-79B9-18A4-ABD484A97924}
+
+DisplayName     : Universal CRT Redistributable
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{0460C87B-7F4C-3170-FAC9-B7A6AE5CE4E9}
+
+DisplayName     : MSI Development Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{06671634-35F4-43F1-1B57-68B7CE54E5B3}
+
+DisplayName     : WinRT Intellisense UAP - Other Languages
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{099E916C-D17E-7E1A-0046-3AD1D042102F}
+
+DisplayName     : Windows SDK Desktop Headers arm64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{0A1B70B0-DD98-1BCC-6958-D5AD8BBAF2B2}
+
+DisplayName     : Python 3.14.7 Core Interpreter (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{0C3F1EF3-38D5-4E27-99B7-56DADC977948}
+
+DisplayName     : cloudflared
+Publisher       : cloudflare
+InstallLocation :
+UninstallString : MsiExec.exe /I{0FCDE59F-3B5F-477D-9F2D-C18F6CD67FCC}
+
+DisplayName     : Windows SDK DirectX x86 Remote
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{11C0EB4F-A1BA-2068-49A5-F7C242708BA2}
+
+DisplayName     : Windows SDK Desktop Libs x64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{12C6754C-2086-9BFC-1292-FA0BE54009E6}
+
+DisplayName     : Windows SDK AddOn
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{13D2A7A2-1B42-4C03-8F0F-697991259AEE}
+
+DisplayName     : Windows App Certification Kit x86 (OnecoreUAP)
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{1620E7A4-76DA-9EBD-0953-E502630F6CD0}
+
+DisplayName     : vs_CoreEditorFonts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{1851460E-0E63-4117-B5BA-25A2F045801B}
+
+DisplayName     : Python 3.14.7 Standard Library (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{1A855C98-7176-4771-B1AB-4A7B24D12FD2}
+
+DisplayName     : Windows Team Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{1F507473-1077-3AB8-2E11-C839AE4E27B8}
+
+DisplayName     : Python 3.14.7 Documentation (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{21BBE93D-EFF4-4EC4-AEB5-E626A2B51F8E}
+
+DisplayName     : Windows SDK Modern Non-Versioned Developer Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{26BD6DC6-3F0F-4C17-A78C-5D06459F39C0}
+
+DisplayName     : Microsoft SQL Server 2005 Tools Express Edition
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft SQL Server\
+UninstallString : MsiExec.exe /I{2750B389-A2D2-4953-99CA-27C1F2A8E6FD}
+
+DisplayName     : vs_communitymsires
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{2817364B-A3DE-472C-BF19-F19B6997061F}
+
+DisplayName     : vs_githubprotocolhandlermsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{29297AFE-9D24-4DFE-ACAF-D90090D905CF}
+
+DisplayName     : Microsoft SQL Server 2005 Express Edition (SQLEXPRESS)
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft SQL Server\
+UninstallString : MsiExec.exe /I{2AFFFDD7-ED85-4A90-8C52-5DA9EBDC9B8F}
+
+DisplayName     : Windows SDK Desktop Libs arm64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{2C37C218-88FF-9E58-0151-1AF693535792}
+
+DisplayName     : Windows SDK for Windows Store Apps Libs
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{2CAA22A5-36FE-21B0-5A67-3BE172FEFF12}
+
+DisplayName     : Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.32.31326
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\ProgramData\Package Cache\{2d507699-404c-4c8b-a54a-38e352f32cdd}\VC_redist.x64.exe"  /uninstall
+
+DisplayName     : WinRT Intellisense IoT - Other Languages
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{3120663A-4F7D-252C-2829-1B9DBEDFEEED}
+
+DisplayName     : Python 3.14.7 Test Suite (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{368C0260-5A5C-4FBE-9531-E71B36D614AA}
+
+DisplayName     : Universal CRT Redistributable
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{368E4D03-5983-1C2C-B42E-1C0C51A935A5}
+
+DisplayName     : WinRT Intellisense Mobile - en-us
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{3EEF5F2A-A2A3-89FC-D7DF-CFE8DEFE4A8F}
+
+DisplayName     : Windows App Certification Kit x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{435037CD-892A-856A-153C-1164E2A5BFF6}
+
+DisplayName     : Kits Configuration Installer
+Publisher       : Microsoft
+InstallLocation :
+UninstallString : MsiExec.exe /I{43506B27-889E-2F0F-F8BE-4AEBE7CC9249}
+
+DisplayName     : Python 3.14.7 Executables (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{47A4E231-2696-4F34-ACEA-914404F853A2}
+
+DisplayName     : Microsoft Visual Studio Setup WMI Provider
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{49727420-70BA-4495-9405-31F8D711CB5A}
+
+DisplayName     : Microsoft Visual C++ 2022 X86 Minimum Runtime - 14.51.36247
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{4BF7CE18-E151-449F-9190-6CDBED0BB4A2}
+
+DisplayName     : Windows SDK for Windows Store Apps Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{4C150435-9153-456C-C0BE-497D89513B18}
+
+DisplayName     : Windows SDK for Windows Store Managed Apps Libs
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{4D8C14D7-C036-33F2-EFA7-C5CC5F73932B}
+
+DisplayName     : vs_communitymsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{4FA3FC1B-0721-4DA8-8543-BC23A8FE1B43}
+
+DisplayName     : Windows SDK EULA
+Publisher       : Microsoft Corporations
+InstallLocation :
+UninstallString : MsiExec.exe /I{5120ED0E-8B54-B212-15E6-EE404FE83E37}
+
+DisplayName     : Update for Windows (KB5001716)
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{52B5CFE5-CACF-488D-96A6-D5C42B05B1FF}
+
+DisplayName     : vs_minshellinteropsharedmsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{537F07C8-0EC6-41A5-BB91-750FA3CAA110}
+
+DisplayName     : VS Script Debugging Common
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{53D16E2A-6284-44BC-9A17-80A957E41C96}
+
+DisplayName     : Microsoft SQL Server Setup Support Files (English)
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft SQL Server\90\Setup Bootstrap\
+UninstallString : MsiExec.exe /X{53F5C3EE-05ED-4830-994B-50B2F0D50FCE}
+
+DisplayName     : Python 3.14.7 Development Libraries (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{55BB31A6-642D-45A3-B792-693F4B94F6E9}
+
+DisplayName     : WinRT Intellisense Desktop - en-us
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{572C25BD-AB18-B702-9ED7-6F0CC6821847}
+
+DisplayName     : Windows SDK ARM64 Desktop Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{575077AC-CCC1-9943-6F3C-EDB6149964E7}
+
+DisplayName     : Microsoft Visual C++ 2022 X86 Additional Runtime - 14.51.36247
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{582BA719-E6F1-4651-A873-049E6A0DDDAF}
+
+DisplayName     : PeaZip 10.2.0
+Publisher       : Giorgio Tani
+InstallLocation : C:\Program Files\PeaZip\
+UninstallString : "C:\Program Files\PeaZip\unins000.exe"
+
+DisplayName     : WinRT Intellisense UAP - en-us
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{5C8B4DA5-62C6-8D4A-F21A-AD4D66FCA8D9}
+
+DisplayName     : Windows App Certification Kit Native Components
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{60D2E777-652D-830D-8A97-3E1A685B3FB7}
+
+DisplayName     : Python 3.14.7 Tcl/Tk Support (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{6575ABDD-235A-4CB2-BC49-3949D06A4BA0}
+
+DisplayName     : vs_minshellmsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{6AAEB5DD-FFFE-4CA1-9FE2-38A44B6B4477}
+
+DisplayName     : vs_filehandler_x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{6C7D0172-7367-4F0C-95DB-6021765B58EA}
+
+DisplayName     : Microsoft Visual Studio Installer
+Publisher       : Microsoft Corporation
+InstallLocation : "C:\Program Files\Microsoft Visual Studio\Installer"
+UninstallString : "C:\Program Files\Microsoft Visual Studio\Installer\setup.exe" /uninstall
+
+DisplayName     : Microsoft Visual C++ 2005 Redistributable
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{710f4c1c-cc18-4c49-8cbf-51240c89a1a2}
+
+DisplayName     : vs_communitysharedmsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{71498EE6-F94E-4061-9DD5-55925CA8A74F}
+
+DisplayName     : Microsoft SQL Server Native Client
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft SQL Server\
+UninstallString : MsiExec.exe /I{7670D32F-DAE6-4E49-8C8B-B3F08B5B1686}
+
+DisplayName     : Windows SDK Desktop Tools arm64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{7C1561F8-C963-0AC7-21BD-EA4DD9633C50}
+
+DisplayName     : Universal CRT Headers Libraries and Sources
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{7D4D186C-70F0-6990-1792-DAA557B1E010}
+
+DisplayName     : Universal General MIDI DLS Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{7E52FE9F-4D3E-9277-0E37-0014C83D4F5E}
+
+DisplayName     : Windows SDK OnecoreUap Headers x64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{80F76A51-EAF7-DA8E-C732-B26C591BCC23}
+
+DisplayName     : Microsoft Visual C++ 2013 x86 Minimum Runtime - 12.0.40664
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{8122DAB1-ED4D-3676-BB0A-CA368196543E}
+
+DisplayName     : Windows SDK OnecoreUap Headers arm64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{85F3FF9F-CFBA-AD2F-85E2-90571032D412}
+
+DisplayName     : Application Verifier x86 External Package (DesktopEditions)
+Publisher       : Microsoft
+InstallLocation :
+UninstallString : MsiExec.exe /I{884AAADC-48DC-DD3F-4433-C1F11BD9658D}
+
+DisplayName     : Microsoft Update Health Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{8F99DEF4-B09B-40D7-9EF5-58DB00C1E053}
+
+DisplayName     : Microsoft Access database engine 2010 (English)
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{90140000-00D1-0409-0000-0000000FF1CE}
+
+DisplayName     : Office 16 Click-to-Run Licensing Component
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{90160000-007E-0000-0000-0000000FF1CE}
+
+DisplayName     : Office 16 Click-to-Run Extensibility Component
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{90160000-008C-0000-0000-0000000FF1CE}
+
+DisplayName     : Office 16 Click-to-Run Localization Component
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{90160000-008C-0401-0000-0000000FF1CE}
+
+DisplayName     : WinRT Intellisense PPI - en-us
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{91306123-946D-452F-3206-A8AB9F8293D6}
+
+DisplayName     : Python 3.14.7 Add to Path (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{96A66AA8-49D3-409E-99E7-DED45581AE5B}
+
+DisplayName     : Windows SDK Redistributables
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{96B30005-C36E-07FF-DF27-EEB8199694CD}
+
+DisplayName     : Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.17
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{9A25302D-30C0-39D9-BD6F-21E6EC160475}
+
+DisplayName     : Windows Team Extension SDK Contracts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{9A2FEE83-D2FB-A48E-52E0-15801042220F}
+
+DisplayName     : Microsoft Visual C++ v14 Redistributable (x86) - 14.51.36247
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\ProgramData\Package Cache\{9a6ce18d-11c0-4452-aa35-9f2b8437c686}\VC_redist.x86.exe"  /uninstall
+
+DisplayName     : WinRT Intellisense PPI - Other Languages
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{9BA10CCD-7064-7FAB-B48B-C7B2CCFC60FB}
+
+DisplayName     : Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{9BE518E6-ECC6-35A9-88E4-87755C07200F}
+
+DisplayName     : Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.40664
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\ProgramData\Package Cache\{9dff3540-fc85-4ed5-ac84-9e3c7fd8bece}\vcredist_x86.exe"  /uninstall
+
+DisplayName     : Windows SDK Desktop Libs x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{9EE92E02-FA29-DF43-7E45-A256139DEBE4}
+
+DisplayName     : Windows Mobile Extension SDK Contracts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{9FA1715F-2809-3C7D-B9BB-17574DA0AED9}
+
+DisplayName     : Windows IoT Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{A056CA2A-2AB1-EB1B-1B2E-D49E0C6C8E17}
+
+DisplayName     : Windows SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{A224D569-B07A-8178-A1E4-75DC397C06B2}
+
+DisplayName     : vs_minshellinteropmsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{A2FDDC26-4232-4287-8839-2F53A01E1E97}
+
+DisplayName     : Node.js
+Publisher       : Node.js Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{A92B484C-CDFA-486B-86FE-A46AEDC41E76}
+
+DisplayName     : Windows IoT Extension SDK Contracts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{AA11F890-8A6F-D292-8A1D-D70710A87852}
+
+DisplayName     : SDK ARM64 Redistributables
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{AA86DFC1-17A2-6133-1D55-92818B9D3082}
+
+DisplayName     : Windows SDK for Windows Store Apps Metadata
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{AF0CF0ED-D9DA-DFDA-52DD-B3B0FE269640}
+
+DisplayName     : Python Launcher
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /X{B20FDD37-AF42-458B-8649-AFF13DE48C7A}
+
+DisplayName     : vs_vswebprotocolselectormsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{B4B3AA16-E828-4577-A9F2-629E1A95FE4A}
+
+DisplayName     : Windows SDK for Windows Store Apps Headers
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{B5534577-4F61-73AC-FFCB-91B0B0674DA4}
+
+DisplayName     : Microsoft Visual C++ 2022 X86 Debug Runtime - 14.44.35211
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{BC104582-4691-4D4C-8922-C215D941A2EB}
+
+DisplayName     : Windows Software Development Kit - Windows 10.0.26100.7705
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : "C:\ProgramData\Package Cache\{c0b93b80-d0a4-47fc-a4d1-21a4008a63ca}\winsdksetup.exe"  /uninstall
+
+DisplayName     : CSR Harmony Wireless Software Stack
+Publisher       : اسم شركتك
+InstallLocation : C:\Program Files\CSR\CSR Harmony Wireless Software Stack\
+UninstallString : MsiExec.exe /X{C746BF8D-B0A9-46A7-BF98-F6331514DE2D}
+
+DisplayName     : vcpp_crt.redist.clickonce
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{C7FC6DE7-5C06-4311-837A-E0D774618D17}
+
+DisplayName     : Windows SDK for Windows Store Apps Headers OnecoreUap
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{CB91C4E7-9C14-6ABD-566B-DF4593456102}
+
+DisplayName     : Windows SDK Desktop Headers x64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{CCEEC7A2-2179-C5D0-60E2-2651993A8AD5}
+
+DisplayName     : Windows SDK for Windows Store Apps
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{CEC6FB8C-1F94-F7F8-C9F7-EF55CC2A519F}
+
+DisplayName     : WinAppDeploy
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{CFEF5BD7-A03F-DEF3-1707-A31C813F6D14}
+
+DisplayName     : Microsoft Visual Studio Setup Configuration
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{D07657AA-968C-4629-BD6C-1B52AF825EA7}
+
+DisplayName     : Windows SDK Desktop Headers x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{D0772A8A-6AB2-E6E1-8BEF-29F59AB99893}
+
+DisplayName     : vs_FileTracker_Singleton
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{D331F4E7-BC3B-47BE-BB56-5F33895F9347}
+
+DisplayName     : Microsoft Visual C++ 2013 x86 Additional Runtime - 12.0.40664
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{D401961D-3A20-3AC7-943B-6139D5BD490A}
+
+DisplayName     : Windows SDK Desktop Tools x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{DB72537E-BD30-364B-6A72-09CE78DB8321}
+
+DisplayName     : Application Verifier x86 External Package (OnecoreUAP)
+Publisher       : Microsoft
+InstallLocation :
+UninstallString : MsiExec.exe /I{E3DAD96A-6B58-5533-10F5-7ECCF06B4552}
+
+DisplayName     : Windows App Certification Kit SupportedApiList x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{E43BDB72-464A-290B-A51D-537CBBE1CAC8}
+
+DisplayName     : Microsoft SQL Server VSS Writer
+Publisher       : Microsoft Corporation
+InstallLocation : C:\Program Files\Microsoft SQL Server\
+UninstallString : MsiExec.exe /I{E7084B89-69E0-46B3-A118-8F99D06988CD}
+
+DisplayName     : Windows SDK for Windows Store Apps Contracts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{E8BE09DF-D93B-AE40-FD63-05E5ABEFB6D9}
+
+DisplayName     : Windows Mobile Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{E901323A-7A02-50A8-F4E0-95C4AD8A098F}
+
+DisplayName     : Python 3.14.7 pip Bootstrap (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : MsiExec.exe /I{E927F812-8373-4C16-B0F0-D2DF7A5B83DD}
+
+DisplayName     : SDK ARM64 Additions
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{E93670D9-924A-7B6F-5F55-AE8E3043BCB0}
+
+DisplayName     : WinRT Intellisense Desktop - Other Languages
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{EA88E7B4-C204-CC0C-FC10-D13FC9C30800}
+
+DisplayName     : Windows SDK Desktop Tools x64
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{EB362CC9-F0B3-EDBC-82E8-91F6BBF36F6E}
+
+DisplayName     : WinRT Intellisense IoT - en-us
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{EB8B0E53-980A-E861-DC85-05240EFA888D}
+
+DisplayName     : vs_minshellmsires
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{EC049978-2176-47C6-B99B-2C64AD6F6828}
+
+DisplayName     : Windows SDK OnecoreUap Headers x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{EFF12E8F-5027-FE5D-6ABF-5F837F3B70F8}
+
+DisplayName     : Microsoft Visual C++ 2010  x86 Redistributable - 10.0.40219
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+DisplayName     : Realtek High Definition Audio Driver
+Publisher       : Realtek Semiconductor Corp.
+InstallLocation : C:\Program Files\Realtek\Audio\HDA
+UninstallString : "C:\Program Files\Realtek\Audio\HDA\RtlUpd.exe" -r -m -nrg2709
+
+DisplayName     : Windows SDK Modern Versioned Developer Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{F251EBD6-9B8C-3876-A422-B4F677BF3766}
+
+DisplayName     : Windows Desktop Extension SDK Contracts
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{F4F63553-2774-41A6-C784-7FAC7DF4CAF3}
+
+DisplayName     : vs_minshellsharedmsi
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{F6E69DD8-7652-4CC6-8A4F-485A16012B5B}
+
+DisplayName     : Windows SDK for Windows Store Apps DirectX x86 Remote
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{F738E2CC-E003-B601-F38B-4521ED842C98}
+
+DisplayName     : Windows SDK Signing Tools
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{F9DDDEF1-BCF0-275F-DE29-9332F1149B79}
+
+DisplayName     : Windows SDK Facade Windows WinMD Versioned
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{FB4D4A9B-9E8F-42CB-B08F-AE153FFA31AC}
+
+DisplayName     : Universal CRT Tools x86
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{FEC52FA9-A866-C884-4AAA-0B15BE793610}
+
+DisplayName     : Windows Desktop Extension SDK
+Publisher       : Microsoft Corporation
+InstallLocation :
+UninstallString : MsiExec.exe /I{FED10190-CF54-E72D-7A92-E3F9CA9B7950}
+
+DisplayName     :
+Publisher       :
+InstallLocation :
+UninstallString :
+
+
+
+
+C:\WINDOWS\system32>powershell -NoProfile -Command "Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' | Select DisplayName, Publisher, InstallLocation, UninstallString | Format-List"
+
+
+DisplayName     : YouTube
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 1"
+                  --uninstall-app-id=agimnkijcaahngcdmfeangaknmldooml
+
+DisplayName     : SaveFrom.net
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory=Default --uninstall-app-id=hdflidlkjcfebpommicfmndhihcfaabk
+
+DisplayName     : Gmail
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3"
+                  --uninstall-app-id=fmgjjmmmlfnkbppncabfkddbjimcfncm
+
+DisplayName     : Google Drive
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3"
+                  --uninstall-app-id=aghbiahbpaijignceidepookljebhfak
+
+DisplayName     : YouTube
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory=Default --uninstall-app-id=agimnkijcaahngcdmfeangaknmldooml
+
+DisplayName     : Telegram
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory=Default --uninstall-app-id=nigookeodlehlnjcpdfifmophdcbjoma
+
+DisplayName     : فيسبوك
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory=Default --uninstall-app-id=kippjfofjhjlffjecoapiogbkgbpmgej
+
+DisplayName     : YouTube
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3"
+                  --uninstall-app-id=agimnkijcaahngcdmfeangaknmldooml
+
+DisplayName     : YouTube
+Publisher       : Google\Chrome
+InstallLocation :
+UninstallString : "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 5"
+                  --uninstall-app-id=agimnkijcaahngcdmfeangaknmldooml
+
+DisplayName     : Python 3.14.7 (32-bit)
+Publisher       : Python Software Foundation
+InstallLocation :
+UninstallString : "C:\Users\96393\AppData\Local\Package Cache\{f7919868-552e-45f9-9cb3-237dfd58c2d4}\python-3.14.7.exe"  /uninstall
