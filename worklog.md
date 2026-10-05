@@ -459,3 +459,18 @@ Stage Summary:
 - الأمر المعتمد: `DISM /Online /Cleanup-Image /RestoreHealth /Source:wim:G:\sources\install.wim:2 /LimitAccess`
 - تحذير للمستخدم: عملية طويلة على القرص الميكانيكي (20-60+ دقيقة)، لا إغلاق للنافذة ولا فصل للمونت G أثناءها
 - عند الفشل: مراجعة آخر 30 سطر من C:\Windows\Logs\DISM\dism.log
+
+---
+Task ID: DISM-RESTORE-OK-1
+Agent: orchestrator (Z.ai Code)
+Task: تنفيذ RestoreHealth — نجح ✅
+
+Work Log:
+- `DISM /Online /Cleanup-Image /RestoreHealth /Source:wim:G:\sources\install.wim:2 /LimitAccess` أكمل إلى 100%
+- النتيجة: "The restore operation completed successfully. / The operation completed successfully."
+- Image Version أثناء العملية: 10.0.19045.7725 — أي أن الإصلاح شُغّل على النظام الحي بنجاح
+- أول نجاح إصلاح منذ بدء الأزمة (سبق: sfc عاجز + DISM فشل بـ 0x800f081f مرتين)
+
+Stage Summary:
+- component store أصبح سليماً — بُني من مصدر نظيف محلي (Index 2 = Pro من install.wim)
+- التالي: فحص G:\sources\sxs ثم تفعيل NetFx3 من المصدر /LimitAccess → إزالة SQL 2005 → sfc /scannow نهائي → تشغيل برق
