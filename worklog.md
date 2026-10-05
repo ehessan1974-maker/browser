@@ -488,3 +488,20 @@ Work Log:
 Stage Summary:
 - .NET Framework 3.5 مفعّل من مصدر نظيف محلي بلا WU
 - المتبقي: إزالة SQL Server 2005 → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة تفعيل ما أوقفه المستخدم
+
+---
+Task ID: SQL2005-REMOVED-1
+Agent: orchestrator (Z.ai Code)
+Task: إزالة SQL Server 2005 كاملاً — نجحت ✅
+
+Work Log:
+- فحص مسبق كشف 3 قواعد مستخدم حقيقية: fmsql.mdf، movedb.mdf، "فاتورة مبيعات س كيو إل.mdf" (آخر تعديل مايو 2025)
+- نسخ احتياطي كامل قبل الإزالة: xcopy MSSQL.1 → D:\SQL_BACKUP\MSSQL.1 (94 ملف تشمل كل قواعد المستخدم + النظام)
+- ظهرت رسالة Program Compatibility Assistant عند تشغيل ARPWrapper — عولجت بـ "تشغيل البرنامج بدون الحصول على التعليمات"
+- نُفذت الإزالات: ARPWrapper (المثيل) + msiexec /x{2750B389} (Tools) + {E7084B89} (VSS Writer) + {7670D32F} (Native Client) + {53F5C3EE} (Setup Support Files)
+- الفحص النهائي عبر Get-ItemProperty على Uninstall keys: قائمة SQL فارغة تماماً ✅
+
+Stage Summary:
+- SQL Server 2005 بكل مكوناته الستة أزيل بنجاح
+- نسخة احتياطية دائمة: D:\SQL_BACKUP\MSSQL.1 (لإعادة تركيب قواعد المستخدم على SQL حديث لاحقاً إن طُلب)
+- المتبقي: إعادة تشغيل → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة التفعيل
