@@ -474,3 +474,17 @@ Work Log:
 Stage Summary:
 - component store أصبح سليماً — بُني من مصدر نظيف محلي (Index 2 = Pro من install.wim)
 - التالي: فحص G:\sources\sxs ثم تفعيل NetFx3 من المصدر /LimitAccess → إزالة SQL 2005 → sfc /scannow نهائي → تشغيل برق
+
+---
+Task ID: NETFX3-OK-1
+Agent: orchestrator (Z.ai Code)
+Task: تفعيل NetFx3 — نجح ✅
+
+Work Log:
+- فحص G:\sources\sxs: يحوي microsoft-windows-netfx3-ondemand-package~31bf3856ad364e35~x86~~.cab (39,116,719 بايت) + IE optional package
+- `DISM /Online /Enable-Feature /FeatureName:NetFx3 /Source:G:\sources\sxs /LimitAccess` → 100% → "The operation completed successfully."
+- القرص G: انتهى دوره بعد هذه الخطوة (يسمح بنزعه؛ ملف الـ ISO يبقى محفوظاً في D:\ISO\uup2)
+
+Stage Summary:
+- .NET Framework 3.5 مفعّل من مصدر نظيف محلي بلا WU
+- المتبقي: إزالة SQL Server 2005 → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة تفعيل ما أوقفه المستخدم
