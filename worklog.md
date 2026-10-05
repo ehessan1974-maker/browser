@@ -420,3 +420,42 @@ Work Log:
 Stage Summary:
 - استبعاد WSUS نهائيًا؛ المسار الرسمي الآن: مصدر محلي نظيف عبر /Source + /LimitAccess لتجاوز WU المعطوبة
 - بانتظار المستخدم: ناتج Get-WimInfo من الـ ISO المركّب + إصدار الويندوز (winver)
+
+---
+Task ID: T-REMIND-1 (🔔 MUST-DO قبل إغلاق العمل نهائيًا)
+Agent: orchestrator (Z.ai Code)
+Task: تذكير المستخدم بإعادة تفعيل ما أوقفه بنفسه بعد انتهاء كل العمل
+
+Work Log:
+- المستخدم أوقف بنفسه شيئًا كان يُظهر رسالة كل ساعة أو نصف ساعة (نص الرسالة/الصورة ضاعت من السياق — غير معروف)
+- المستخدم طلب صراحة: "ذكرني بهذا — سنعيد تفعيلها بعد انتهاء كل العمل"
+- سُجّل البند في TodoWrite بأعلى أولوية: remind-reactivate (pending)
+- التذكير لا يُنفذ إلا بعد: نجاح sfc /scannow النهائي + تشغيل برق بنجاح
+- مطلوب من المستخدم لاحقًا: اسم الخدمة/البرنامج الموقف (أو أول سطر من الرسالة) لتجهيز أمر إعادة التفعيل الصحيح
+
+---
+Task ID: ISO-DONE-1
+Agent: orchestrator (Z.ai Code)
+Task: اكتمال بناء ISO ويندوز 10 22H2 x86 عربي النظيف
+
+Work Log:
+- محول uupdump v126 أكمل: FODs (23 حزمة) → install.wim → 5 تحديثات (SSU 7714، Enablement KB5015684، SafeOS KB5122887، SetupDU KB5126029، LCU KB5129236) → Pro edition → إعادة ضغط (3,990,528 KiB) → winre.wim (SafeOS 7722 + LCU 7727) → boot.wim → ISO بلا أي خطأ
+- الناتج: D:\ISO\uup2\19045.7727.260912-1613.22H2_RELEASE_SVC_IM_CLIENTMULTI_X86FRE_AR-SA.ISO — 5,148,180,480 بايت (~4.8 GB)
+- الـ ISO مصدر إصلاح فقط — ممنوع تشغيل setup.exe
+
+---
+Task ID: DISM-SOURCE-1
+Agent: orchestrator (Z.ai Code)
+Task: فحص مصدر الإصلاح وتحديد الفهرس الصحيح
+
+Work Log:
+- ISO مونت على الحرف **G:** (Volume: CCSA_X86FRE_AR-SA_DV5)
+- install.wim موجود: 4,464,630,141 بايت، مقروء
+- Get-WimInfo: Index 1 = Windows 10 Home، Index 2 = Windows 10 Pro
+- EditionID على جهاز المستخدم = Professional → الفهرس المختار: **Index 2**
+- نظام المستخدم 19045.7725، المصدر 19045.7727 (أحدث بدرجتين — صالح للإصلاح)
+
+Stage Summary:
+- الأمر المعتمد: `DISM /Online /Cleanup-Image /RestoreHealth /Source:wim:G:\sources\install.wim:2 /LimitAccess`
+- تحذير للمستخدم: عملية طويلة على القرص الميكانيكي (20-60+ دقيقة)، لا إغلاق للنافذة ولا فصل للمونت G أثناءها
+- عند الفشل: مراجعة آخر 30 سطر من C:\Windows\Logs\DISM\dism.log
