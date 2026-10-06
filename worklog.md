@@ -568,3 +568,20 @@ Stage Summary:
 - السبب الأصلي لكل BSODs الجهاز: تعريف كرت الشاشة (0x116) — مرتبط بعمر الجهاز/التعريف، وليس بملفات النظام
 - خطة العلاج بالترتيب: 1) تشغيل برق بـ --disable-gpu (اختبار تأكيدي + حل تشغيلي فوري) 2) معرفة كرت الشاشة وDriverVersion/Date 3) إزالة التعريف الحالي وإعادة تثبيته (أو Basic Display Adapter كحل آمن) 4) إن استمر 0x116 بلا تطبيقات رسومية → شبهة عتاد (حرارة/عُتاد GPU)
 - النسخ الاحتياطي على الفلاش ما زال شرطاً قبل أي تجربة تشغيل جديدة
+
+---
+Task ID: GPU-GUI-2
+Agent: orchestrator (Z.ai Code)
+Task: إصلاح خطأ إطلاق واجهة "مركز تحكم برق" — Start-Process powershell -Verb RunAs فشل بـ "No application is associated with the specified file"
+
+Work Log:
+- المستخدم أكمل تثبيت BarqControl.ps1 على سطح المكتب بنجاح ("OK - Barq Control Center created")، لكن أمر الإطلاق `Start-Process powershell -Verb RunAs -ArgumentList "-File ...BarqControl.ps1"` فشل: ERROR_NO_ASSOCIATION (0x80070483).
+- التشخيص: ShellExecuteEx فشل في حل الاسم المختصر "powershell" (بدون مسار/امتداد) على نظام أُصلح مؤخراً — الفشل قبل إطلاق أي عملية؛ الأدلة: نمط RunAs على ملفات بمسار كامل (bat الأزرار) يعمل على نفس الجهاز.
+- الحل الفوري المسلّم: أمر إطلاق مصحح بمسار كامل "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" + -STA، وبنافذة كونسول ظاهرة (بدون Hidden) في المرة الأولى للتشخيص البصري.
+- الحل الدائم المسلّم: Desktop\BarqCenter.bat بنمط الارتفاع الذاتي المجرّب (fltmc + Start-Process -FilePath '%~f0' -Verb RunAs) يطلق powershell.exe بالمسار الكامل مع -WindowStyle Hidden -File BarqControl.ps1 + اختصار Desktop\مركز تحكم برق.lnk بأيقونة D:\Barq\Barq.exe.
+- قاعدة مقررة مستقبلاً: على هذا الجهاز دائماً مسار كامل مع .exe عند أي Start-Process (ومنها الارتفاع الذاتي داخل ps1).
+
+Stage Summary:
+- السبب الجذري: فشل حل الأسماء التنفيذية المختصرة في ShellExecute على نظام ما بعد الإصلاح؛ ليس خللاً في الواجهة ولا في BarqControl.ps1 (اتم بناؤه كاملاً لأن بلوك التثبيت وصل لـ Write-Host الختامي).
+- مساران للإطلاق الآن: one-liner مصحح للتجربة الأولى (كونسول ظاهر للتشخيص) + اختصار دائم (bat+lnk) لا يعتمد على الارتفاع الداخلي للسكربت.
+- الأزرار الخمسة القديمة واختصارات Ctrl+Alt+F11/F12 لم تُمَس. معلّق: تأكيد المستخدم أن النافذة فتحت، ثم تنظيف اختياري لسطح المكتب، ثم وعد إعادة تفعيل Controlled Folder Access.
