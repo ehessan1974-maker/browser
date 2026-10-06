@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld("barq", {
   home: () => ipcRenderer.send("barq:home"),
   state: () => ipcRenderer.invoke("barq:state"),
   onNavState: (cb) => ipcRenderer.on("barq:nav-state", (_e, s) => cb(s)),
+  engines: () => ipcRenderer.invoke("barq:engines"),
+  setEngine: (id) => ipcRenderer.send("barq:set-engine", id),
 });

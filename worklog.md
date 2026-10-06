@@ -619,3 +619,22 @@ Work Log:
 Stage Summary:
 - لا شيء ضاع: 2 لقائمة ابدأ (هوتكي حي) + 3 للأرشيف + أيقونة إطلاق واحدة ظاهرة. الوظيفة والحماية كاملة.
 - معلّق ثابت: تأكيد فعلية عمل Ctrl+Alt+F11/F12 بعد النقل + وعد إعادة تفعيل Controlled Folder Access بعد انتهاء كل العمل.
+
+---
+Task ID: BARQ-SEARCH-1
+Agent: orchestrator (Z.ai Code)
+Task: طلب المستخدم "أريد أن يعمل برق على كل محركات البحث" — تعدد محركات البحث في برق سطح المكتب v1.1.0
+
+Work Log:
+- السبب الجذري: desktop/main.js سطر 18 — SEARCH_URL ثابت duckduckgo فقط (شريط العناوين + صفحة البداية).
+- فحص trackers.js: قائمة الحظر لا تمس نطاقات محركات البحث (google.com/gstatic/googleapis/bing/yandex) → صفحات البحث تعمل كاملة وإعلانات النتائج تُحجب.
+- تطوير v1.1.0: SEARCH_ENGINES (google/bing/duckduckgo/yandex/wikipedia) + حفظ المحرك في userData/search-engine.json + IPC (set-engine/engines) + حقن ?engine= في loadFile + روابط داخلية barq.internal/set-engine و /search عبر will-navigate + navState يضم engine/engineName.
+- UI: قائمة محرك في شريط الأدوات (ui.html/ui.js) + شرائح محركات على صفحة البداية (home.html) + بلاطتا جوجل وبينج.
+- desktop/package.json → 1.1.0؛ build-desktop.yml → wildcards للـ artifacts.
+- فحوصات: node --check للملفات الثلاثة + trackers (203 hosts) + package.json — نجحت كلها.
+- الدفع لGitHub فشل (لا صلاحيات من الساندبوكس) → لا Actions/Release جديد؛ download-data.ts بقيت 1.0.0 عمداً لتبقى روابط الموقع صحيحة.
+- قرار التسليم: ترقية في المكان عبر بلوك PowerShell يكتب resources/app (مجلد غير معبأ يُحمَّل عند غياب app.asar) + إعادة تسمية app.asar → app.asar.bak احتياطاً. بدون تنزيل 60MB وبدون تغيير D:\Barq\Barq.exe → منظومة مركز التحكم وbarq_once.bat سليمة.
+
+Stage Summary:
+- برق 1.1.0: 5 محركات + اختيار محفوظ دائم + توافق Electron 22 (win7) و33. قابل للعكس بأمر واحد.
+- معلّق: دفع v1.1.0 للمستودع وتحديث download-data.ts عند توفر صلاحيات؛ وعد إعادة تفعيل Controlled Folder Access.

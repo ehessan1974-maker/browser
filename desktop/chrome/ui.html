@@ -23,6 +23,14 @@
   button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
   button:disabled { opacity: .35; cursor: default; }
   button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  select {
+    flex: 0 0 auto; height: 34px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35);
+    color: #a7bdb4; font-size: 12.5px; padding: 0 6px; cursor: pointer; outline: none;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+  }
+  select:hover { color: #34d399; border-color: rgba(52,211,153,.45); }
+  select option { background: #14201b; color: #e7f0ec; }
   form { flex: 1 1 auto; display: flex; align-items: center; }
   input {
     width: 100%; height: 36px; border-radius: 18px;
@@ -58,6 +66,8 @@
   <button id="home" title="صفحة البداية" aria-label="صفحة البداية">
     <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
   </button>
+
+  <select id="engine" title="محرك البحث الافتراضي" aria-label="محرك البحث"></select>
 
   <form id="go">
     <input id="url" type="text" spellcheck="false"

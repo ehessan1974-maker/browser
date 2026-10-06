@@ -10,18 +10,18 @@
     font-family: "Segoe UI", Tahoma, sans-serif;
     background: radial-gradient(1200px 600px at 50% -10%, #12241d 0%, #0c1210 60%);
     color: #e7f0ec; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 26px; padding: 24px;
+    align-items: center; justify-content: center; gap: 22px; padding: 24px;
   }
   .mark {
-    width: 84px; height: 84px; border-radius: 24px;
-    display: grid; place-items: center; font-size: 42px;
+    width: 76px; height: 76px; border-radius: 22px;
+    display: grid; place-items: center; font-size: 38px;
     border: 1px solid rgba(52,211,153,.3);
     background: rgba(52,211,153,.08);
     box-shadow: 0 0 60px rgba(52,211,153,.12);
   }
   h1 { font-size: 30px; font-weight: 800; }
   h1 span { color: #34d399; }
-  .tag { color: #93a8a0; font-size: 14px; margin-top: -14px; }
+  .tag { color: #93a8a0; font-size: 14px; margin-top: -12px; }
   form { width: min(620px, 92vw); }
   input {
     width: 100%; height: 52px; border-radius: 26px;
@@ -30,7 +30,20 @@
     padding: 0 24px; font-size: 15px; direction: ltr; text-align: left;
   }
   input:focus { border-color: rgba(52,211,153,.6); box-shadow: 0 0 0 3px rgba(52,211,153,.14); }
-  .tiles { display: grid; grid-template-columns: repeat(6, 88px); gap: 12px; }
+  .engines { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .engines .lbl { color: #6f877e; font-size: 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .chips button {
+    padding: 7px 16px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    color: #cfe0d9; font-size: 13px; font-family: inherit;
+  }
+  .chips button:hover { border-color: rgba(52,211,153,.45); color: #34d399; }
+  .chips button.on {
+    background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.55);
+    color: #34d399; font-weight: 700;
+  }
+  .tiles { display: grid; grid-template-columns: repeat(4, 88px); gap: 12px; }
   a.tile {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     padding: 14px 6px 10px; border-radius: 16px; text-decoration: none;
@@ -45,7 +58,10 @@
   }
   .note { color: #6f877e; font-size: 12px; }
   .note b { color: #34d399; }
-  @media (max-width: 640px) { .tiles { grid-template-columns: repeat(3, 88px); } }
+  @media (max-width: 640px) {
+    .tiles { grid-template-columns: repeat(4, 74px); }
+    .chips button { padding: 6px 12px; font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -57,18 +73,48 @@
     <input id="q" type="text" spellcheck="false" placeholder="ابحث في الإنترنت أو اكتب عنوانًا…" aria-label="البحث" />
   </form>
 
-  <div class="tiles">
-    <a class="tile" href="https://ar.wikipedia.org"><i>📚</i>ويكيبيديا</a>
-    <a class="tile" href="https://www.aljazeera.net"><i>📰</i>الجزيرة</a>
-    <a class="tile" href="https://www.youtube.com"><i>▶️</i>يوتيوب</a>
-    <a class="tile" href="https://x.com"><i>𝕏</i>إكس</a>
-    <a class="tile" href="https://www.facebook.com"><i>👥</i>فيسبوك</a>
-    <a class="tile" href="https://duckduckgo.com"><i>🦆</i>ديك دك جو</a>
+  <div class="engines">
+    <span class="lbl">محرك البحث الافتراضي — اضغط على الاسم للتغيير</span>
+    <div class="chips" id="chips"></div>
   </div>
 
-  <p class="note">🛡 برق يحجب المتعقبات والإعلانات تلقائيًا على مستوى الشبكة — العدّاد أعلى الصفحة يعرض المحجوب</p>
+  <div class="tiles">
+    <a class="tile" href="https://www.google.com"><i>🔎</i>جوجل</a>
+    <a class="tile" href="https://ar.wikipedia.org"><i>📚</i>ويكيبيديا</a>
+    <a class="tile" href="https://www.youtube.com"><i>▶️</i>يوتيوب</a>
+    <a class="tile" href="https://www.aljazeera.net"><i>📰</i>الجزيرة</a>
+    <a class="tile" href="https://x.com"><i>𝕏</i>إكس</a>
+    <a class="tile" href="https://www.facebook.com"><i>👥</i>فيسبوك</a>
+    <a class="tile" href="https://duckduckgo.com"><i>🦆</i>دك دك جو</a>
+    <a class="tile" href="https://www.bing.com"><i>🅑</i>بينج</a>
+  </div>
+
+  <p class="note">🛡 برق يحجب المتعقبات والإعلانات تلقائيًا على مستوى الشبكة — حتى في نتائج البحث</p>
 
   <script>
+    var ENGINES = [
+      { id: "google",     name: "جوجل" },
+      { id: "bing",       name: "بينج" },
+      { id: "duckduckgo", name: "دك دك جو" },
+      { id: "yandex",     name: "ياندكس" },
+      { id: "wikipedia",  name: "ويكيبيديا" }
+    ];
+    var ENGINE = new URLSearchParams(location.search).get("engine") || "duckduckgo";
+
+    var chips = document.getElementById("chips");
+    for (var i = 0; i < ENGINES.length; i++) {
+      (function (en) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = en.name;
+        if (en.id === ENGINE) b.className = "on";
+        b.addEventListener("click", function () {
+          location.href = "https://barq.internal/set-engine?e=" + encodeURIComponent(en.id);
+        });
+        chips.appendChild(b);
+      })(ENGINES[i]);
+    }
+
     document.getElementById("s").addEventListener("submit", function (e) {
       e.preventDefault();
       var v = document.getElementById("q").value.trim();
@@ -76,7 +122,7 @@
       if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(v) && v.indexOf(" ") === -1) {
         location.href = "https://" + v;
       } else {
-        location.href = "https://duckduckgo.com/?q=" + encodeURIComponent(v);
+        location.href = "https://barq.internal/search?e=" + encodeURIComponent(ENGINE) + "&q=" + encodeURIComponent(v);
       }
     });
   </script>

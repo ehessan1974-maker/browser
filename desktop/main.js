@@ -1,5 +1,6 @@
 // برق — متصفح سطح مكتب خفيف بمحرك Chromium
 // شريط أدوات عربي RTL + حظر حقيقي للمتعقبات على مستوى الشبكة
+// 1.1.0 — البحث في كل محركات البحث: جوجل، بينج، دك دك جو، ياندكس، ويكيبيديا
 "use strict";
 
 const {
@@ -10,12 +11,51 @@ const {
   session,
   shell,
 } = require("electron");
+const fs = require("fs");
 const path = require("path");
 const { blockedHosts } = require("./trackers");
 
 const HOME_FILE = path.join(__dirname, "chrome", "home.html");
 const CHROME_H = 56;
-const SEARCH_URL = "https://duckduckgo.com/?q=";
+
+/* ------------------------- محركات البحث المدعومة ------------------------- */
+
+const SEARCH_ENGINES = {
+  google:     { name: "جوجل",      url: "https://www.google.com/search?q=" },
+  bing:       { name: "بينج",      url: "https://www.bing.com/search?q=" },
+  duckduckgo: { name: "دك دك جو",  url: "https://duckduckgo.com/?q=" },
+  yandex:     { name: "ياندكس",    url: "https://yandex.com/search/?text=" },
+  wikipedia:  { name: "ويكيبيديا", url: "https://ar.wikipedia.org/w/index.php?search=" },
+};
+const DEFAULT_ENGINE = "duckduckgo";
+
+let currentEngine = DEFAULT_ENGINE;
+
+function engineFile() {
+  try {
+    return path.join(app.getPath("userData"), "search-engine.json");
+  } catch {
+    return null;
+  }
+}
+
+function loadEngine() {
+  try {
+    const f = engineFile();
+    if (f && fs.existsSync(f)) {
+      const id = JSON.parse(fs.readFileSync(f, "utf8")).engine;
+      if (SEARCH_ENGINES[id]) return id;
+    }
+  } catch {}
+  return DEFAULT_ENGINE;
+}
+
+function saveEngine(id) {
+  try {
+    const f = engineFile();
+    if (f) fs.writeFileSync(f, JSON.stringify({ engine: id }), "utf8");
+  } catch {}
+}
 
 /* ------------------- استقرار الأجهزة القديمة / 32-bit ------------------- */
 
@@ -80,6 +120,7 @@ function navState() {
     canFwd = navHistory(wc).canGoForward();
   }
   const isHome = url.startsWith("file://");
+  const eng = SEARCH_ENGINES[currentEngine] || SEARCH_ENGINES[DEFAULT_ENGINE];
   return {
     url: isHome ? "" : url,
     canBack,
@@ -87,6 +128,8 @@ function navState() {
     blockedCurrent,
     blockedTotal,
     isHome,
+    engine: currentEngine,
+    engineName: eng ? eng.name : "",
   };
 }
 
@@ -99,7 +142,8 @@ function normalizeInput(raw) {
   if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(input) && !input.includes(" ")) {
     return "https://" + input;
   }
-  return SEARCH_URL + encodeURIComponent(input);
+  const eng = SEARCH_ENGINES[currentEngine] || SEARCH_ENGINES[DEFAULT_ENGINE];
+  return eng.url + encodeURIComponent(input);
 }
 
 function navigate(target) {
@@ -108,7 +152,33 @@ function navigate(target) {
 }
 
 function goHome() {
-  if (view) view.webContents.loadFile(HOME_FILE).catch(() => {});
+  if (!view || view.webContents.isDestroyed()) return;
+  view.webContents
+    .loadFile(HOME_FILE, { query: { engine: currentEngine } })
+    .catch(() => {});
+}
+
+// روابط داخلية من صفحة البداية: barq.internal/set-engine و barq.internal/search
+function handleInternal(raw) {
+  try {
+    const u = new URL(raw);
+    if (u.hostname !== "barq.internal") return;
+    const id = u.searchParams.get("e") || currentEngine;
+    const q = u.searchParams.get("q");
+    if (u.pathname === "/set-engine") {
+      if (SEARCH_ENGINES[id]) {
+        currentEngine = id;
+        saveEngine(id);
+      }
+      goHome();
+    } else if (u.pathname === "/search" && q) {
+      const eng =
+        SEARCH_ENGINES[id] ||
+        SEARCH_ENGINES[currentEngine] ||
+        SEARCH_ENGINES[DEFAULT_ENGINE];
+      navigate(eng.url + encodeURIComponent(q));
+    }
+  } catch {}
 }
 
 /* ---------------------------------- setup --------------------------------- */
@@ -139,8 +209,13 @@ function attachViewEvents() {
     if (/^https?:\/\//i.test(url)) navigate(url);
   });
 
-  // الروابط الخارجية (mailto وغيرها) عبر التطبيق الافتراضي
+  // الروابط الخارجية (mailto وغيرها) عبر التطبيق الافتراضي + روابط برق الداخلية
   wc.on("will-navigate", (e, url) => {
+    if (/^https:\/\/barq\.internal\//i.test(url)) {
+      e.preventDefault();
+      handleInternal(url);
+      return;
+    }
     if (!/^https?:|^file:/i.test(url)) {
       e.preventDefault();
       shell.openExternal(url);
@@ -171,6 +246,9 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    // محرك البحث المحفوظ من الجلسة السابقة
+    currentEngine = loadEngine();
+
     // حظر المتعقبات قبل أي اتصال
     const ses = session.defaultSession;
     ses.webRequest.onBeforeRequest({ urls: ["*://*/*"] }, (details, cb) => {
@@ -244,3 +322,21 @@ ipcMain.on("barq:reload", () => {
 });
 ipcMain.on("barq:home", () => goHome());
 ipcMain.handle("barq:state", () => navState());
+
+/* ------------------------------ محرك البحث -------------------------------- */
+
+ipcMain.on("barq:set-engine", (_e, id) => {
+  if (SEARCH_ENGINES[id]) {
+    currentEngine = id;
+    saveEngine(id);
+    pushStats();
+  }
+});
+
+ipcMain.handle("barq:engines", () => ({
+  current: currentEngine,
+  list: Object.keys(SEARCH_ENGINES).map((id) => ({
+    id,
+    name: SEARCH_ENGINES[id].name,
+  })),
+}));

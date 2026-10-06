@@ -24,11 +24,11 @@ jobs:
           - os: macos-latest
             target: mac
             artifact: Barq-macOS
-            artifact_path: "desktop/dist/Barq-1.0.0.dmg"
+            artifact_path: "desktop/dist/Barq-*.dmg"
           - os: ubuntu-latest
             target: linux
             artifact: Barq-Linux
-            artifact_path: "desktop/dist/Barq-1.0.0.AppImage"
+            artifact_path: "desktop/dist/Barq-*.AppImage"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
