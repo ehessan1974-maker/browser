@@ -505,3 +505,17 @@ Stage Summary:
 - SQL Server 2005 بكل مكوناته الستة أزيل بنجاح
 - نسخة احتياطية دائمة: D:\SQL_BACKUP\MSSQL.1 (لإعادة تركيب قواعد المستخدم على SQL حديث لاحقاً إن طُلب)
 - المتبقي: إعادة تشغيل → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة التفعيل
+
+---
+Task ID: SFC-REPAIRED-1
+Agent: orchestrator (Z.ai Code)
+Task: sfc /scannow بعد الإصلاح — نجح ✅
+
+Work Log:
+- sc query MSSQL$SQLEXPRESS → "does not exist as an installed service" ✅ (خدمة SQL أزيلت كلياً)
+- sfc /scannow (بعد إعادة التشغيل) → "Windows Resource Protection found corrupt files and successfully repaired them."
+- مقارنة تاريخية: قبل الإصلاح كانت النتيجة "unable to fix some of them" — التحوّل نتيجة RestoreHealth بالمصدر النظيف 19045.7727
+
+Stage Summary:
+- أول إصلاح ناجح كامل لملفات النظام منذ بدء الأزمة
+- متبقٍ للتأكيد: تشغيلة sfc ثانية يجب أن تطلع "no integrity violations" → ثم تشغيل برق → 🔔 تذكير إعادة التفعيل
