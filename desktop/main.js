@@ -1,6 +1,7 @@
 // برق — متصفح سطح مكتب خفيف بمحرك Chromium
 // شريط أدوات عربي RTL + حظر حقيقي للمتعقبات على مستوى الشبكة
 // 1.1.0 — البحث في كل محركات البحث: جوجل، بينج، دك دك جو، ياندكس، ويكيبيديا
+// 1.2.0 — سجل بحث + مفضلة بنجمة (تخزين محلي JSON في userData)
 "use strict";
 
 const {
@@ -55,6 +56,133 @@ function saveEngine(id) {
     const f = engineFile();
     if (f) fs.writeFileSync(f, JSON.stringify({ engine: id }), "utf8");
   } catch {}
+}
+
+/* ---------------------- سجل البحث والمفضلة (1.2.0) ---------------------- */
+
+const SEARCH_HISTORY_MAX = 300;
+const BOOKMARKS_MAX = 500;
+const PANEL_H = 300;
+
+let searchHistory = []; // { q, engine, t }
+let bookmarks = [];     // { url, title, t }
+let panelOpen = false;
+
+function dataFile(name) {
+  try {
+    return path.join(app.getPath("userData"), name);
+  } catch {
+    return null;
+  }
+}
+
+function readJson(name, fallback) {
+  try {
+    const f = dataFile(name);
+    if (f && fs.existsSync(f)) {
+      const v = JSON.parse(fs.readFileSync(f, "utf8"));
+      if (Array.isArray(v)) return v;
+    }
+  } catch {}
+  return fallback;
+}
+
+function writeJson(name, value) {
+  try {
+    const f = dataFile(name);
+    if (f) fs.writeFileSync(f, JSON.stringify(value), "utf8");
+  } catch {}
+}
+
+// هل هذا رابط بحث في أحد المحركات؟ يرجع معرف المحرك أو null
+function engineIdFromUrl(url) {
+  for (const id in SEARCH_ENGINES) {
+    if (url.startsWith(SEARCH_ENGINES[id].url)) return id;
+  }
+  return null;
+}
+
+function addSearchEntry(q, engineId) {
+  q = (q || "").trim().slice(0, 300);
+  if (!q) return;
+  const t = Date.now();
+  const last = searchHistory[0];
+  if (last && last.q === q && t - last.t < 15000) {
+    last.t = t; // نفس البحث الحديث يُحدّث وقته فقط — بلا تكرار
+  } else {
+    searchHistory.unshift({ q, engine: engineId || currentEngine, t });
+    if (searchHistory.length > SEARCH_HISTORY_MAX) {
+      searchHistory.length = SEARCH_HISTORY_MAX;
+    }
+  }
+  writeJson("search-history.json", searchHistory);
+}
+
+function logSearchIfAny(raw, url) {
+  const engId = engineIdFromUrl(url);
+  if (!engId) return;
+  const eng = SEARCH_ENGINES[engId];
+  let q = "";
+  try {
+    q = decodeURIComponent(url.slice(eng.url.length));
+  } catch {
+    q = "";
+  }
+  if (!q && typeof raw === "string") q = raw.trim();
+  addSearchEntry(q, engId);
+}
+
+function isBookmarked(url) {
+  return bookmarks.some((b) => b.url === url);
+}
+
+function toggleBookmark() {
+  if (!view || view.webContents.isDestroyed()) return { ok: false };
+  const url = view.webContents.getURL() || "";
+  if (!url || url.startsWith("file://") || /^https:\/\/barq\.internal\//i.test(url)) {
+    return { ok: false };
+  }
+  const idx = bookmarks.findIndex((b) => b.url === url);
+  let starred;
+  if (idx >= 0) {
+    bookmarks.splice(idx, 1);
+    starred = false;
+  } else {
+    const title = (view.webContents.getTitle() || url).slice(0, 200);
+    bookmarks.unshift({ url, title, t: Date.now() });
+    if (bookmarks.length > BOOKMARKS_MAX) bookmarks.length = BOOKMARKS_MAX;
+    starred = true;
+  }
+  writeJson("bookmarks.json", bookmarks);
+  pushStats();
+  return { ok: true, starred };
+}
+
+function removeBookmark(url) {
+  const n = bookmarks.length;
+  bookmarks = bookmarks.filter((b) => b.url !== url);
+  if (bookmarks.length !== n) {
+    writeJson("bookmarks.json", bookmarks);
+    pushStats();
+  }
+}
+
+// فتح/غلق اللوحتين = تحريك حدود العرض، واللوحة نفسها مرسومة في واجهة الشريط
+function setPanel(open) {
+  const v = !!open;
+  if (v !== panelOpen) {
+    panelOpen = v;
+    layout();
+  }
+}
+
+function closePanel() {
+  if (!panelOpen) return;
+  panelOpen = false;
+  layout();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("barq:panels-closed");
+  }
 }
 
 /* ------------------- استقرار الأجهزة القديمة / 32-bit ------------------- */
@@ -121,6 +249,10 @@ function navState() {
   }
   const isHome = url.startsWith("file://");
   const eng = SEARCH_ENGINES[currentEngine] || SEARCH_ENGINES[DEFAULT_ENGINE];
+  let title = "";
+  if (view && !view.webContents.isDestroyed()) {
+    title = view.webContents.getTitle() || "";
+  }
   return {
     url: isHome ? "" : url,
     canBack,
@@ -130,6 +262,8 @@ function navState() {
     isHome,
     engine: currentEngine,
     engineName: eng ? eng.name : "",
+    title,
+    starred: !isHome && !!url && isBookmarked(url),
   };
 }
 
@@ -148,11 +282,13 @@ function normalizeInput(raw) {
 
 function navigate(target) {
   if (!view || !target) return;
+  closePanel();
   view.webContents.loadURL(target).catch(() => {});
 }
 
 function goHome() {
   if (!view || view.webContents.isDestroyed()) return;
+  closePanel();
   view.webContents
     .loadFile(HOME_FILE, { query: { engine: currentEngine } })
     .catch(() => {});
@@ -176,6 +312,7 @@ function handleInternal(raw) {
         SEARCH_ENGINES[id] ||
         SEARCH_ENGINES[currentEngine] ||
         SEARCH_ENGINES[DEFAULT_ENGINE];
+      addSearchEntry(q, SEARCH_ENGINES[id] ? id : null);
       navigate(eng.url + encodeURIComponent(q));
     }
   } catch {}
@@ -192,6 +329,8 @@ function attachViewEvents() {
   });
   wc.on("did-navigate-in-page", pushStats);
   wc.on("did-finish-load", pushStats);
+  // عنوان الصفحة يحدّث النجمة والحالة (النجمة تُسجل بعنوان حقيقي)
+  wc.on("page-title-updated", pushStats);
 
   // النوافذ المنبثقة تُفتح داخل نفس العرض — لا نوافذ عشوائية
   wc.setWindowOpenHandler(({ url }) => {
@@ -246,8 +385,10 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
-    // محرك البحث المحفوظ من الجلسة السابقة
+    // محرك البحث + سجل البحث + المفضلة المحفوظة من الجلسة السابقة
     currentEngine = loadEngine();
+    searchHistory = readJson("search-history.json", []);
+    bookmarks = readJson("bookmarks.json", []);
 
     // حظر المتعقبات قبل أي اتصال
     const ses = session.defaultSession;
@@ -303,7 +444,10 @@ app.on("window-all-closed", () => {
 
 ipcMain.on("barq:navigate", (_e, raw) => {
   const url = normalizeInput(raw);
-  if (url) navigate(url);
+  if (url) {
+    logSearchIfAny(typeof raw === "string" ? raw : "", url);
+    navigate(url);
+  }
 });
 ipcMain.on("barq:back", () => {
   if (view && !view.webContents.isDestroyed()) {
@@ -340,3 +484,30 @@ ipcMain.handle("barq:engines", () => ({
     name: SEARCH_ENGINES[id].name,
   })),
 }));
+
+/* ---------------------- سجل البحث والمفضلة: IPC ---------------------- */
+
+ipcMain.on("barq:panel", (_e, open) => setPanel(open));
+
+ipcMain.handle("barq:get-history", () => ({
+  list: searchHistory.slice(0, 150),
+}));
+
+ipcMain.on("barq:remove-search", (_e, t) => {
+  const n = searchHistory.length;
+  searchHistory = searchHistory.filter((x) => x.t !== t);
+  if (searchHistory.length !== n) {
+    writeJson("search-history.json", searchHistory);
+  }
+});
+
+ipcMain.on("barq:clear-history", () => {
+  searchHistory = [];
+  writeJson("search-history.json", searchHistory);
+});
+
+ipcMain.handle("barq:get-bookmarks", () => ({ list: bookmarks }));
+
+ipcMain.handle("barq:star", () => toggleBookmark());
+
+ipcMain.on("barq:remove-bookmark", (_e, url) => removeBookmark(url));

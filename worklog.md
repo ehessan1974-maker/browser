@@ -970,3 +970,24 @@ Work Log:
 
 Stage Summary:
 - المستخدم استعاد قدرة الطوارئ الأعمى بمفاتيح حقيقية هذه المرة (الفكرة نفسها بلا سكربت إقامة أو خلفيات أو منطق GPU خطير)
+
+---
+Task ID: BARQ-1.2.0
+Agent: orchestrator (Z.ai Code)
+Task: طلب المستخدم - ميزتان جديدتان لبرق: سجل بحث + مفضلة بنجمة (نهاية تجميد v1.1.0 بطلب صريح)
+
+Work Log:
+- قراءة كامل الكود: desktop/main.js (عملية واحدة + BrowserView + IPC + حظر متعقبات + 5 محركات) و chrome/{ui.html,ui.js,preload.js,home.html} و آلية تسليم 1.1.0 (سكربت بـ payload base64 + SHA256 -> resources\app يتقدم على app.asar)
+- main.js: إضافة مخزن JSON عام (readJson/writeJson في userData) + search-history.json (حد 300، دمج تكرار <15ث) + bookmarks.json (حد 500) + logSearchIfAny (يكتشف روابط المحركات من normalizeInput ويفك q) + تسجيل بحث صفحة البداية عبر handleInternal/search + toggleBookmark/removeBookmark/isBookmarked + navState يضيف title و starred + page-title-updated -> pushStats + نظام اللوحات: panelOpen + PANEL_H=300 (layout يزيح BrowserView) + closePanel تلقائياً عند أي تنقل + IPC: barq:panel/get-history/remove-search/clear-history/get-bookmarks/star/remove-bookmark
+- ui.html: شريط .bar منفصل + زر نجمة (#star) وزر ساعة (#hist) + لوحتا .panel (position absolute top:57 داخل نافذة الشريط، تظهران بعد أن يزيح main الـ BrowserView) بقوائم قابلة للتمرير وحذف فردي ومسح كامل + حالة فارغة + نجمة مضاءة star-on (ذهبي #f5b83d)
+- ui.js: render يعرض حالة النجمة ويعطلها بالبيت + showPanel/hidePanels (مع onPanelsClosed من main) + renderHistory/renderBookmarks مع esc() لكل نص + fmtTime (اليوم/أمس/تاريخ) + dblclick على النجمة يفتح لوحة المفضلة
+- preload.js: 8 دوال جديدة عبر contextBridge - package.json: version 1.2.0
+- التحقق: node --check على الملفات الأربعة OK + بناء barq120.zip (15,181B, SHA256=0fb42f0d39109a31dfa4a18d287177275f4f53e8b653962403d3429219f46809)
+- إصلاح حاسم أثناء التغليف: آخر سطر base64 كان بلا newline فالتصقت قافلة here-string '@ به -> السكربت كان سينكسر عند المستخدم؛ أُعيد التوليد وتحقق فك التشفير العكسي (extracted.zip == barq120.zip byte-for-byte)
+- أرشفة: download/barq-1.2.0/{Barq-Upgrade-1.2.0.ps1 (310 سطر, 26.8KB), barq120.zip} + خطة C: public/downloads/barq120.zip
+- السكربت: نفس هيكل 1.1.0 المجرب ([1] اغلاق برق -> [2] ايجاد مجلد -> probe صلاحيات -> [4] SHA256 -> [5] expand لـ resources\app -> [6] asar.bak -> [7] verify version=1.2.0+BOOKMARKS_MAX+panel-history -> [8] تشغيل)
+
+Stage Summary:
+- برق 1.2.0 جاهز بالكامل ومؤكد حزمياً: سجل بحث تلقائي (شريط العنوان + بحث صفحة البداية) + مفضلة بنجمة مع لوحتين منسدلتين
+- التسليم: سكربت اللصق (مجرّب ميدانياً من 1.1.0) + خطة C تنزيل مباشر من البريفيو /downloads/barq120.zip
+- بيانات المستخدم آمنة: search-engine.json القديم يبقى في نفس userData (%APPDATA%\Barq)

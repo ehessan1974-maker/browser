@@ -10,10 +10,12 @@
   body {
     font-family: "Segoe UI", Tahoma, sans-serif;
     background: #0c1210; color: #e7f0ec;
+    position: relative; user-select: none;
+  }
+  .bar {
     display: flex; align-items: center; gap: 8px;
     height: 56px; padding: 0 10px;
     border-bottom: 1px solid rgba(255,255,255,.08);
-    user-select: none;
   }
   button {
     flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
@@ -23,6 +25,9 @@
   button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
   button:disabled { opacity: .35; cursor: default; }
   button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* النجمة وهي مضاءة */
+  button.star-on { color: #f5b83d; border-color: rgba(245,184,61,.5); background: rgba(245,184,61,.12); }
+  button.star-on svg { fill: currentColor; }
   select {
     flex: 0 0 auto; height: 34px; border-radius: 10px;
     border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35);
@@ -49,35 +54,103 @@
   }
   .shield svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
   .logo { flex: 0 0 auto; font-weight: 800; font-size: 15px; color: #34d399; padding: 0 2px; }
+
+  /* اللوحتان المنسدلتان: سجل البحث + المفضلة */
+  .panel {
+    position: absolute; top: 57px; right: 0; left: 0; height: 299px;
+    background: #0e1714; border-bottom: 1px solid rgba(255,255,255,.12);
+    display: none; flex-direction: column; gap: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.55);
+  }
+  .panel.open { display: flex; }
+  .panel-head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .panel-head b { font-size: 13.5px; color: #34d399; }
+  .panel-head .grow { flex: 1; }
+  .panel-head button.act {
+    width: auto; height: 28px; padding: 0 12px; font-size: 12px; border-radius: 8px;
+    font-family: inherit;
+  }
+  .panel-head button.act:hover { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+  .plist {
+    flex: 1 1 auto; overflow-y: auto;
+    border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
+    background: rgba(0,0,0,.25);
+  }
+  .row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .row:hover { background: rgba(52,211,153,.08); }
+  .row:last-child { border-bottom: none; }
+  .row .main { flex: 1 1 auto; min-width: 0; }
+  .row .t1 {
+    font-size: 13px; color: #e7f0ec;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row .t2 {
+    font-size: 11px; color: #6f877e; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    direction: ltr; text-align: left;
+  }
+  .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; }
+  .empty { color: #6f877e; font-size: 12.5px; text-align: center; padding: 26px 12px; }
 </style>
 </head>
 <body>
-  <span class="logo">⚡ برق</span>
+  <div class="bar">
+    <span class="logo">⚡ برق</span>
 
-  <button id="back" title="رجوع" aria-label="رجوع">
-    <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-  </button>
-  <button id="fwd" title="تقدّم" aria-label="تقدّم">
-    <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-  </button>
-  <button id="reload" title="تحديث" aria-label="تحديث">
-    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></svg>
-  </button>
-  <button id="home" title="صفحة البداية" aria-label="صفحة البداية">
-    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
-  </button>
+    <button id="back" title="رجوع" aria-label="رجوع">
+      <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button id="fwd" title="تقدّم" aria-label="تقدّم">
+      <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button id="reload" title="تحديث" aria-label="تحديث">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></svg>
+    </button>
+    <button id="home" title="صفحة البداية" aria-label="صفحة البداية">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
+    </button>
 
-  <select id="engine" title="محرك البحث الافتراضي" aria-label="محرك البحث"></select>
+    <button id="star" title="مفضلة — احفظ/أزل الصفحة الحالية" aria-label="مفضلة">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+    </button>
+    <button id="hist" title="سجل البحث" aria-label="سجل البحث">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
+    </button>
 
-  <form id="go">
-    <input id="url" type="text" spellcheck="false"
-      placeholder="اكتب عنوانًا أو ابحث… مثال: wikipedia.org" aria-label="العنوان أو البحث" />
-  </form>
+    <select id="engine" title="محرك البحث الافتراضي" aria-label="محرك البحث"></select>
 
-  <span class="shield" id="shield" title="متعقّبات محجوبة في هذه الصفحة / الجلسة">
-    <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
-    <span id="count">0</span>
-  </span>
+    <form id="go">
+      <input id="url" type="text" spellcheck="false"
+        placeholder="اكتب عنوانًا أو ابحث… مثال: wikipedia.org" aria-label="العنوان أو البحث" />
+    </form>
+
+    <span class="shield" id="shield" title="متعقّبات محجوبة في هذه الصفحة / الجلسة">
+      <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+      <span id="count">0</span>
+    </span>
+  </div>
+
+  <div class="panel" id="panel-history" role="region" aria-label="سجل البحث">
+    <div class="panel-head">
+      <b>🕘 سجل البحث</b>
+      <span class="grow"></span>
+      <button class="act" id="clear-history" title="حذف كل السجل">مسح الكل</button>
+    </div>
+    <div class="plist" id="history-list"></div>
+  </div>
+
+  <div class="panel" id="panel-bookmarks" role="region" aria-label="المفضلة">
+    <div class="panel-head">
+      <b>★ المفضلة</b>
+      <span class="grow"></span>
+    </div>
+    <div class="plist" id="bookmark-list"></div>
+  </div>
 
   <script src="ui.js"></script>
 </body>
