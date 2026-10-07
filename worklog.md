@@ -793,3 +793,19 @@ Stage Summary:
 - التعريف وصل السقف الأعلى الممكن (2702/2013) والحزم القديمة 2009 أزيلت نهائياً - جذر 0x116 عولج
 - المتبقي فقط: إسكات الرأس الثاني الفاشل (v5: محاولة تشغيل ثم تعطيل إن لزم) ثم اختبار برق + يوتيوب 10 دقائق
 - آخر خط بديل إن رجع 0x116: Basic Display Adapter (كما وعدنا)
+
+---
+Task ID: GPU-DRIVER-8
+Agent: orchestrator (Z.ai Code)
+Task: تنفيذ v5 عند المستخدم - الرأس الفاشل انعطل بنجاح، الشاشة بقيت شغالة - تبقى ريستارت + فحص نهائي
+
+Work Log:
+- المستخدم نفذ v5: [0] admin OK -> [1] الجهاز الفاشل: PCI\VEN_8086&DEV_2A42&SUBSYS_FF671179&REV_07 (Toshiba subsys) مشكلته CM_PROB_FAILED_POST_START -> [2] pnputil /restart-device: "Device restarted successfully" لكن الجهاز رجع Error (متوقع - فشل عتادي/BIOS) -> [3] pnputil /disable-device: "Device disabled successfully" -> [4] الحالة النهائية: سطر OK|CM_PROB_NONE + سطر Error|CM_PROB_DISABLED
+- نقطة مهمة مكشوفة من الـ InstanceId: DEV_2A42 هو وظيفة العرض الأساسية للشريحة (2.0) - الشريحة بتنعرض نفسها بوظيفتين PnP لنفس السيليكون، والوظيفة الفاشلة كانت بتفشل post-start عالبيوس القديم منذ 2009
+- الدليل الميداني الحاسم: الشاشة ما انقطعت أبداً بعد التعطيل - الوظيفة السليمة (نفس السيليكون) عم تسوق العرض عبر درايفر Intel WDDM 1.1 2702
+- سلّمت للمستخدم شبكة أمان استباقية: إن هبطت الشاشة بعد الريستارت لوضع Basic/دقة منخفضة -> أمر enable بسطر واحد: Get-PnpDevice -Class Display | Where-Object { $_.Problem -eq 'CM_PROB_DISABLED' } | ForEach-Object { pnputil /enable-device "$($_.InstanceId)" } (أو Device Manager Right-click Enable)
+
+Stage Summary:
+- الملف شبه مقفل: التعريف بالسقف الأعلى (2702)، حزم 2009 محذوفة، الرأس الفاشل معطل نهائياً بشكل دائم (persistent)
+- المتبقي: إعادة تشغيل + بلوك فحص (متوقع OK + Disabled) + اختبار برق ويوتيوب 10 دقائق
+- خطوط الشبكة الأمنية: أمر enable للترجيع الفوري / نقطة استعادة v3 / Basic Display Adapter كخطة أخيرة
