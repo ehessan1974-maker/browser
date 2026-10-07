@@ -869,3 +869,16 @@ Work Log:
 Stage Summary:
 - مساحة متوقعة للتحرير: ~9.5GB مع بقاء الإيزو 4.79GB + العدة الصغيرة functional
 - لا يزال معلقاً من المستخدم: اختبار برق + يوتيوب 10 دقائق، وتنظيف Desktop/Downloads إن لم ينفذ بعد
+
+---
+Task ID: CLEANUP-4
+Agent: orchestrator (Z.ai Code)
+Task: سؤال عن BarqCenter.bat و BarqControl.ps1 على سطح المكتب - إلهن لزوم؟
+
+Work Log:
+- المستخدم عرض ملفين: BarqCenter.bat ومحتواه يستدعي PowerShell بـ -WindowStyle Hidden -File BarqControl.ps1 (غلاف تشغيل سكربت مخفي) - ثنائية من مراحل سابقة لمشروع برق
+- محتوى BarqControl.ps1 غير معروف لي في السياق الحالي -> قبل قرار حذف/إبقاء سلّمت بلوك طباعة محتوى الملفين (بلا admin)
+- قاعدة القرار الأولية: برق يعمل من أيقونته بدون هذين -> إن كانا أداة تحكم ي still يستخدمها المستخدم تبقى، وإلا حذف آمن بعد الاطلاع على المحتوى
+
+Stage Summary:
+- القرار معلق على عرض محتوى BarqControl.ps1 (ماذا يفعل بالضبط) ثم قرار مشترك
