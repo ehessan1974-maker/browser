@@ -672,3 +672,22 @@ Work Log:
 Stage Summary:
 - برق 1.1.0 يعمل من الأيقونة مباشرة — منظومة التشغيل المساعد أصبحت ترفاً لا ضرورة
 - الملف المفتوح الوحيد تقنياً: تعريف GPU (خطوة اختيارية) + وعد إعادة تفعيل Controlled Folder Access (جاهز متى ما طلب المستخدم)
+
+---
+Task ID: GPU-DRIVER-1
+Agent: orchestrator (Z.ai Code)
+Task: تحليل نتيجة Win32_VideoController — تحديد التعريف وبناء خطة تحديث موثقة
+
+Work Log:
+- نتيجة الفحص: Mobile Intel(R) 4 Series Express Chipset Family ×2، DriverVersion 8.15.10.1883 بتاريخ 8/27/2009، أحدهما Status=Error — دليل قاطع: تعريف عمره 17 سنة (من أيام ويندوز 7، انتقل عبر الترقيات) بحالة تلف ظاهرة = مصدر 0x116 المؤكد
+- بحث المصادر: downloadmirror.intel.com ميت (403) — إنتل حذفت الإرث؛ Microsoft Update Catalog فيه التعريف
+- استخراج GUID 286dcaaf-9a0f-48e1-9196-85b399e17832 (أحدث إدخال: 10/12/2011) عبر Search.aspx + DownloadDialog.aspx POST → رابط مباشر catalog.s.download.windowsupdate.com/.../20541202_69255649c39c0b2eeaa72014f7cfb1c4fd673ae1.cab
+- تنزيل الـ cab في الساندبوكس (20,572,304 بايت، SHA256 c87b3cda...a3ff7d0) وفك ضغطه بـ libarchive-c (LZX) → فحص INF: DriverVer=10/13/2011,8.15.10.2555، أقسام NTx86.5.1/6.0/6.2 (32-بت حتى نمط ويندوز 8)، Device IDs 2A42/2A43 مطابقة للكرت، ig4icd32.dll بعمارة i386 — كل الفحوصات مطابقة
+- ملاحظة صراحة: التعريف النهائي المطلق 2702 (2013) غير موجود بالكاتالوج ومصادره اليوم غير موثوقة → اعتماد 2555 (المصدر الموقّع من مايكروسوفت) كهدف
+- تحضير بلوك تثبيت كامل: فحص صلاحيات admin → Enable-ComputerRestore + Checkpoint-Computer → تنزيل من رابط مايكروسوفت المباشر → تحقق SHA256 → expand.exe (مدمج بالويندوز) → pnputil /add-driver /install → توجيه إعادة تشغيل ثم أمر الفحص نفسه
+- نسخة احتياطية: download/intel-gpu/20541202_intel-4series-2555-x86.cab
+
+Stage Summary:
+- الجذر مؤكد: تعريف 2009 بحالة Error — التحديث المخطط: 1883 (2009) → 2555 (2011، موقّع من مايكروسوفت، 32-بت، مطابق هاردوير)
+- خطة الطوارئ جاهزة إذا رفض pnputil: Have-Disk يدوي من Desktop\IntelGFX2555\kit51500.inf
+- خطة بديلة أخيرة إن استمر 0x116 بعد التحديث: Basic Display Adapter (إزالة نهائية لمعادلة TDR)
