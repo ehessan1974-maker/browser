@@ -2,6 +2,7 @@
 // شريط أدوات عربي RTL + حظر حقيقي للمتعقبات على مستوى الشبكة
 // 1.1.0 — البحث في كل محركات البحث: جوجل، بينج، دك دك جو، ياندكس، ويكيبيديا
 // 1.2.0 — سجل بحث + مفضلة بنجمة (تخزين محلي JSON في userData)
+// 1.2.1 — إصلاح حاسم: اللوحتان كانتا مخفيتين خلف BrowserView — layout() ينزل العرض عند فتح اللوحة
 "use strict";
 
 const {
@@ -325,6 +326,7 @@ function attachViewEvents() {
 
   wc.on("did-navigate", () => {
     blockedCurrent = 0;
+    closePanel(); // أي تنقل حتى بالنقر داخل الصفحة نفسها يغلق اللوحة ويعيد العرض لوضعه
     pushStats();
   });
   wc.on("did-navigate-in-page", pushStats);
@@ -365,11 +367,14 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
+  // إصلاح 1.2.1: عند فتح لوحة (سجل/مفضلة) يُنزَل العرض تحت اللوحة حتى تظهر فعلاً —
+  // BrowserView يرسم فوق محتوى النافذة دائماً، فبدون هذه الإزاحة تبقى اللوحة مخفية خلفه
+  const top = CHROME_H + (panelOpen ? PANEL_H : 0);
   view.setBounds({
     x: 0,
-    y: CHROME_H,
+    y: top,
     width: w,
-    height: Math.max(0, h - CHROME_H),
+    height: Math.max(0, h - top),
   });
 }
 

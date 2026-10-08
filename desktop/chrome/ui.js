@@ -1,5 +1,6 @@
 // برق — منطق شريط الأدوات (يعمل بمعزل تام عبر contextIsolation)
 // 1.2.0 — زر نجمة للمفضلة + لوحة سجل البحث
+// 1.2.1 — زر مخصص لقائمة المفضلة (بدل النقر المزدوج على النجمة)
 "use strict";
 
 const el = {
@@ -8,6 +9,7 @@ const el = {
   reload: document.getElementById("reload"),
   home: document.getElementById("home"),
   star: document.getElementById("star"),
+  marks: document.getElementById("marks"),
   hist: document.getElementById("hist"),
   form: document.getElementById("go"),
   url: document.getElementById("url"),
@@ -200,7 +202,7 @@ function renderBookmarks() {
 }
 
 el.hist.addEventListener("click", () => showPanel("history"));
-el.star.addEventListener("dblclick", () => showPanel("bookmarks"));
+el.marks.addEventListener("click", () => showPanel("bookmarks"));
 el.clearHistory.addEventListener("click", () => {
   window.barq.clearHistory();
   renderHistory();
