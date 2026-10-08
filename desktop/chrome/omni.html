@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>برق • بحث شامل</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #12241d 0%, #0c1210 60%);
+    color: #e7f0ec; min-height: 100vh; padding: 26px 18px 60px;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h1 { font-size: 24px; font-weight: 800; color: #34d399; }
+  .sub { color: #93a8a0; font-size: 13px; }
+  form { display: flex; gap: 8px; margin: 18px 0 14px; }
+  input {
+    flex: 1; height: 50px; border-radius: 25px;
+    border: 1px solid rgba(255,255,255,.12); outline: none;
+    background: rgba(0,0,0,.4); color: #e7f0ec;
+    padding: 0 22px; font-size: 15px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+  }
+  input:focus { border-color: rgba(52,211,153,.6); box-shadow: 0 0 0 3px rgba(52,211,153,.14); }
+  form button {
+    height: 50px; padding: 0 26px; border-radius: 25px; cursor: pointer;
+    border: 1px solid rgba(52,211,153,.5); background: rgba(52,211,153,.15);
+    color: #34d399; font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  form button:active { transform: translateY(1px) scale(.95); background: rgba(52,211,153,.35); }
+  .open-row { color: #93a8a0; font-size: 13px; margin-bottom: 20px; line-height: 2; }
+  .open-row a {
+    display: inline-block; margin: 0 2px; padding: 4px 12px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    color: #cfe0d9; font-size: 12.5px; text-decoration: none;
+  }
+  .open-row a:hover { border-color: rgba(52,211,153,.45); color: #34d399; }
+  .open-row a:active { transform: translateY(1px); background: rgba(52,211,153,.25); }
+  section {
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 16px;
+  }
+  section h2 { font-size: 15px; color: #34d399; margin-bottom: 10px; }
+  .st { color: #6f877e; font-size: 13px; padding: 6px 0; }
+  .item { padding: 9px 0; border-bottom: 1px dashed rgba(255,255,255,.06); }
+  .item:last-child { border-bottom: none; }
+  .item a { color: #e7f0ec; font-size: 15px; font-weight: 600; text-decoration: none; word-break: break-word; }
+  .item a:hover { color: #34d399; text-decoration: underline; }
+  .item .u { color: #5f7a70; font-size: 11.5px; direction: ltr; display: block; text-align: left; margin-top: 2px; }
+  .item .s { color: #a9bdb5; font-size: 13px; margin-top: 4px; line-height: 1.7; }
+  .empty { color: #6f877e; font-size: 13px; }
+  .empty a { color: #34d399; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>⚡ بحث شامل</h1>
+      <span class="sub">استعلام واحد — عدة محركات في نفس اللحظة</span>
+    </div>
+
+    <form id="sf">
+      <input id="q" type="text" spellcheck="false" placeholder="اكتب ما تبحث عنه…" aria-label="البحث الشامل" />
+      <button type="submit">🔍 ابحث</button>
+    </form>
+
+    <div class="open-row" id="open-row">
+      افتح نفس البحث فوراً في:
+      <a data-e="google">🔎 جوجل</a>
+      <a data-e="youtube">▶️ يوتيوب</a>
+      <a data-e="x">𝕏 إكس</a>
+      <a data-e="maps">🗺 خرائط جوجل</a>
+      <a data-e="yandex">🌐 ياندكس</a>
+      <a data-e="bing">🅑 بينج</a>
+      <a data-e="duckduckgo">🦆 دك دك جو</a>
+      <a data-e="wikipedia">📚 ويكيبيديا</a>
+    </div>
+
+    <section id="sec-wiki">
+      <h2>📚 ويكيبيديا — نتائج حية</h2>
+      <div class="st" id="st-wiki">جارٍ البحث…</div>
+      <div class="list" id="list-wiki"></div>
+    </section>
+
+    <section id="sec-ddg">
+      <h2>🦆 دك دك جو — نتائج حية</h2>
+      <div class="st" id="st-ddg">جارٍ البحث…</div>
+      <div class="list" id="list-ddg"></div>
+    </section>
+
+    <section id="sec-bing">
+      <h2>🅑 بينج — نتائج حية</h2>
+      <div class="st" id="st-bing">جارٍ البحث…</div>
+      <div class="list" id="list-bing"></div>
+    </section>
+  </div>
+
+  <script>
+    "use strict";
+    var Q = (new URLSearchParams(location.search).get("q") || "").trim();
+    var NAMES = {
+      google: "جوجل", youtube: "يوتيوب", x: "إكس", maps: "خرائط جوجل",
+      yandex: "ياندكس", bing: "بينج", duckduckgo: "دك دك جو", wikipedia: "ويكيبيديا"
+    };
+
+    document.getElementById("q").value = Q;
+    document.getElementById("q").focus();
+
+    // أزرار «افتح نفس البحث في» — تمرر الاستعلام للمحرك المختار
+    var row = document.getElementById("open-row");
+    var links = row.getElementsByTagName("a");
+    for (var i = 0; i < links.length; i++) {
+      (function (a) {
+        var id = a.getAttribute("data-e");
+        a.href = "https://barq.internal/search?e=" + encodeURIComponent(id) +
+                 (Q ? "&q=" + encodeURIComponent(Q) : "");
+        a.target = "_self";
+        a.title = Q ? "ابحث عن: " + Q : "اختر هذا المحرك";
+      })(links[i]);
+    }
+
+    document.getElementById("sf").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var v = document.getElementById("q").value.trim();
+      location.href = "https://barq.internal/omni" + (v ? "?q=" + encodeURIComponent(v) : "");
+    });
+
+    function esc(s) {
+      return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function render(sec, st, list, results, engineId) {
+      var stEl = document.getElementById(st);
+      var listEl = document.getElementById(list);
+      if (results && results.length) {
+        stEl.textContent = results.length + " نتيجة";
+        var html = "";
+        for (var i = 0; i < results.length; i++) {
+          var r = results[i];
+          html += '<div class="item">' +
+            '<a href="' + esc(r.u) + '">' + esc(r.t) + "</a>" +
+            '<span class="u">' + esc(r.u.length > 90 ? r.u.slice(0, 90) + "…" : r.u) + "</span>" +
+            (r.s ? '<div class="s">' + esc(r.s) + "</div>" : "") +
+            "</div>";
+        }
+        listEl.innerHTML = html;
+      } else {
+        stEl.textContent = "";
+        listEl.innerHTML = '<div class="empty">تعذّر جلب نتائج هذا المحرك الآن — ' +
+          '<a href="https://barq.internal/search?e=' + engineId +
+          (Q ? "&q=" + encodeURIComponent(Q) : "") + '">افتح نتائج ' +
+          esc(NAMES[engineId] || engineId) + " كاملة</a></div>";
+      }
+    }
+
+    // الاستعلام يذهب للمحركات الثلاثة في نفس اللحظة، وكل قسم يظهر لحظة جهوزه
+    if (Q) {
+      window.omni.wiki(Q).then(function (r) { render("wiki", "st-wiki", "list-wiki", r, "wikipedia"); });
+      window.omni.ddg(Q).then(function (r)  { render("ddg",  "st-ddg",  "list-ddg",  r, "duckduckgo"); });
+      window.omni.bing(Q).then(function (r) { render("bing", "st-bing", "list-bing", r, "bing"); });
+    } else {
+      ["st-wiki", "st-ddg", "st-bing"].forEach(function (id) {
+        document.getElementById(id).textContent = "اكتب ما تبحث عنه في الخانة أعلاه";
+      });
+    }
+  </script>
+</body>
+</html>

@@ -23,6 +23,17 @@
   h1 span { color: #34d399; }
   .tag { color: #93a8a0; font-size: 14px; margin-top: -12px; }
   form { width: min(620px, 92vw); }
+  form .row { display: flex; gap: 8px; }
+  form .row input { flex: 1; }
+  #omni-btn {
+    height: 52px; padding: 0 20px; border-radius: 26px; cursor: pointer;
+    border: 1px solid rgba(52,211,153,.5); background: rgba(52,211,153,.15);
+    color: #34d399; font-size: 14px; font-weight: 700; font-family: inherit;
+    white-space: nowrap;
+    transition: background .06s, transform .05s, border-color .06s;
+  }
+  #omni-btn:hover { background: rgba(52,211,153,.28); }
+  #omni-btn:active { transform: translateY(1px) scale(.94); background: rgba(52,211,153,.4); }
   input {
     width: 100%; height: 52px; border-radius: 26px;
     border: 1px solid rgba(255,255,255,.12); outline: none;
@@ -79,7 +90,10 @@
   <p class="tag">تصفّح أسرع — أخفّ — أكثر خصوصية</p>
 
   <form id="s">
-    <input id="q" type="text" spellcheck="false" placeholder="ابحث في الإنترنت أو اكتب عنوانًا…" aria-label="البحث" />
+    <div class="row">
+      <input id="q" type="text" spellcheck="false" placeholder="ابحث في الإنترنت أو اكتب عنوانًا…" aria-label="البحث" />
+      <button type="button" id="omni-btn" title="ابحث في كل المحركات في نفس اللحظة">🔍 الكل</button>
+    </div>
   </form>
 
   <div class="engines">
@@ -106,7 +120,10 @@
       { id: "bing",       name: "بينج" },
       { id: "duckduckgo", name: "دك دك جو" },
       { id: "yandex",     name: "ياندكس" },
-      { id: "wikipedia",  name: "ويكيبيديا" }
+      { id: "wikipedia",  name: "ويكيبيديا" },
+      { id: "youtube",    name: "يوتيوب" },
+      { id: "x",          name: "إكس (تويتر)" },
+      { id: "maps",       name: "خرائط جوجل" }
     ];
     var ENGINE = new URLSearchParams(location.search).get("engine") || "duckduckgo";
 
@@ -133,6 +150,12 @@
       } else {
         location.href = "https://barq.internal/search?e=" + encodeURIComponent(ENGINE) + "&q=" + encodeURIComponent(v);
       }
+    });
+
+    // 1.3.0 — زر «الكل»: بحث شامل في كل المحركات بنفس اللحظة
+    document.getElementById("omni-btn").addEventListener("click", function () {
+      var v = document.getElementById("q").value.trim();
+      location.href = "https://barq.internal/omni" + (v ? "?q=" + encodeURIComponent(v) : "");
     });
   </script>
 </body>

@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld("barq", {
   onNavState: (cb) => ipcRenderer.on("barq:nav-state", (_e, s) => cb(s)),
   engines: () => ipcRenderer.invoke("barq:engines"),
   setEngine: (id) => ipcRenderer.send("barq:set-engine", id),
+  // 1.3.0 — البحث الشامل: كل المحركات في نفس اللحظة
+  omniOpen: (q) => ipcRenderer.send("barq:omni-open", q),
   // 1.2.0 — سجل البحث والمفضلة
   panel: (name) => ipcRenderer.send("barq:panel", name),
   // 1.2.4 — تبديل جهة اللوحة الجانبية

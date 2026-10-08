@@ -4,6 +4,7 @@
 // 1.2.2 — اللوحتان جانبيتين بنمط كروم + الزر صاحب اللوحة المفتوحة يبقى مضيئاً
 // 1.2.6 — اللوحتان صارتا panel.html (BrowserView مستقل فوق الصفحة):
 //         هنا فقط زرا الساعة/المفضلة يرسلان الطلب، والإضاءة تأتي من main
+// 1.3.0 — زر البحث الشامل: استعلام واحد ← عدة محركات في نفس اللحظة
 "use strict";
 
 const el = {
@@ -18,6 +19,7 @@ const el = {
   url: document.getElementById("url"),
   engine: document.getElementById("engine"),
   count: document.getElementById("count"),
+  omni: document.getElementById("omni"),
 };
 
 let focused = false;
@@ -81,6 +83,13 @@ el.back.addEventListener("click", () => window.barq.back());
 el.fwd.addEventListener("click", () => window.barq.forward());
 el.reload.addEventListener("click", () => window.barq.reload());
 el.home.addEventListener("click", () => window.barq.home());
+
+// 1.3.0 — البحث الشامل: يرسل نص الخانة (إن وجد) لصفحة كل المحركات
+el.omni.addEventListener("click", () => {
+  try {
+    window.barq.omniOpen(el.url.value || "");
+  } catch (e) {}
+});
 
 /* ------------------- النجمة: حفظ/إزالة الصفحة الحالية ------------------- */
 

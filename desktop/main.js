@@ -16,6 +16,11 @@
 // 1.2.8 — النسخة المحمولة الحقيقية: إن وُجد ملف portable.txt بجوار Barq.exe
 //         تصبح كل بيانات المستخدم (مفضلة/سجل/جلسات) بمجلد Data بجواره،
 //         فيشتغل برق من فلاش USB أو أي مجلد بدون تثبيت ومعه ملفاته.
+// 1.3.0 — البحث الشامل: استعلام واحد ← عدة محركات في نفس اللحظة:
+//         نتائج حية مباشرة (ويكيبيديا API + دك دك جو HTML + بينج HTML)
+//         تُجلب من العملية الرئيسية بالتوازي وكل قسم يظهر لحظة جهوزه،
+//         + محركات جديدة: يوتيوب، إكس، خرائط جوجل (المجموع 8)،
+//         + زر «الكل» في الشريط والرئيسية يفتح صفحة البحث الشامل.
 "use strict";
 
 const {
@@ -28,6 +33,7 @@ const {
 } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 const { blockedHosts } = require("./trackers");
 
 /* ------------------------- الوضع المحمول (1.2.8) ------------------------- */
@@ -54,6 +60,9 @@ const SEARCH_ENGINES = {
   duckduckgo: { name: "دك دك جو",  url: "https://duckduckgo.com/?q=" },
   yandex:     { name: "ياندكس",    url: "https://yandex.com/search/?text=" },
   wikipedia:  { name: "ويكيبيديا", url: "https://ar.wikipedia.org/w/index.php?search=" },
+  youtube:    { name: "يوتيوب",    url: "https://www.youtube.com/results?search_query=" },
+  x:          { name: "إكس (تويتر)", url: "https://x.com/search?q=" },
+  maps:       { name: "خرائط جوجل", url: "https://www.google.com/maps/search/" },
 };
 const DEFAULT_ENGINE = "duckduckgo";
 
@@ -159,6 +168,114 @@ function logSearchIfAny(raw, url) {
   }
   if (!q && typeof raw === "string") q = raw.trim();
   addSearchEntry(q, engId);
+}
+
+/* ------------------------- البحث الشامل (1.3.0) ------------------------- */
+// استعلام واحد ← نتائج حية من عدة محركات في نفس اللحظة.
+// جوجل وياندكس يحظران الجلب الآلي وعرض النتائج المضمّن، لذا النتائج الحية
+// المباشرة من: ويكيبيديا (API رسمي) + دك دك جو (نسخة HTML الخالصة)
+// + بينج (HTML)، وبقية المحركات تُفتح بنقرة من أزرار صفحة البحث الشامل.
+
+const OMNI_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
+
+function httpGet(url, cb) {
+  let done = false;
+  const finish = (e, d) => { if (!done) { done = true; cb(e, d); } };
+  const req = https.get(url, {
+    headers: { "User-Agent": OMNI_UA, "Accept-Language": "ar,en;q=0.8" },
+    timeout: 8000,
+  }, (res) => {
+    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+      res.resume();
+      try { httpGet(new URL(res.headers.location, url).toString(), finish); }
+      catch (e2) { finish(e2); }
+      return;
+    }
+    if (res.statusCode !== 200) { res.resume(); finish(new Error("HTTP " + res.statusCode)); return; }
+    let data = "";
+    res.setEncoding("utf8");
+    res.on("data", (c) => { if (data.length < 900000) data += c; });
+    res.on("end", () => finish(null, data));
+    res.on("error", (e2) => finish(e2));
+  });
+  req.on("timeout", () => req.destroy(new Error("timeout")));
+  req.on("error", (e2) => finish(e2));
+}
+
+function stripTags(s) {
+  return String(s || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// روابط دك دك جو التنفيذية: //duckduckgo.com/l/?uddg=<encoded>&rut=...
+function ddgRealUrl(u) {
+  const m = String(u || "").match(/[?&]uddg=([^&]+)/);
+  if (m) { try { return decodeURIComponent(m[1]); } catch { return u; } }
+  return u;
+}
+
+function parseDdg(html) {
+  const out = [];
+  const re = /<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 6) {
+    const t = stripTags(m[2]);
+    if (!t || !m[1]) continue;
+    out.push({ t: t, u: ddgRealUrl(m[1]), s: "" });
+  }
+  let i = 0;
+  const sre = /<a[^>]+class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/g;
+  while ((m = sre.exec(html)) && i < out.length) { out[i].s = stripTags(m[1]).slice(0, 220); i++; }
+  return out;
+}
+
+function parseBing(html) {
+  const out = [];
+  const re = /<li[^>]+class="[^"]*b_algo[^"]*"[^>]*>[\s\S]*?<h2[^>]*>\s*<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>([\s\S]*?)(?=<li[^>]+class="[^"]*b_algo|<\/ol>)/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 6) {
+    const t = stripTags(m[2]);
+    if (!t || !m[1]) continue;
+    out.push({ t: t, u: m[1], s: stripTags(m[3] || "").slice(0, 220) });
+  }
+  return out;
+}
+
+function searchWiki(q, cb) {
+  const u = "https://ar.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+    encodeURIComponent(q) + "&format=json&srlimit=5";
+  httpGet(u, (e, d) => {
+    if (e || !d) return cb([]);
+    try {
+      const r = JSON.parse(d);
+      cb(((r.query && r.query.search) || []).map((x) => ({
+        t: x.title,
+        u: "https://ar.wikipedia.org/wiki/" + encodeURIComponent(String(x.title).replace(/ /g, "_")),
+        s: stripTags(x.snippet || ""),
+      })));
+    } catch { cb([]); }
+  });
+}
+
+function searchDdg(q, cb) {
+  httpGet("https://html.duckduckgo.com/html/?q=" + encodeURIComponent(q), (e, d) => {
+    cb(e || !d ? [] : parseDdg(d));
+  });
+}
+
+function searchBing(q, cb) {
+  httpGet("https://www.bing.com/search?q=" + encodeURIComponent(q) + "&setlang=ar", (e, d) => {
+    cb(e || !d ? [] : parseBing(d));
+  });
 }
 
 function isBookmarked(url) {
@@ -397,6 +514,11 @@ function handleInternal(raw) {
         SEARCH_ENGINES[DEFAULT_ENGINE];
       addSearchEntry(q, SEARCH_ENGINES[id] ? id : null);
       navigate(eng.url + encodeURIComponent(q));
+    } else if (u.pathname === "/omni") {
+      // صفحة البحث الشامل — من زر «الكل» بالرئيسية أو من داخل الصفحة نفسها
+      view.webContents
+        .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: q ? { q: q } : {} })
+        .catch(() => {});
     }
   } catch {}
 }
@@ -518,7 +640,12 @@ if (!app.requestSingleInstanceLock()) {
     win.loadFile(path.join(__dirname, "chrome", "ui.html"));
 
     view = new BrowserView({
-      webPreferences: { contextIsolation: true, sandbox: true },
+      webPreferences: {
+        // 1.3.0 — جسر البحث الشامل فقط: 3 دوال استعلام بلا أي صلاحية أخرى
+        preload: path.join(__dirname, "chrome", "omni-preload.js"),
+        contextIsolation: true,
+        sandbox: true,
+      },
     });
     win.addBrowserView(view);
     attachViewEvents();
@@ -556,6 +683,18 @@ app.on("window-all-closed", () => {
 });
 
 /* ----------------------------------- IPC ---------------------------------- */
+
+/* البحث الشامل (1.3.0): ثلاثة محركات تجيب بالتوازي وكل قسم يظهر لحظة جهوزه */
+ipcMain.handle("barq:omni-wiki", (_e, q) => new Promise((res) => searchWiki(String(q || "").slice(0, 200), res)));
+ipcMain.handle("barq:omni-ddg",  (_e, q) => new Promise((res) => searchDdg(String(q || "").slice(0, 200), res)));
+ipcMain.handle("barq:omni-bing", (_e, q) => new Promise((res) => searchBing(String(q || "").slice(0, 200), res)));
+ipcMain.on("barq:omni-open", (_e, q) => {
+  const s = String(q || "").trim();
+  if (!view || view.webContents.isDestroyed()) return;
+  view.webContents
+    .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: s ? { q: s } : {} })
+    .catch(() => {});
+});
 
 ipcMain.on("barq:navigate", (_e, raw) => {
   const url = normalizeInput(raw);

@@ -1,7 +1,19 @@
 // برق — منطق اللوحة المستقلة (1.2.6)
 // اللوحة صارت BrowserView مستقلة ترسم فوق صفحة الويب دائماً (آخر من يُرفق = أعلى طبقة)
 // لذلك يستحيل أن تختفي خلف الصفحة مهما كانت حالة المزامنة أو كرت الشاشة.
+// 1.3.0 — أسماء المحركات بالعربي في سجل البحث (من ضمنها المحركات الجديدة)
 "use strict";
+
+const ENGINE_NAMES = {
+  google: "جوجل",
+  bing: "بينج",
+  duckduckgo: "دك دك جو",
+  yandex: "ياندكس",
+  wikipedia: "ويكيبيديا",
+  youtube: "يوتيوب",
+  x: "إكس (تويتر)",
+  maps: "خرائط جوجل",
+};
 
 const el = {
   title: document.getElementById("panel-title"),
@@ -71,7 +83,7 @@ function paintHistory(data) {
     row.title = "ابحث من جديد";
     row.innerHTML =
       '<div class="main"><div class="t1">' + esc(x.q) + "</div>" +
-      '<div class="t2">' + esc(x.engine || "") + " • " + fmtTime(x.t) + "</div></div>";
+      '<div class="t2">' + esc(ENGINE_NAMES[x.engine] || x.engine || "") + " • " + fmtTime(x.t) + "</div></div>";
     row.addEventListener("click", function () {
       window.barq.navigate(x.q);
     });
