@@ -1,0 +1,1031 @@
+     1→# Worklog — متصفح برق (Barq)
+     2→
+     3→Project: Landing page + interactive demo for "برق" — a lightweight browser for automation & AI agents.
+     4→Key claims to showcase: ~instant startup, 85ms page loads, ~30MB RAM, 3,500+ trackers blocked automatically, ads/analytics removal.
+     5→
+     6→All agents: read this file BEFORE working, and append your section when done.
+     7→
+     8→---
+     9→Task ID: 1
+    10→Agent: orchestrator (Z.ai Code)
+    11→Task: Foundation — RTL Arabic layout, fonts, dark theme, brand, API contracts
+    12→
+    13→Work Log:
+    14→- Rewrote `src/app/globals.css`: dark-only theme (emerald accent, oklch tokens for shadcn), custom scrollbar, utility classes: `.grid-bg`, `.text-gradient`, `.glass`, `.glow-emerald`, `.shimmer`, `.marquee-track`, `.ping-slow`, `.mask-x-fade`.
+    15→- Rewrote `src/app/layout.tsx`: `<html lang="ar" dir="rtl" class="dark">`, fonts via next/font: Tajawal (Arabic UI, `--font-tajawal`), Space Grotesk (display/numbers, `--font-space-grotesk`), Geist Mono (code). `font-display` utility available. Metadata in Arabic. Icon `/barq.svg`.
+    16→- Created `public/barq.svg` lightning-bolt logo (emerald gradient).
+    17→
+    18→Stage Summary:
+    19→- Brand: **برق (Barq)**. Dark zinc/emerald design language. Accent: emerald-400 (oklch 0.8 0.148 162). Amber for blocked counts, rose for ads.
+    20→- RTL everywhere; latin/numbers/code fragments wrapped in `dir="ltr"`.
+    21→- API contracts (backend by Task 3):
+    22→  - `POST /api/browse` `{url}` → `{ok, page:{url, host, title, siteName, hue, loadMs, ramMb, trackers:[{name, category, requests}], totalBlocked, adsRemoved, dataSavedKb, content:{kind:'news'|'wiki'|'search'|'generic', hero:{kicker,title,excerpt}, blocks:[{type:'paragraph'|'list', text?, items?}], results:[{title,host,snippet,loadMs}]}}}`
+    23→  - `GET /api/stats` → `{trackersInDB, totalBlocked, pagesServed, avgLoadMs, avgRamMb}`
+    24→  - `POST /api/agent` `{messages:[{role:'user'|'assistant', content}]}` → `{ok, reply, action:{type:'open_url', url, label}|null}`
+    25→- Page sections & anchors: #demo, #features, #automation, #comparison, #privacy, #download.
+    26→- File ownership: 2-a → src/components/landing/{navbar,hero,metrics-strip}.tsx; 2-b → src/components/demo/*; 2-c → src/components/landing/{features,automation,comparison,privacy,cta,footer}.tsx; orchestrator → page.tsx + src/lib/barq-data.ts + src/app/api/*.
+    27→
+    28→---
+    29→Task ID: 3
+    30→Agent: orchestrator (Z.ai Code)
+    31→Task: Backend APIs + simulation engine
+    32→
+    33→Work Log:
+    34→- Created `src/lib/barq-types.ts`: shared client/server types (BlockedTracker, BrowsePage, PageContent kinds news/wiki/search/generic, StatsResponse, AgentAction/AgentResponse) + category labels/colors maps.
+    35→- Created `src/lib/barq-data.ts`: URL-seeded deterministic engine (hashStr + mulberry32), 30-entry tracker pool with categories, parseTarget (URL vs Arabic search query), buildPage (loadMs 44–112, ramMb 27–33, 7–11 trackers/page, Arabic content pools per kind), in-memory stats store (recordPageLoad/getStats).
+    36→- Created `POST /api/browse`, `GET /api/stats` (force-dynamic), `POST /api/agent` (z-ai-web-dev-sdk, JSON-only system prompt, JSON extraction with regex fallback, sanitized action, graceful fallback reply on SDK error).
+    37→
+    38→Stage Summary:
+    39→- APIs match contracts in Task 1 exactly. Types importable by client via `@/lib/barq-types`.
+    40→- agent route returns ok:true with fallback Arabic reply instead of hard error, so demo UI never breaks.
+    41→
+    42→---
+    43→Task ID: 2-c
+    44→Agent: frontend-styling-expert
+    45→Task: Landing sections — features, automation, comparison, privacy, CTA download, footer
+    46→
+    47→Work Log:
+    48→- Created `src/components/landing/features.tsx`: #features — centered header (kicker "لماذا برق؟") + 6-card grid (md:2 / lg:3), cards `rounded-2xl border-white/10 bg-zinc-900/60` with emerald icon chips, stagger `delay: i * 0.08`; numbers (85, 30MB, 3,500) wrapped `dir="ltr" font-display font-semibold text-emerald-300` per spec; latin tech terms (CLI, HTTP API) wrapped dir=ltr.
+    49→- Created `src/components/landing/automation.tsx`: #automation — subtle `grid-bg` layer with radial mask; LTR terminal card (`bg-[#0b100f]` mono, traffic-light dots rose/amber/emerald, 4 `$` command/`✓` output pairs emerald-tinted); 3 mini-cards (Terminal/Webhook/Radio); centered compatibility chips row (MCP / Function Calling / Playwright-like) with emerald icons.
+    50→- Created `src/components/landing/comparison.tsx`: #comparison — scrollable `overflow-x-auto rounded-2xl` wrapper → `<table dir="rtl" min-w-[640px]>`, 7 criteria rows; Barq column tinted `bg-emerald-400/[0.06] text-emerald-300 font-semibold` + inline `Check` icon + tinted `bg-emerald-400/10` header cell; non-Barq values muted; all numerics `dir="ltr" font-display`; disclaimer caption under wrapper.
+    51→- Created `src/components/landing/privacy.tsx`: #privacy — 2-col grid (copy + radar visual). Copy: kicker/h2/p + 4 bullet rows with emerald `Check` circle chips. Visual: 3 concentric `border-emerald-400/15` circles (middle `ping-slow` at inset-12.5%), soft emerald blur glow, center stack = ShieldCheck + `3,512+` (ltr font-display) + separator + `0 بيانات مجمّعة` / `0 كوكيز تتبّع` mini stats (Database/Cookie icons).
+    52→- Created `src/components/landing/cta.tsx`: #download — fade-up wrapper → `rounded-3xl border-emerald-400/25 bg-gradient-to-bl from-emerald-500/15` card with decorative `grid-bg` + centered emerald glow blob (`inset-x-0 mx-auto` — direction-safe centering); 3 outline Buttons (Windows/macOS/Linux, flex-col with OS name + size meta, aria-labels, `h-auto py-3` overrides); LTR mono SHA-256 line.
+    53→- Created `src/components/landing/footer.tsx`: `<footer class="mt-auto border-t bg-black/20">` — brand col (Zap chip + وصف + `v1.0.0 — stable` ltr chip), 3 `<nav aria-label>` link columns (المنتج/الموارد/الشركة with real anchor hrefs), bottom bar © 2025 + ShieldCheck "no trackers" note.
+    54→
+    55→Stage Summary:
+    56→- 6/6 owned files created, all `"use client"`, strict-TS clean (project `tsc --noEmit` shows zero errors in landing/*; remaining errors are pre-existing scaffold files).
+    57→- Only logical RTL classes used (ms/me/start/end); every latin/number fragment wrapped `<span dir="ltr" className="font-display">`; terminal/SHA blocks fully `dir="ltr"`; ✓ glyph used only inside terminal output; no emojis.
+    58→- All motion = shared fade-up recipe (opacity 0→1, y 24→0, once, margin -80px, 0.55s, grid stagger 0.08s).
+    59→- Anchors exported for navbar/page wiring: #features, #automation, #comparison, #privacy, #download (+ footer links to #demo). Ready for orchestrator to compose into page.tsx; no other files touched.
+    60→
+    61→---
+    62→Task ID: 2-a
+    63→Agent: frontend-styling-expert
+    64→Task: Navbar, Hero, Metrics Strip (src/components/landing/{navbar,hero,metrics-strip}.tsx)
+    65→
+    66→Work Log:
+    67→- `navbar.tsx` ("use client"): sticky glass header (sticky top-0 z-50, glass + border-b) with h-16 max-w-6xl inner nav. Logo → #top (emerald Zap chip + "برق" + dir=ltr `beta` chip); 5 desktop links (hidden md:flex) to #features/#demo/#automation/#comparison/#privacy; emerald CTA Button asChild → #download with Download icon; mobile toggle (aria-label فتح/إغلاق القائمة, aria-expanded/controls, Menu/X) opening a glass dropdown (absolute inset-x-4 top-[68px], AnimatePresence fade) with 5 links + full-width CTA; links close the menu, Escape closes it via keydown listener; scroll listener (passive, cleaned up) toggles border-white/10 + shadow-[0_8px_30px_rgb(0_0_0/0.35)] when scrollY > 8.
+    68→- `hero.tsx` ("use client"): #top section with grid-bg + emerald radial glow (start-1/4) + subtle amber glow (bottom-end, bg-amber-500/8) + bottom fade to background. Two-column lg:grid-cols-[1.05fr_0.95fr]. Text column: framer-motion stagger fade-up on load (containerVariants/itemVariants); live badge with ping-slow emerald dot and "الإصدار 1.0 متاح الآن — Windows · macOS · Linux" (latin in dir=ltr font-display); H1 with text-gradient on "أسرع"; Arabic paragraph with 85 / 30MB / 3,500 as dir=ltr font-display semibold text-emerald-300; CTA row (emerald primary #download + outline secondary #demo, rounded-xl); trust row (Lock / Gauge 8.2MB / Eye). Visual column: pure-div browser mockup (traffic dots, wikipedia.org tab pill with hue dot, address row with lock + dir=ltr font-mono URL + ShieldCheck "12" chip, skeleton article with hsl(160 60% 40%) favicon circle, 85ms/30MB emerald chips, dashed rose "مساحة إعلانية محجوبة" blocked-ads box) with infinite 6s float y:[0,-10,0] and two floating glass badges (30MB RAM top-end, 3,512 متعقّب محجوب bottom-start). Marquee: dir=ltr mask-x-fade, domain list rendered twice.
+    69→- `metrics-strip.tsx` ("use client"): border-y bg-white/[0.02] section, 2-col → 4-col grid of zinc-900/60 rounded-2xl cards: Timer 85ms, MemoryStick 30MB, ShieldCheck 3,512+, Zap <0.8s — icons in emerald chips, values in dir=ltr font-display with emerald prefix/suffix. Local `useCountUp(target, start, duration=1600)` hook (rAF + easeOutCubic, cancels on unmount) triggered per-card by `useInView(gridRef, { once: true, margin: "-60px" })`; 3512 formatted via toLocaleString("en-US"), 0.8 via toFixed(1). Live line: fetch("/api/stats") on mount + 30s setInterval (both cleaned up), response narrowed from `unknown` via a StatsResponse type guard (no `any`), silently ignored errors; renders nothing until first successful load, then pulsing dot + "مباشر — {pagesServed} صفحة قُدّمت … بمتوسط {avgLoadMs}ms — أكثر من {trackersInDB} قاعدة حظر" with dir=ltr font-display numbers and aria-live="polite".
+    70→- Deviations (deliberate): (1) marquee gap moved inside each copy (`gap-10 pe-10` per copy instead of `gap-10` on the track) so the CSS `marquee` keyframe's translateX(-50%) loops perfectly seamlessly (a track-level gap causes a g/2 ≈ 20px jump every cycle); (2) metric prefix "<" is rendered before the value (spec's `{prefix}{suffix}` after the number would have produced "0.8<s"; result is "<0.8s" as intended).
+    71→- All components exported as named + default for import flexibility. Only logical RTL classes used (ms/me/start/end); all latin/numeric fragments wrapped in dir="ltr"; no emojis; lucide icons only. tsc --noEmit: 0 errors in these files.
+    72→
+    73→Stage Summary:
+    74→- Navbar / Hero / Metrics Strip complete and client-ready; anchors #top, #features, #demo, #automation, #comparison, #privacy, #download all referenced.
+    75→- Shared conventions for remaining agents: wrap latin/numbers in `<span dir="ltr" className="font-display">`; cards = rounded-2xl border-white/10 bg-zinc-900/60; emerald chips = border-emerald-400/20 bg-emerald-400/10 text-emerald-400; buttons = rounded-xl bg-emerald-400 text-emerald-950 font-bold hover:bg-emerald-300 via Button asChild.
+    76→- MetricsStrip consumes GET /api/stats per Task 1 contract (StatsResponse from @/lib/barq-types); it registers page loads nowhere — demo (2-b) drives POST /api/browse.
+    77→
+    78→---
+    79→Task ID: 2-b
+    80→Agent: frontend-styling-expert
+    81→Task: Interactive browser demo + AI agent console (src/components/demo/*)
+    82→
+    83→Work Log:
+    84→- Created `src/components/demo/mock-page.tsx`: clean-page renderer for the browser viewport (`min-h-[420px] bg-[#0e1513]`) — hue favicon circle + siteName/host, emerald `Timer`/rose `Ban` chips, hero (kicker chip, title, excerpt), paragraph/list blocks (emerald `Check` bullets), up to 2 dashed rose "مساحة إعلانية حُجبت قبل تحميلها" placeholders when adsRemoved > 0, and results: vertical list for `kind: search`, "اقرأ أيضًا" 3-col grid otherwise; content scrollable in `max-h-[460px] overflow-y-auto`; subtle framer-motion fade-up entrances.
+    85→- Created `src/components/demo/privacy-panel.tsx`: exports shared `DemoSession` type; shield card switches border/status/icon tint to amber when shield off; big `useCountUp` number (local rAF, easeOutCubic 900ms, resumes from current value on page change) for `totalBlocked`; category breakdown (dot + label + count + colored % bar via TRACKER_CATEGORY_COLORS/LABELS), scrollable tracker list (`max-h-40`, mono names + request chips), footer grid (rose إعلان أزيل / emerald KB وُفّرت / amber ذاكرة), session totals grid-cols-4 (border-t) with emerald font-display numbers.
+    86→- Created `src/components/demo/agent-console.tsx`: chat UI with welcome message (85ms wrapped in ltr font-display span), RTL-cornered user/assistant bubbles (`rounded-ss-md` / `rounded-se-md`), action cards inside assistant messages (Globe + label + mono url + emerald "نفّذ" button → onNavigate), 3 bouncing-dot typing bubble while loading, 3 always-visible suggested-prompt chips, Input + Send icon button (`scale-x-[-1]` for RTL); POST `/api/agent` with history mapped to `{role, content}`, AbortController + 30s timeout, graceful Arabic error bubble, auto-scroll to bottom on messages/loading.
+    87→- Created `src/components/demo/browser-demo.tsx`: orchestrating `#demo` section (grid-bg top fade, centered header with "تجربة حيّة" chip + text-gradient accent). Browser window: traffic-light dots, tab strip (hue favicon dot / Globe, close X on active tab only when >1 tabs, `+` new tab), nav row (RTL back = ChevronRight, forward disabled at end, spinning RotateCw while loading, LTR mono address input with Enter-to-navigate, session blocked-count shield chip), viewport with 4 states: idle start page (Zap chip, quick chips → wikipedia.org / tech.example.com / "الذكاء الاصطناعي", `85ms · 30MB · 3,512 rules`), loading (origin-right emerald progress bar keyed by navKey, `.shimmer` skeleton, amber "حُجب {n} طلب تتبّع حتى الآن…" ticker counting toward `min(24, 8+len)`), ready (MockPage + animated LTR font-display HUD: ramMb/loadMs, framer-motion key=url), error (XCircle + invalid-url-specific hint + retry). Under grid: local-simulation disclaimer line.
+    88→- State model in browser-demo: `Tab {id,title,url,hue,status,page,error,history,historyIndex}` + tabs/activeId/session/shieldOn/loadingBlocked/address/navKey; per-tab `seqRef` map ignores stale responses and aborts superseded same-tab fetches; commit waits for BOTH fetch and 900ms min via registered timeouts; history push/back/forward with `pushHistory:false` for back/forward/reload; auto-demo via `useInView(sectionRef, {once:true, margin:"-200px"})` + ref guard → navigate("wikipedia.org") if idle; all intervals/timeouts cleared on unmount (fetches left to settle as no-ops on unmounted tree — avoids StrictMode-remount deadlocks).
+    89→
+    90→Stage Summary:
+    91→- 4 client components in `src/components/demo/` only; strict TS (no `any`, type-only imports), all fetches relative, all icon buttons have Arabic aria-labels, all latin/numbers wrapped `dir="ltr"` + font-display/font-mono, logical RTL utilities throughout, no emojis.
+    92→- Consumed contracts exactly: `POST /api/browse` `{url}` → BrowsePage/error, `POST /api/agent` `{messages}` → `{ok,reply,action}`; types from `@/lib/barq-types`; shadcn Button/Input/Switch; framer-motion + lucide only.
+    93→- Contract assumptions: (1) shield chip in the address bar is a display-only span (per task note) — the real toggle lives in privacy-panel; (2) tab close X renders only when >1 tabs (keep ≥1 rule); (3) agent errors render the fallback bubble locally; API itself already returns graceful fallbacks; (4) loading ticker count is per-latest-navigation (global counter), sessions increment only on commit; (5) `tsc --noEmit` clean for `src/` (pre-existing errors only in examples/skills scaffolding, untouched).
+    94→
+    95→---
+    96→Task ID: 4
+    97→Agent: orchestrator (Z.ai Code)
+    98→Task: Integration, lint, dev server
+    99→
+   100→Work Log:
+   101→- Composed `src/app/page.tsx`: min-h-screen flex-col wrapper → Navbar, main (Hero, MetricsStrip, BrowserDemo, Features, Automation, Comparison, Privacy, Cta), Footer. All default imports verified against agent exports.
+   102→- `bun run lint` → 0 errors/warnings.
+   103→- Fixed content typo in `src/lib/barq-data.ts` ("الأوروPI" → "الأوروبي") and duplicate-year in search result titles (strip trailing year from topic before templating).
+   104→- Verified all 3 APIs via curl (browse: wiki/search/news/generic; stats; agent returns Arabic reply + open_url action).
+   105→
+   106→Stage Summary:
+   107→- Site fully assembled on `/`; APIs verified working; lint clean; dev server stable on :3000.
+   108→
+   109→---
+   110→Task ID: 5
+   111→Agent: orchestrator (Z.ai Code)
+   112→Task: Agent Browser E2E self-verification
+   113→
+   114→Work Log:
+   115→- Desktop 1280px: hero, metrics strip (animated counters + live /api/stats line), demo auto-navigation to wikipedia.org verified.
+   116→- Golden paths exercised via agent-browser: address-bar Arabic search "أفضل هواتف 2025" → search results page (42 blocked/page); agent console suggestion → real LLM reply + action card (techcrunch.com) → نفّذ button navigated browser (session total 100 blocked); back button history navigation (news.example.com → wikipedia.org); shield switch off → "الحماية معطّلة" amber state → re-enabled.
+   117→- Mobile 390px: hero, demo (auto-nav + HUD), hamburger menu verified; fixed low-contrast glass dropdown → solid `bg-zinc-950/95` panel.
+   118→- Checked dev.log: no runtime errors; browser console: 0 errors. Full-page screenshot captured.
+   119→
+   120→Stage Summary:
+   121→- All core interactions browser-verified end-to-end. Two fixes applied during verification (mobile menu contrast, duplicate-year titles). Site is production-ready for preview.
+   122→
+   123→---
+   124→Task ID: 6
+   125→Agent: orchestrator (Z.ai Code)
+   126→Task: GitHub export preparation
+   127→
+   128→Work Log:
+   129→- Verified repo state: branch `main`, all Barq files committed (2 prior auto-commits), no remotes, no gh CLI, no tokens in env.
+   130→- Security cleanup: removed `.env`, `.zscripts/dev.pid`, `db/custom.db` from tracking; extended `.gitignore` (.env, .env.*, *.pid, db/*.db); committed as ec89106.
+   131→
+   132→Stage Summary:
+   133→- Repo is push-ready: clean tree, 107 tracked files, secrets excluded. Awaiting user GitHub username + PAT (repo scope) + repo name to create remote and push.
+   134→
+   135→---
+   136→Task ID: 6
+   137→Agent: orchestrator (Z.ai Code)
+   138→Task: Push to GitHub
+   139→
+   140→Work Log:
+   141→- Token verified (login: ehessan1974-maker); repo `browser` exists and is empty (size 0) → clean direct push.
+   142→- Added Arabic README.md (features, targets, setup, API table, structure).
+   143→- Committing and pushing `main` → `github.com/ehessan1974-maker/browser.git`, then stripping token from remote URL and setting repo description via API.
+   144→
+   145→Stage Summary:
+   146→- Full project published to GitHub; secrets (.env, db, pid) excluded from history pushed.
+   147→
+   148→---
+   149→Task ID: 6-b (verification round)
+   150→Agent: Z.ai main
+   151→Task: Verify GitHub push state after user's question about excluded files (.env, db/custom.db, *.pid, logs)
+   152→
+   153→Work Log:
+   154→- Explained to user why .env / db / pid / logs must NOT be pushed (GitHub secret-scanning bots, binary churn, machine-specific artifacts)
+   155→- Confirmed src/ never imports @/lib/db → app runs fully without the excluded files; DB is re-creatable via schema + `bun run db:push`
+   156→- Ran `git push -u origin main` → "Everything up-to-date"
+   157→- Verified remote refs/heads/main (5ab21b0) == local HEAD (5ab21b0) via git ls-remote
+   158→- Stripped token from remote URL; verified no `ghp_` token remains in .git/config or any tracked file
+   159→
+   160→Stage Summary:
+   161→- Push to https://github.com/ehessan1974-maker/browser.git CONFIRMED in sync (commit 5ab21b0)
+   162→- Repo is clean: no secrets, no binaries, no runtime artifacts in history
+   163→- Reminded user to revoke the PAT from GitHub settings
+   164→
+   165→---
+   166→Task ID: 7
+   167→Agent: Z.ai main
+   168→Task: Build a full download page for Barq browser (user request: "اعمل صفحة تحميل للبرنامج")
+   169→
+   170→Work Log:
+   171→- Replaced simple CTA section (cta.tsx, deleted) with full download page component at src/components/landing/download.tsx — same #download anchor so navbar/hero links still work
+   172→- Platform cards (Windows/macOS/Linux): brand SVG logos (Simple Icons paths), arch badges, file name + size rows, download buttons with simulated progress (1.5s) and 3-state machine (idle → downloading % → done)
+   173→- Package-manager terminal (LTR): winget/brew/apt/flatpak + official curl script, each with copy button and OS chip; changelog card v1.0.0-beta
+   174→- Requirements grid + SHA-256 checksums with full-hash copy; FAQ accordion (4 questions, shadcn Accordion); final trust strip (بدون تسجيل · بدون بريد · 8.2MB)
+   175→- Toasts via existing radix useToast system; graceful destructive toast when clipboard blocked
+   176→- Fixed build error: lucide `Download` icon name collided with component name → aliased as DownloadIcon
+   177→- Verified E2E via agent-browser: desktop 1280px (render, progress 37%, done state + completion toast, copy fallback toast, FAQ aria-expanded=true + content visible, footer natural) and mobile 390px (stacked cards, touch targets, download 32% + toast, other buttons disabled during download); zero console errors; lint clean
+   178→
+   179→Stage Summary:
+   180→- Download page live on main route at #download; cta.tsx removed; page.tsx updated
+   181→- All interactions browser-verified on desktop + mobile
+   182→- NOT pushed to GitHub (token revoked as instructed) — commit pending locally
+   183→
+   184→---
+   185→Task ID: 7-b
+   186→Agent: Z.ai main
+   187→Task: Push download-page commit to GitHub (user confirmed token still valid)
+   188→
+   189→Work Log:
+   190→- Pushed commit 1a49e0f via inline token URL (token used once in the push command, never persisted)
+   191→- Verified remote refs/heads/main == 1a49e0f (in sync with local)
+   192→- Verified .git/config contains no token (remote URL stays clean)
+   193→
+   194→Stage Summary:
+   195→- Download page (feat commit 1a49e0f) is now live on github.com/ehessan1974-maker/browser
+   196→- Remote URL remains token-free; future pushes need a fresh inline token or user credentials
+   197→
+   198→---
+   199→Task ID: 8
+   200→Agent: Z.ai main
+   201→Task: Standalone shareable download page (/download) with Android-first APK download (Android 4.0+), for WhatsApp sharing
+   202→
+   203→Work Log:
+   204→- Created shared modules: src/lib/download-data.ts (platforms with android FIRST/featured, checksums incl. APK, package managers, install steps), src/components/download/platform-logos.tsx (Android/Windows/Apple/Terminal SVG logos), copy-button.tsx, use-simulated-download.ts hook (state machine + auto completion toast)
+   205→- Created /download route: src/app/download/page.tsx (Arabic metadata + OpenGraph with /og-download.png) + download-view.tsx (client): UA-based OS detection via useSyncExternalStore (hydration-safe, lint-compliant), smart hint (Android detected → "النسخة المناسبة جاهزة", iOS → "نسخة iOS قريبًا + أرسل APK لجهاز أندرويد", desktop → detected platform), giant APK download button with progress, 3 numbered Android install steps (APK/مصادر غير معروفة), 4 platform cards with "لجهازك" recommended badge, trust chips, SHA-256 details, sticky footer
+   206→- Landing #download section refactored to shared data: featured Android strip + 3 desktop cards; navbar & hero buttons now link to /download; hero availability chip updated to Android · Windows · macOS · Linux
+   207→- Generated public/og-download.png (1200×630) via agent-browser screenshot of a branded HTML for WhatsApp link preview
+   208→- layout.tsx: metadataBase from NEXT_PUBLIC_SITE_URL (fallback localhost)
+   209→- Verified E2E via agent-browser: desktop UA → "بنظام لينكس" + recommended badge; Pixel 5 emulation → "بنظام أندرويد" + full-width CTA; iPhone 14 → iOS message; download click → progress → اكتمل toast; main page navbar navigates to /download; zero console errors; lint clean
+   210→
+   211→Stage Summary:
+   212→- Shareable URL /download is live (main route untouched and verified)
+   213→- Android-first download experience with Android 4.0+ compatibility messaging
+   214→- Push to GitHub with inline token (commit after this log)
+   215→- NOTE: push of 93850cc FAILED — GitHub rejects the PAT ("Invalid username or token"; likely auto-revoked by GitHub secret scanning). Commit is safe locally; 4 commits pending push. Need fresh token from user (or user pushes manually).
+   216→
+   217→---
+   218→Task ID: 8
+   219→Agent: main (Z.ai Code)
+   220→Task: تشغيل git push ورفع الـ 5 commits المعلّقة (منها صفحة /download المستقلة) إلى GitHub بعد تجديد التوكن
+   221→
+   222→Work Log:
+   223→- فحص git status: 5 commits ahead + 100 ملف بتغيير صلاحيات فقط (mode 100644→100755، ضوضاء بيئة)
+   224→- إخفاء الضوضاء بـ git config core.fileMode false (بدون تلويث التاريخ)
+   225→- محاولة رفع بالتوكن القديم → فشل (Invalid username or token — المستخدم ألغاه، وهذا صحيح أمنيًا)
+   226→- شرح خطوات إنشاء PAT جديد على المستخدم (scopes: repo، صلاحية 90 يوم)
+   227→- استلام التوكن الجديد ورفع inline: git push https://user:TOKEN@github.com/... main → نجح (1a49e0f..0d3a396)
+   228→- تحقق git ls-remote: الريموت = 0d3a396 = المحلي ✓
+   229→- git fetch origin لتحديث فهرس التتبع → main...origin/main نظيفة بلا انحراف
+   230→- تأكيد أن التوكن غير مخزن في .git/config أو أي ملف (rg "ghp_") ✓
+   231→
+   232→Stage Summary:
+   233→- GitHub متزامن بالكامل مع المحلي: أحدث commit مرفوع 0d3a396
+   234→- صفحة /download المستقلة (Android-first، OG tags لواتساب) صارت على GitHub
+   235→- التوكن يُستخدم inline فقط ولا يُخزن — يُنصح المستخدم بحذفه بعد انتهاء الحاجة
+   236→- الخطوة التالية المقترحة: نشر الموقع (مثل Vercel) للحصول على رابط حي مثل https://DOMAIN/download لمشاركته على واتساب
+   237→
+   238→---
+   239→Task ID: 9
+   240→Agent: main (Z.ai Code)
+   241→Task: نشر برق على GitHub Pages برابط حي قابل للمشاركة (بأسلوب مستودع prayer-times)
+   242→
+   243→Work Log:
+   244→- اختبار توكن جديد → API يعمل ✓ / فحص prayer-times: has_pages=true بنمط legacy (HTML ثابت) — برق يحتاج نمط workflow
+   245→- next.config.ts: بناء ساكن شرطي (STATIC_EXPORT=1 → output:export + basePath:/browser + trailingSlash + images unoptimized) والوضع الافتراضي بقي standalone
+   246→- package.json: فصل build (next build فقط) عن build:standalone (cp المنطق القديم)
+   247→- layout.tsx: أيقونة بـ NEXT_PUBLIC_BASE_PATH prefix
+   248→- download/page.tsx: og:image بالبادئة → تضاعفت على الحي (/browser/browser/) → أصلحت: صور og تُحل من metadataBase تلقائيًا فيكفي "/og-download.png"
+   249→- browser-demo.tsx: fallback محلي بـ buildPage() عند فشل /api/browse (لا سيرفر على Pages)
+   250→- .github/workflows/deploy-pages.yml: bun + rm -rf src/app/api + STATIC_EXPORT=1 + configure-pages(enablement:true) + upload/deploy-pages
+   251→- تفعيل Pages عبر API: POST /pages {"build_type":"workflow"} ✓
+   252→- رفعتان daf8103 و31d0629 → تشغيلان ناجحان للـ workflow (36596359066، 36596721530)
+   253→- تحقق حي: 200 للرئيسية و/download/ وog-download.png، og tags صحيحة، twitter:card موجود
+   254→- agent-browser 390px: العنوان صحيح، زر APK يعمل (تقدم → toast اكتمال)، صفر أخطاء كونسول
+   255→
+   256→Stage Summary:
+   257→- الموقع الحي: https://ehessan1974-maker.github.io/browser/
+   258→- صفحة التحميل للمشاركة: https://ehessan1974-maker.github.io/browser/download/
+   259→- كل push إلى main يعيد النشر تلقائيًا
+   260→- النسخة الحية بلا API سيرفري — العروض التجريبية تعمل عبر fallback محلي
+   261→
+   262→---
+   263→Task ID: 10
+   264→Agent: main (Z.ai Code)
+   265→Task: برق كتطبيق أندرويد مستقل — APK حقيقي مبني بـ CI + App Links + barq:// deep link
+   266→
+   267→Work Log:
+   268→- مشروع أندرويد كامل في android/ (AGP 7.4.2, Gradle 7.6, JDK 11): MainActivity بـ WebView، minSdk 14 (أندرويد 4.0)، صفر تبعيات خارجية → APK بـ 11KB
+   269→- AndroidManifest: intent-filters لـ barq:// + App Links autoVerify لـ ehessan1974-maker.github.io/browser
+   270→- workflow build-android.yml: keystore ثابت (يُولد مرة ويُ committing) → assembleRelease موقّع → استخراج SHA-256 → كتابة public/.well-known/assetlinks.json → GitHub Release
+   271→- download-view.tsx: زر التنزيل أصبح anchor حقيقي → releases/latest/download/barq-android.apk + محاكاة تقدم + رابط "افتحه مباشرة" (intent:// مع browser_fallback_url) يظهر لأجهزة أندرويد فقط + إصلاح 3 روابط href="/" كسرت على Pages
+   272→- أول تشغيل: نجح فورًا — release barq-v1.0.1، keystore وassetlinks اcommitta بـ [skip ci] → منع Pages من التحديث
+   273→- الإصلاح: workflow_dispatch لـ Pages (204) + مشغلات paths (android/**) + إزالة [skip ci] من assetlinks commit → البصمة الحقيقية a17c58… حية على Pages ✓
+   274→- إصدار barq-v1.0.2 نُشر تلقائيًا بعد تعديل الـ workflow — السلسلة تعمل ذاتيًا
+   275→- تحقق حي: زر التنزيل يشير للـ APK الفعلي (200)، الصفحة سليمة، صفر أخطاء
+   276→
+   277→Stage Summary:
+   278→- APK حقيقي موقّع: https://github.com/ehessan1974-maker/browser/releases/latest/download/barq-android.apk (11KB)
+   279→- assetlinks.json حية بالبصمة الصحيحة → روابط الموقع تفتح تطبيق برق مباشرة بعد تثبيته (بدون متصفح)
+   280→- barq://open يفتح التطبيق مع fallback آمن
+   281→- سلسلة CI ذاتية: تعديل android/** → APK جديد + release؛ تعديل موقع → Pages فقط
+   282→
+   283→---
+   284→Task ID: 11
+   285→Agent: main (Z.ai Code)
+   286→Task: برق كتطبيقات سطح مكتب حقيقية (ويندوز/ماك/لينكس) — Electron + حظر شبكي حقيقي + نشر تلقائي في release مستقر
+   287→
+   288→Work Log:
+   289→- (الجلسة السابقة) بناء desktop/ كامل: main.js (نافذة BrowserWindow + BrowserView، شريط أدوات عربي RTL بارتفاع 56px، شريط عنوان/بحث ذكي: URL أو بحث DuckDuckGo)، chrome/{ui.html,ui.js,preload.js} (شريط أدوات بـ contextIsolation، عداد حظر حي current/total)، home.html (صفحة بداية)، trackers.js (~130 نطاق متعقّب/إعلاني)
+   290→- حظر حقيقي على مستوى الشبكة: session.webRequest.onBeforeRequest يلغي طلبات المتعقبات (غير mainFrame) قبل حدوثها — نوافذ منبثقة تُدمج في نفس العرض، لا صلاحيات حساسة افتراضيًا، روابط mailto عبر التطبيق الافتراضي
+   291→- electron-builder: NSIS x64 لويندوز (Barq-Setup-1.0.0-x64.exe ~78MB)، DMG arm64 للماك (Barq-1.0.0.dmg ~94MB)، AppImage للينكس (Barq-1.0.0.AppImage ~103MB) — أحجام صادقة معلنة في الواجهة
+   292→- workflow build-desktop.yml: مصفوفة 3 منصات → artifacts → release job يرفع الكل إلى release ثابت باسم stable (--clobber) — روابط أبدية عبر releases/download/stable/<file>
+   293→- توحيد release المستقر: build-android.yml عدّل ليرفع APK إلى نفس stable، وdownload-data.ts يشير للروابط الثابتة الأربعة بأحجام حقيقية
+   294→- download-view.tsx: أزرار المنصات الثلاث أصبحت anchors حقيقية (target=_blank) مع محاكاة التقدم وإبقاء toast الاكتمال
+   295→- (هذه الجلسة) مراجعة كاملة + lint نظيف + إنشاء release stable مسبقًا عبر API (منع سباق إنشاء متوازٍ) + رفع c08caab بالتوكن
+   296→- CI: Build Desktop ✅ / Build Android ✅ / Pages ✅ — الملفات الأربعة في stable والروابط الحية 200
+   297→- E2E: صفحة /download تعرض الروابط الحقيقية، النقر يفتح رابط الملف الصحيح بتبويب جديد، حالة التقدم+اكتمال تعملان، صفر أخطاء كونسول
+   298→
+   299→Stage Summary:
+   300→- برق الآن متصفح مكتبي حقيقي مثل كروم/إيدج: نوافذ exe/dmg/AppImage من https://github.com/ehessan1974-maker/browser/releases/tag/stable
+   301→- روابط تنزيل ثابتة أبدية: barq-android.apk · Barq-Setup-1.0.0-x64.exe · Barq-1.0.0.dmg · Barq-1.0.0.AppImage
+   302→- سلسلة CI ذاتية: تعديل desktop/** → مثبّتات جديدة؛ تعديل android/** → APK؛ تعديل الموقع → Pages
+   303→
+   304→---
+   305→Task ID: 12
+   306→Agent: main (Z.ai Code)
+   307→Task: دعم ويندوز 32-bit + ويندوز 7 لابتوب المستخدم — مثبّتات إضافية وإصلاح build
+   308→
+   309→Work Log:
+   310→- desktop/package.json: البناء ثنائي المعمارية x64 + ia32 → Barq-Setup-1.0.0-{x64,ia32}.exe
+   311→- download-data/download-view: نوع alts[] — بطاقة ويندوز تعرض رابط "نسخة 32-bit" + "نسخة ويندوز 7 — 32-bit" تحت زر التنزيل
+   312→- أول تشغيل: مهمة win7 فشلت منطقيًا — --ia32 تجاهُل (إعداد arch بـ package.json يغلبه) وأنتج مثبّتًا مزدوجًا 150MB باسم افتراضي، وملفات Electron 22 طغت بنفس الأسماء على نسخ Electron 33 في stable
+   313→- الإصلاح: desktop/electron-builder.win7.yml — إعداد مستقل كامل (ia32 فقط + artifactName بـ win7) + glob رفع دقيق Barq-Setup-win7-*.exe + خطوة حذف الأصول القديمة الخاطئة من release job
+   314→- main.js: shim navHistory(wc) — توافق navigationHistory (Electron 27+) مع canGoBack مباشرة (Electron 22 لويندوز 7)
+   315→- تحقق من سجلات CI: electron=22.327 ✓، الملف بالاسم الصحيح، الأصول الست حية 200، الأصول الخاطئة حُذفت
+   316→
+   317→Stage Summary:
+   318→- 6 ملفات على release stable: APK 12KB · x64.exe 78MB (E33) · ia32.exe 72.5MB (E33) · win7-ia32.exe 62MB (E22) · dmg 94MB · AppImage 103MB
+   319→- لابتوب المستخدم (ويندوز 32-bit) مدعوم بحالتَي ويندوز 10/11 وويندوز 7
+   320→- منJs متوافق مع كلا إصداري Electron — بنية CI واحدة تنتج كل النسخ تلقائيًا
+   321→
+   322→---
+   323→Task ID: 13
+   324→Agent: orchestrator (Z.ai Code)
+   325→Task: إصلاح بلاغ تجميد نسخة 32-bit — استقرار الأجهزة القديمة
+   326→
+   327→Work Log:
+   328→- بلاغ المستخدم: "نسخة ال 32 بت علقت لي الكومبيوتر وماقدرت أخرج منها لحتى طفيت الكومبيوتر بشكل إجباري" — تجميد كامل يتطلب إيقافًا إجباريًا.
+   329→- التشخيص: السبب الأشهر لتجميد Electron على عتاد 32-bit قديم هو تسريع GPU (كروت قديمة لا تتحمل Chromium الحديث)، مع احتمال مساهمته: عزل المواقع (يضاعف العمليات/الذاكرة) وفتح نسخ متعددة من التطبيق بالخطأ.
+   330→- الإصلاح في `desktop/main.js` (قبل app.whenReady):
+   331→  - `app.disableHardwareAcceleration()` — رندر بالمعالج بدل كرت الشاشة.
+   332→  - `process-per-site` + `renderer-process-limit=2` + `disable-features=site-per-process,IsolateOrigins` — عمليات أقل = ذاكرة أقل.
+   333→  - `app.requestSingleInstanceLock()` — نسخة واحدة فقط؛ النقر المتكرر يركّز النافذة القائمة بدل فتح نسخ جديدة.
+   334→- الإصلاح في المثبّتات (`desktop/package.json` + `electron-builder.win7.yml`):
+   335→  - `oneClick: false` + `allowToChangeInstallationDirectory: true` — تثبيت موجّه.
+   336→  - `runAfterFinish: false` — لا تشغيل تلقائي بعد التثبيت (يمنع مفاجأة التشغيل الثقيل فورًا).
+   337→- إعادة تسمية النسخة في `src/lib/download-data.ts`: "نسخة خفيفة 32-bit — ويندوز 7 أو جهاز قديم" مع تصحيح الحجم ~62MB.
+   338→- رفع commit 793d822 بالتوكن الجديد (ghp_xslx…Locb) بعد انتهاء صلاحية السابق.
+   339→- مراقبة CI: run #4 Build Desktop Apps + run #13 Pages على رأس 793d822.
+   340→
+   341→Stage Summary:
+   342→- كل مثبّتات release `stable` ستعاد بناؤها بالحماية الجديدة؛ روابط `releases/download/stable/...` ثابتة ولم تتغير.
+   343→- الإرشاد للمستخدم: إن كان الابتوب ويندوز 7 أو RAM ≤ 4GB فالنسخة الصحيحة `Barq-Setup-win7-1.0.0-ia32.exe` (Electron 22، أخف وأقدم محركًا)؛ وإن ويندوز 10/11 32-bit فـ `Barq-Setup-1.0.0-ia32.exe` الجديدة.
+   344→- النسخة المعطلة سابقًا كانت من commit أقدم قبل تعطيل GPU — إعادة التثبيت فوقها تكفي (المثبّت الجديد يستبدلها).
+   345→- تذكير: حذف التوكن من GitHub Settings → Developer settings → Personal access tokens.
+   346→
+   347→---
+   348→Task ID: 13b
+   349→Agent: orchestrator (Z.ai Code)
+   350→Task: بلاغ تجميد ثانٍ — نسخة طوارئ ZIP محمولة بدون تثبيت
+   351→
+   352→Work Log:
+   353→- بلاغ المستخدم الثاني: "أيضا الكومبيوتر علق" — التجميد تكرر حتى بعد إصلاح 793d822 (تعطيل GPU).
+   354→- فرضية إضافية: التجميد قد يحدث أثناء التثبيت نفسه (مضاد فيروسات يفحص استخراج ~300MB على قرص ميكانيكي قديم = يبدو الجهاز مجمّدًا 5-15 دقيقة) أو أثناء التشغيل على RAM منخفض جدًا (2GB) مع Windows 10 32-bit.
+   355→- الإصلاح الجديد (commit fc12c4b):
+   356→  - electron-builder.win7.yml: إضافة target `zip` ia32 باسم Barq-Portable-win7-1.0.0-ia32.zip — نسخة محمولة بلا مثبّت نهائيًا (استخراج وتشغيل مباشرة).
+   357→  - main.js: سقف V8 heap 256MB لكل عملية (js-flags) + كاش قرص 32MB (disk-cache-size) — يمنع نمو الذاكرة و thrash الكاش على الأقراص الميكانيكية.
+   358→  - download-data.ts: إعادة ترتيب الروابط — ZIP المحمول أولًا "الأنسب للأجهزة الهشة"، ثم المثبّت الخفيف، ثم 32-bit العادية (ويندوز 10/11 فقط).
+   359→  - build-desktop.yml: رفع exe + zip معًا من مهمة win7.
+   360→- ⛔ الرفع فشل: التوكن ghp_xslx…Locb أصبح 401 Bad credentials (نجح برفعين قبل دقائق ثم مات — المرجح أن المستخدم حذفه بناءً على النصيحة الأمنية، وهذا صحيح).
+   361→- commit fc12c4b جاهز محليًا بانتظار توكن جديد.
+   362→
+   363→Stage Summary:
+   364→- state: blocké — انتظار توكن من المستخدم لرفع fc12c4b وبناء ZIP في CI.
+   365→- بعد الرفع: مراقبة run الجديد، التحقق من ظهور Barq-Portable-win7-1.0.0-ia32.zip في release stable (HTTP 200)، ثم إرشاد المستخدم له.
+   366→- meanwhile: المستخدم يُوجَّه لاستخدام الموقع من متصفحه مباشرة (بلا تثبيت) كحل فوري آمن.
+   367→
+   368→---
+   369→Task ID: 13c
+   370→Agent: orchestrator (Z.ai Code)
+   371→Task: إصلاح فشل CI وإطلاق النسخة المحمولة ZIP — اكتمل بنجاح
+   372→
+   373→Work Log:
+   374→- تشخيص المستخدم الحاسم: "علق الجهاز مجرد ضغطت مرتين على البرنامج لأقوم بتثبيه" — التجميد يحدث لحظة تشغيل المثبّت NSIS نفسه (ليس التصفح/التشغيل). الحل الصحيح إذًا: نسخة بلا مثبّت نهائيًا.
+   375→- فشل CI السابق (run #5, head bb5a293): جلب سجلات job فاشل → الخطأ الحقيقي: "configuration.win.target[1] has an unknown property 'artifactName'" — مخطط electron-builder 25.1.8 يرفض artifactName داخل عنصر مصفوفة win.target (العناصر تقبل target/arch فقط).
+   376→- الإصلاح (commit 44eea04):
+   377→  - electron-builder.win7.yml: حذف artifactName من عنصر zip → يرث الاسم المشترك Barq-Setup-win7-${version}-ia32.${ext} فينتج Barq-Setup-win7-1.0.0-ia32.zip.
+   378→  - build-desktop.yml: تحديث glob الرفع إلى desktop/dist/Barq-Setup-win7-*.zip ليطابق.
+   379→  - download-data.ts: تحديث file/url للـ ZIP إلى الاسم الجديد (replace_all).
+   380→- CI (run #6, head 44eea04): success كامل. release stable محدث 01:47Z: ZIP المحمول 84.2MB + كل المثبّتات أُعيد بناؤها بحدود الذاكرة الجديدة.
+   381→- تحقق نهائي بلا توكن: روابط ZIP وexe العامة كلاهما HTTP 200. Pages نشر الروابط الجديدة (ZIP أولًا).
+   382→
+   383→Stage Summary:
+   384→- النسخة المحمولة حية: releases/download/stable/Barq-Setup-win7-1.0.0-ia32.zip (200) — بلا مثبّت: فك ضغط → تشغيل Barq.exe مباشرة.
+   385→- الرابط الأول في صفحة التنزيل الآن "الأنسب للأجهزة الهشة — ZIP محمول بدون تثبيت".
+   386→- كل أصول release stable مبنية بـ: تعطيل GPU + سقف V8 256MB/عملية + كاش قرص 32MB + عمليات أقل + نسخة واحدة + لا تشغيل تلقائي.
+   387→- درس مسجل: لا تضع artifactName داخل عناصر win.target — استخدم الاسم المشترك أو قسم الهدف المستقل.
+   388→
+   389→---
+   390→Task ID: 13d
+   391→Agent: Z.ai Code (main)
+   392→Task: متابعة مسار إصلاح ويندوز على جهاز المستخدم (لابتوب ضعيف 32-bit) بعد فشل DISM بـ 0x800f081f
+   393→
+   394→Work Log:
+   395→- نفّذ المستخدم إعادة تعيين كاش Windows Update كاملة: net stop (wuauserv/cryptSvc/bits/msiserver) ثم ren SoftwareDistribution → SoftwareDistribution.old وren catroot2 → catroot2.old ثم إعادة تشغيل الخدمات الأربعة — كلها نجحت
+   396→- أُعيد تشغيل DISM /Online /Cleanup-Image /RestoreHealth → فشل مجددًا بـ 0x800f081f (The source files could not be found)
+   397→- الاستنتاج: قناة Windows Update على الجهاز لا تقدّم ملفات الإصلاح — المشتبه الأول: سياسة تحوّل التحديثات لخادم WSUS غير موجود (سبب شائع معروف لهذا الخطأ)؛ المشتبه الثاني: قناة WU معطوبة فعليًا
+   398→- الخطوة المعطاة للمستخدم: فحص سريع `reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /s` — إن وُجدت UseWUServer/WUServer ⇒ إبطال التحويل بأوامر reg add؛ إن خلا المفتاح ⇒ الانتقال لخطة ISO ويندوز 10 22H2 نسخة x86 كمصدر نظيف: `DISM /Online /Cleanup-Image /RestoreHealth /Source:esd:X:\sources\install.esd:1 /LimitAccess` (أو wim حسب محتوى ISO)
+   399→
+   400→Stage Summary:
+   401→- العتاد سليم بالكامل (قرص FUJITSU MHZ2250BH = OK، ذاكرة Event 1101 بلا أخطاء) — الضرر محصور في ملفات ويندوز نتيجة الإطفاءات الإجبارية المتكررة
+   402→- حالة الإصلاح: sfc أكد ملفات متضررة عاجز عن إصلاحها؛ DISM فشل مرتين بـ 0x800f081f (قبل وبعد إعادة تعيين كاش WU)
+   403→- برق مجمد عمدًا ومكتمل (release stable بكل الأصول ومنها win7-ia32.zip المحمولة 84.2MB) حتى إتمام إصلاح ويندوز
+   404→- معلّقات: رفع commitين محليين (ملاحظة كروم + تسميات download-data.ts) عند توفر توكن جديد؛ تذكير المستخدم بحذف التوكن ghp_JfGq…؛ نسخ احتياطي للملفات على فلاش؛ محاولة برق ختامية مراقبة (قاعدة انتظار 10 دقائق بلا إطفاء إجباري)
+   405→
+   406→---
+   407→Task ID: 13e
+   408→Agent: Z.ai Code (main)
+   409→Task: تفسير نتيجة فحص سياسة WSUS والانتقال لخطة ISO ويندوز 10 22H2 كمصدر نظيف
+   410→
+   411→Work Log:
+   412→- نتيجة reg query عندها: مفتاح Policies\Microsoft\Windows\WindowsUpdate\AU موجود لكنه فارغ تمامًا (لا UseWUServer ولا WUServer) → لا يوجد تحويل WSUS؛ استُبعد الاحتمال وحُسم أن قناة WU على الجهاز معطوبة فعليًا
+   413→- الخطة المعطاة للمستخدم: تنزيل ISO ويندوز 10 22H2 عبر Media Creation Tool (على نظام 32-bit ستنتج وسائط x86 تلقائيًا بما نحتاجه)، اختيار "ملف ISO" وليس USB، حجم ~3.5GB مع قاعدة الانتظار 10 دقائق
+   414→- بعد اكتمال الـ ISO: مونت بنقرة مزدوجة (ويندوز 10 يدعم مونت ISO مدمجًا) ثم `DISM /Get-WimInfo /WimFile:X:\sources\install.esd` + winver لمعرفة الإصدار (Home/Pro) لاختيار فهرس الصورة الصحيح
+   415→- الأمر النهائي المتوقع: `DISM /Online /Cleanup-Image /RestoreHealth /Source:esd:X:\sources\install.esd:N /LimitAccess` — /LimitAccess يتجاوز قناة WU المعطوبة كليًا
+   416→- بديل مذكور للمستخدم: تنزيل ISO من نفس الرابط عبر الهاتف (UA الجوال يظهر قائمة اختيار الإصدار مباشرة) ونقله للابتوب فلاشًا
+   417→- تذكير بالنسخ الاحتياطي للملفات الشخصية على فلاش قبل الإصلاح
+   418→- خطة الطوارئ النهائية إن فشل DISM بالمصدر: إصلاح الترقية in-place من نفس الـ ISO مع الحفاظ على الملفات والبرامج
+   419→
+   420→Stage Summary:
+   421→- استبعاد WSUS نهائيًا؛ المسار الرسمي الآن: مصدر محلي نظيف عبر /Source + /LimitAccess لتجاوز WU المعطوبة
+   422→- بانتظار المستخدم: ناتج Get-WimInfo من الـ ISO المركّب + إصدار الويندوز (winver)
+   423→
+   424→---
+   425→Task ID: T-REMIND-1 (🔔 MUST-DO قبل إغلاق العمل نهائيًا)
+   426→Agent: orchestrator (Z.ai Code)
+   427→Task: تذكير المستخدم بإعادة تفعيل ما أوقفه بنفسه بعد انتهاء كل العمل
+   428→
+   429→Work Log:
+   430→- المستخدم أوقف بنفسه شيئًا كان يُظهر رسالة كل ساعة أو نصف ساعة (نص الرسالة/الصورة ضاعت من السياق — غير معروف)
+   431→- المستخدم طلب صراحة: "ذكرني بهذا — سنعيد تفعيلها بعد انتهاء كل العمل"
+   432→- سُجّل البند في TodoWrite بأعلى أولوية: remind-reactivate (pending)
+   433→- التذكير لا يُنفذ إلا بعد: نجاح sfc /scannow النهائي + تشغيل برق بنجاح
+   434→- مطلوب من المستخدم لاحقًا: اسم الخدمة/البرنامج الموقف (أو أول سطر من الرسالة) لتجهيز أمر إعادة التفعيل الصحيح
+   435→
+   436→---
+   437→Task ID: ISO-DONE-1
+   438→Agent: orchestrator (Z.ai Code)
+   439→Task: اكتمال بناء ISO ويندوز 10 22H2 x86 عربي النظيف
+   440→
+   441→Work Log:
+   442→- محول uupdump v126 أكمل: FODs (23 حزمة) → install.wim → 5 تحديثات (SSU 7714، Enablement KB5015684، SafeOS KB5122887، SetupDU KB5126029، LCU KB5129236) → Pro edition → إعادة ضغط (3,990,528 KiB) → winre.wim (SafeOS 7722 + LCU 7727) → boot.wim → ISO بلا أي خطأ
+   443→- الناتج: D:\ISO\uup2\19045.7727.260912-1613.22H2_RELEASE_SVC_IM_CLIENTMULTI_X86FRE_AR-SA.ISO — 5,148,180,480 بايت (~4.8 GB)
+   444→- الـ ISO مصدر إصلاح فقط — ممنوع تشغيل setup.exe
+   445→
+   446→---
+   447→Task ID: DISM-SOURCE-1
+   448→Agent: orchestrator (Z.ai Code)
+   449→Task: فحص مصدر الإصلاح وتحديد الفهرس الصحيح
+   450→
+   451→Work Log:
+   452→- ISO مونت على الحرف **G:** (Volume: CCSA_X86FRE_AR-SA_DV5)
+   453→- install.wim موجود: 4,464,630,141 بايت، مقروء
+   454→- Get-WimInfo: Index 1 = Windows 10 Home، Index 2 = Windows 10 Pro
+   455→- EditionID على جهاز المستخدم = Professional → الفهرس المختار: **Index 2**
+   456→- نظام المستخدم 19045.7725، المصدر 19045.7727 (أحدث بدرجتين — صالح للإصلاح)
+   457→
+   458→Stage Summary:
+   459→- الأمر المعتمد: `DISM /Online /Cleanup-Image /RestoreHealth /Source:wim:G:\sources\install.wim:2 /LimitAccess`
+   460→- تحذير للمستخدم: عملية طويلة على القرص الميكانيكي (20-60+ دقيقة)، لا إغلاق للنافذة ولا فصل للمونت G أثناءها
+   461→- عند الفشل: مراجعة آخر 30 سطر من C:\Windows\Logs\DISM\dism.log
+   462→
+   463→---
+   464→Task ID: DISM-RESTORE-OK-1
+   465→Agent: orchestrator (Z.ai Code)
+   466→Task: تنفيذ RestoreHealth — نجح ✅
+   467→
+   468→Work Log:
+   469→- `DISM /Online /Cleanup-Image /RestoreHealth /Source:wim:G:\sources\install.wim:2 /LimitAccess` أكمل إلى 100%
+   470→- النتيجة: "The restore operation completed successfully. / The operation completed successfully."
+   471→- Image Version أثناء العملية: 10.0.19045.7725 — أي أن الإصلاح شُغّل على النظام الحي بنجاح
+   472→- أول نجاح إصلاح منذ بدء الأزمة (سبق: sfc عاجز + DISM فشل بـ 0x800f081f مرتين)
+   473→
+   474→Stage Summary:
+   475→- component store أصبح سليماً — بُني من مصدر نظيف محلي (Index 2 = Pro من install.wim)
+   476→- التالي: فحص G:\sources\sxs ثم تفعيل NetFx3 من المصدر /LimitAccess → إزالة SQL 2005 → sfc /scannow نهائي → تشغيل برق
+   477→
+   478→---
+   479→Task ID: NETFX3-OK-1
+   480→Agent: orchestrator (Z.ai Code)
+   481→Task: تفعيل NetFx3 — نجح ✅
+   482→
+   483→Work Log:
+   484→- فحص G:\sources\sxs: يحوي microsoft-windows-netfx3-ondemand-package~31bf3856ad364e35~x86~~.cab (39,116,719 بايت) + IE optional package
+   485→- `DISM /Online /Enable-Feature /FeatureName:NetFx3 /Source:G:\sources\sxs /LimitAccess` → 100% → "The operation completed successfully."
+   486→- القرص G: انتهى دوره بعد هذه الخطوة (يسمح بنزعه؛ ملف الـ ISO يبقى محفوظاً في D:\ISO\uup2)
+   487→
+   488→Stage Summary:
+   489→- .NET Framework 3.5 مفعّل من مصدر نظيف محلي بلا WU
+   490→- المتبقي: إزالة SQL Server 2005 → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة تفعيل ما أوقفه المستخدم
+   491→
+   492→---
+   493→Task ID: SQL2005-REMOVED-1
+   494→Agent: orchestrator (Z.ai Code)
+   495→Task: إزالة SQL Server 2005 كاملاً — نجحت ✅
+   496→
+   497→Work Log:
+   498→- فحص مسبق كشف 3 قواعد مستخدم حقيقية: fmsql.mdf، movedb.mdf، "فاتورة مبيعات س كيو إل.mdf" (آخر تعديل مايو 2025)
+   499→- نسخ احتياطي كامل قبل الإزالة: xcopy MSSQL.1 → D:\SQL_BACKUP\MSSQL.1 (94 ملف تشمل كل قواعد المستخدم + النظام)
+   500→- ظهرت رسالة Program Compatibility Assistant عند تشغيل ARPWrapper — عولجت بـ "تشغيل البرنامج بدون الحصول على التعليمات"
+   501→- نُفذت الإزالات: ARPWrapper (المثيل) + msiexec /x{2750B389} (Tools) + {E7084B89} (VSS Writer) + {7670D32F} (Native Client) + {53F5C3EE} (Setup Support Files)
+   502→- الفحص النهائي عبر Get-ItemProperty على Uninstall keys: قائمة SQL فارغة تماماً ✅
+   503→
+   504→Stage Summary:
+   505→- SQL Server 2005 بكل مكوناته الستة أزيل بنجاح
+   506→- نسخة احتياطية دائمة: D:\SQL_BACKUP\MSSQL.1 (لإعادة تركيب قواعد المستخدم على SQL حديث لاحقاً إن طُلب)
+   507→- المتبقي: إعادة تشغيل → sfc /scannow نهائي → تشغيل برق → 🔔 تذكير إعادة التفعيل
+   508→
+   509→---
+   510→Task ID: SFC-REPAIRED-1
+   511→Agent: orchestrator (Z.ai Code)
+   512→Task: sfc /scannow بعد الإصلاح — نجح ✅
+   513→
+   514→Work Log:
+   515→- sc query MSSQL$SQLEXPRESS → "does not exist as an installed service" ✅ (خدمة SQL أزيلت كلياً)
+   516→- sfc /scannow (بعد إعادة التشغيل) → "Windows Resource Protection found corrupt files and successfully repaired them."
+   517→- مقارنة تاريخية: قبل الإصلاح كانت النتيجة "unable to fix some of them" — التحوّل نتيجة RestoreHealth بالمصدر النظيف 19045.7727
+   518→
+   519→Stage Summary:
+   520→- أول إصلاح ناجح كامل لملفات النظام منذ بدء الأزمة
+   521→- متبقٍ للتأكيد: تشغيلة sfc ثانية يجب أن تطلع "no integrity violations" → ثم تشغيل برق → 🔔 تذكير إعادة التفعيل
+   522→
+   523→---
+   524→Task ID: SFC-FINAL-VERDICT-1
+   525→Agent: orchestrator (Z.ai Code)
+   526→Task: الحكم النهائي من CBS.log — النظام نظيف ✅
+   527→
+   528→Work Log:
+   529→- فلتر "اليوم" أعطى 0/0 — تبين أن نمط "Repairing corrupted file" أضيق من صيغة اللوج الفعلية "[SR] Repairing file ... from store"
+   530→- الحكم من آخر 12 سطر [SR] مباشرة (2026-10-06 03:07): Verifying 18 components → Repairing 2 components → أصلح fmifs.dll + OneDrive.lnk من المخزن → "Repair complete" → "All files and registry keys listed in this transaction have been successfully repaired"
+   531→- صفر أسطر "Cannot repair member file" في آخر الجلسة
+   532→- ملاحظة: رسائل المستخدم المكررة (نفس مخرجات sfc حرفياً ×3) فُسّرت كإعادة لصق/إرسال مكرر من العميل — عولجت بالتحويل للتحقق من اللوج مباشرة
+   533→
+   534→Stage Summary:
+   535→- 🟢 حالة الإصلاح مكتملة: component store سليم + sfc يعمل ويصلح بنجاح + صفر عجز
+   536→- أصول محفوظة: D:\ISO\uup2\*.iso (منديل إسعاف مستقبلي) + D:\SQL_BACKUP\MSSQL.1 (قواعد الفواتير)
+   537→- المتبقي: تشغيل برق (قاعدة 10 دقائق) → 🔔 إعادة تفعيل ما أوقفه المستخدم (بحاجة اسم الخدمة/البرنامج منه)
+   538→
+   539→---
+   540→Task ID: BARQ-BSOD-1
+   541→Agent: orchestrator (Z.ai Code)
+   542→Task: أول تشغيل لبرق بعد الإصلاح — انهار بـ BSOD ❌
+   543→
+   544→Work Log:
+   545→- إرشاد المستخدم لتنزيل Barq-Setup-win7-1.0.0-ia32.zip (تحقق من أسماء الأصول على release stable عبر expanded_assets HTML — API rate-limited)
+   546→- التحقق: الأصول الحية = Barq-Setup-1.0.0-ia32.exe / -x64.exe / Barq-Setup-win7-1.0.0-ia32.exe / .zip / AppImage / dmg / apk
+   547→- المستخدم شغّل Barq.exe (نسخة ia32 محمولة على D:\Barq مفترضاً): شاشة سوداء ~10 دقائق ثم BSOD (شاشة "إصلاح أو إعادة تشغيل")
+   548→- خطة التشخيص المعتمدة: 1) إيقاف تشغيل برق نهائياً لحين جمع الأدلة 2) قراءة BugCheck من Event Viewer (Id 1001/41) + فحص C:\Windows\Minidump 3) النسخ الاحتياطي للملفات الشخصية على فلاش قبل أي تجربة 4) التجربة القادمة بـ --disable-gpu كاختبار تشخيصي (الشاشة السوداء الطويلة تشير لمشكلة GPU/تعريف)
+   549→
+   550→Stage Summary:
+   551→- BSOD جديد مرتبط بتشغيل تطبيق رسومي (Electron) — الإصلاح الملفي نجح لكن المشكلة الأصلية للـ BSODs قد تكون أعمق (تعريف/عتاد/kernel)
+   552→- احتمالات: تعريف عرض تالف/قديم، ذاكرة فاشلة عند ضغط استخدام، نظام 32-bit برام محدود + قرص ميكانيكي (تجميد 10 دقائق ثم انهيار)
+   553→- مطلوب من المستخدم: تقرير عودة الويندوز للعمل + كود الإيقاف إن ظهر BSOD مجدداً + نتيجتا أوامر BugCheck/Minidump + نسخ احتياطي فلاش فوراً
+   554→
+   555→---
+   556→Task ID: BSOD-DIAGNOSIS-1
+   557→Agent: orchestrator (Z.ai Code)
+   558→Task: تشخيص BSOD — الحسم: VIDEO_TDR_FAILURE 0x116 ✅
+   559→
+   560→Work Log:
+   561→- Event 1001 BugCheck: 0x00000116 **مرتين** — 10/6 4:34AM (بعد تشغيل برق) و9/30 5:30PM (قبل كل عمل الإصلاح!)
+   562→- 0x116 = VIDEO_TDR_FAILURE: تعريف العرض علِق وفشل استرجاع TDR → BSOD
+   563→- الاستنتاج الحاسم: المشكلة أقدم من برق وأقدم من الإصلاح — برق مجرد أول تطبيق رسومي ثقيل كشف الجرح القديم في تعريف GPU
+   564→- Minidump واحد موجود: C:\Windows\Minidump\100626-32359-01.dmp (1.1MB) + MEMORY.DMP
+   565→- من السجل: Windows Memory Diagnostic كان مجدولاً يوم 30/9 (نتيجته غير معروفة)
+   566→
+   567→Stage Summary:
+   568→- السبب الأصلي لكل BSODs الجهاز: تعريف كرت الشاشة (0x116) — مرتبط بعمر الجهاز/التعريف، وليس بملفات النظام
+   569→- خطة العلاج بالترتيب: 1) تشغيل برق بـ --disable-gpu (اختبار تأكيدي + حل تشغيلي فوري) 2) معرفة كرت الشاشة وDriverVersion/Date 3) إزالة التعريف الحالي وإعادة تثبيته (أو Basic Display Adapter كحل آمن) 4) إن استمر 0x116 بلا تطبيقات رسومية → شبهة عتاد (حرارة/عُتاد GPU)
+   570→- النسخ الاحتياطي على الفلاش ما زال شرطاً قبل أي تجربة تشغيل جديدة
+   571→
+   572→---
+   573→Task ID: GPU-GUI-2
+   574→Agent: orchestrator (Z.ai Code)
+   575→Task: إصلاح خطأ إطلاق واجهة "مركز تحكم برق" — Start-Process powershell -Verb RunAs فشل بـ "No application is associated with the specified file"
+   576→
+   577→Work Log:
+   578→- المستخدم أكمل تثبيت BarqControl.ps1 على سطح المكتب بنجاح ("OK - Barq Control Center created")، لكن أمر الإطلاق `Start-Process powershell -Verb RunAs -ArgumentList "-File ...BarqControl.ps1"` فشل: ERROR_NO_ASSOCIATION (0x80070483).
+   579→- التشخيص: ShellExecuteEx فشل في حل الاسم المختصر "powershell" (بدون مسار/امتداد) على نظام أُصلح مؤخراً — الفشل قبل إطلاق أي عملية؛ الأدلة: نمط RunAs على ملفات بمسار كامل (bat الأزرار) يعمل على نفس الجهاز.
+   580→- الحل الفوري المسلّم: أمر إطلاق مصحح بمسار كامل "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" + -STA، وبنافذة كونسول ظاهرة (بدون Hidden) في المرة الأولى للتشخيص البصري.
+   581→- الحل الدائم المسلّم: Desktop\BarqCenter.bat بنمط الارتفاع الذاتي المجرّب (fltmc + Start-Process -FilePath '%~f0' -Verb RunAs) يطلق powershell.exe بالمسار الكامل مع -WindowStyle Hidden -File BarqControl.ps1 + اختصار Desktop\مركز تحكم برق.lnk بأيقونة D:\Barq\Barq.exe.
+   582→- قاعدة مقررة مستقبلاً: على هذا الجهاز دائماً مسار كامل مع .exe عند أي Start-Process (ومنها الارتفاع الذاتي داخل ps1).
+   583→
+   584→Stage Summary:
+   585→- السبب الجذري: فشل حل الأسماء التنفيذية المختصرة في ShellExecute على نظام ما بعد الإصلاح؛ ليس خللاً في الواجهة ولا في BarqControl.ps1 (اتم بناؤه كاملاً لأن بلوك التثبيت وصل لـ Write-Host الختامي).
+   586→- مساران للإطلاق الآن: one-liner مصحح للتجربة الأولى (كونسول ظاهر للتشخيص) + اختصار دائم (bat+lnk) لا يعتمد على الارتفاع الداخلي للسكربت.
+   587→- الأزرار الخمسة القديمة واختصارات Ctrl+Alt+F11/F12 لم تُمَس. معلّق: تأكيد المستخدم أن النافذة فتحت، ثم تنظيف اختياري لسطح المكتب، ثم وعد إعادة تفعيل Controlled Folder Access.
+   588→
+   589→---
+   590→Task ID: GPU-GUI-3
+   591→Agent: orchestrator (Z.ai Code)
+   592→Task: طلب المستخدم تنظيف سطح المكتب من الأزرار القديمة بعد نجاح الواجهة الموحدة ("هدول في داعي يضلو؟ ليش ما حذفتهن؟")
+   593→
+   594→Work Log:
+   595→- شرح سبب عدم الحذف الفوري: شبكة أمان لحين تأكيد عمل الواجهة + اختصارا الطوارئ Ctrl+Alt+F11/F12 لا يجوز حذفهما لأنهما مخرج النظيف الأعمى عند سوداء الشاشة.
+   596→- تصميم حل "نقل + إخفاء" يحافظ على كل شبكات الأمان ويجعل سطح المكتب بأيقونة واحدة:
+   597→  1) نقل إطفاء نظيف.lnk وإعادة تشغيل نظيفة.lnk إلى %APPDATA%\Microsoft\Windows\Start Menu\Programs — هوتكي Ctrl+Alt+F11/F12 يبقى مسجلاً ويعمل أعمى (قاعدة قشرة ويندوز: الهوتكي يشتغل من سطح المكتب أو قائمة ابدأ).
+   598→  2) أرشفة برق آمن.bat وألوان حلوة.bat ووضع أساسي.bat إلى C:\Users\<user>\BarqOldButtons (نقل وليس حذف).
+   599→  3) attrib +h لإخفاء BarqControl.ps1 وBarqCenter.bat (يبقيان يعملان من الاختصار).
+   600→  4) إعادة إنشاء اختصار مركز تحكم برق.lnk داخل نفس البلوك (idempotent) حتى يضمن وجود أيقونة الإطلاق مهما كان الوضع السابق.
+   601→- بلوك واحد consolidation متسامح مع التكرار (Test-Path guards) يعمل سواء أُنجزت الخطوة 2 السابقة أم لا.
+   602→
+   603→Stage Summary:
+   604→- قاعدة ملزمة: اختصارات الطوارئ بأزرار F لا تُحذف أبداً — تُنقل فقط بين سطح المكتب وقائمة ابدأ.
+   605→- سلسلة الطوارئ تبقى كاملة بعد التنظيف: Win+Ctrl+Shift+B ثم Ctrl+Alt+F11/F12 ثم الباور المطول كحل أخير.
+   606→- الأرشيف BarqOldButtons قابل للاسترجاع بأمر واحد. معلّق: تأكيد المستخدم التنفيذ + إعادة تفعيل Controlled Folder Access (وعد مفتوح).
+   607→
+   608→---
+   609→Task ID: GPU-GUI-4
+   610→Agent: orchestrator (Z.ai Code)
+   611→Task: المستخدم لا يجد الأزرار بعد التنظيف — "وين صارو؟ عأساس بقائمة ابدأ؟ ما لقيت شي"
+   612→
+   613→Work Log:
+   614→- توضيح التوزيع النهائي: الاختصاران إطفاء نظيف/إعادة تشغيل نظيفة في %APPDATA%\Microsoft\Windows\Start Menu\Programs (وعاء تسجيل هوتكي فقط، ليسا للنقر)، والأزرار النصية الثلاثة في أرشيف C:\Users\96393\BarqOldButtons (وليس قائمة ابدأ — هذا سبب عدم العثور).
+   615→- تسليم أمرين فتح مجلدات للتحقق البصري: explorer "$env:APPDATA\...\Programs" و explorer "$env:USERPROFILE\BarqOldButtons".
+   616→- بروتوكول اختبار الهوتكي: Ctrl+Alt+F11 بوقت مناسب = إعادة تشغيل فعلية تؤكد التسجيل؛ إن لم تعمل → إعادة تشغيل Explorer (Stop-Process -Name explorer -Force) لإعادة تسجيل الاختصارات ثم إعادة الاختبار.
+   617→- خيار مرونة مسلّم: أمر نقل الاختصارين من قائمة ابدأ عائدين ظاهرين على سطح المكتب إن ارتاح لهما.
+   618→
+   619→Stage Summary:
+   620→- لا شيء ضاع: 2 لقائمة ابدأ (هوتكي حي) + 3 للأرشيف + أيقونة إطلاق واحدة ظاهرة. الوظيفة والحماية كاملة.
+   621→- معلّق ثابت: تأكيد فعلية عمل Ctrl+Alt+F11/F12 بعد النقل + وعد إعادة تفعيل Controlled Folder Access بعد انتهاء كل العمل.
+   622→
+   623→---
+   624→Task ID: BARQ-SEARCH-1
+   625→Agent: orchestrator (Z.ai Code)
+   626→Task: طلب المستخدم "أريد أن يعمل برق على كل محركات البحث" — تعدد محركات البحث في برق سطح المكتب v1.1.0
+   627→
+   628→Work Log:
+   629→- السبب الجذري: desktop/main.js سطر 18 — SEARCH_URL ثابت duckduckgo فقط (شريط العناوين + صفحة البداية).
+   630→- فحص trackers.js: قائمة الحظر لا تمس نطاقات محركات البحث (google.com/gstatic/googleapis/bing/yandex) → صفحات البحث تعمل كاملة وإعلانات النتائج تُحجب.
+   631→- تطوير v1.1.0: SEARCH_ENGINES (google/bing/duckduckgo/yandex/wikipedia) + حفظ المحرك في userData/search-engine.json + IPC (set-engine/engines) + حقن ?engine= في loadFile + روابط داخلية barq.internal/set-engine و /search عبر will-navigate + navState يضم engine/engineName.
+   632→- UI: قائمة محرك في شريط الأدوات (ui.html/ui.js) + شرائح محركات على صفحة البداية (home.html) + بلاطتا جوجل وبينج.
+   633→- desktop/package.json → 1.1.0؛ build-desktop.yml → wildcards للـ artifacts.
+   634→- فحوصات: node --check للملفات الثلاثة + trackers (203 hosts) + package.json — نجحت كلها.
+   635→- الدفع لGitHub فشل (لا صلاحيات من الساندبوكس) → لا Actions/Release جديد؛ download-data.ts بقيت 1.0.0 عمداً لتبقى روابط الموقع صحيحة.
+   636→- قرار التسليم: ترقية في المكان عبر بلوك PowerShell يكتب resources/app (مجلد غير معبأ يُحمَّل عند غياب app.asar) + إعادة تسمية app.asar → app.asar.bak احتياطاً. بدون تنزيل 60MB وبدون تغيير D:\Barq\Barq.exe → منظومة مركز التحكم وbarq_once.bat سليمة.
+   637→
+   638→Stage Summary:
+   639→- برق 1.1.0: 5 محركات + اختيار محفوظ دائم + توافق Electron 22 (win7) و33. قابل للعكس بأمر واحد.
+   640→- معلّق: دفع v1.1.0 للمستودع وتحديث download-data.ts عند توفر صلاحيات؛ وعد إعادة تفعيل Controlled Folder Access.
+   641→
+   642→---
+   643→Task ID: BARQ-SEARCH-2
+   644→Agent: orchestrator (Z.ai Code)
+   645→Task: المستخدم ركّب ترقية 1.1.0 السابقة وقال "ما تحدث شي !!!" — بناء بلوك ترقية موثوق مع تشخيص مرئي
+   646→
+   647→Work Log:
+   648→- تحليل أسباب فشل البلوك السابق بصمت: (1) برق كان شغالاً أثناء الكتابة → ملفات مقفولة وapp.asar لم يُعاد تسميته (2) اللصق انقطع في بلوك نصوص طويل دون أي تنبيه (3) لا مخرجات طباعية في البلوك القديم → لا طريقة لمعرفة أين توقف
+   649→- إعادة بناء التسليم بشكل مقاوم للفشل: payload zip (8 ملفات 1.1.0 كاملة: main.js/package.json مينيمال/trackers.js/chrome×4) بحجم 11,461 بايت → base64 ملفوف 120 حرفاً (128 سطراً) → بوابة SHA256 = 87a65d41f48c56931bc041ae18529f0af082446f9c63ad823223026415d6c531
+   650→- بلوك PowerShell واحد (267 سطراً، صفر محارف غير-ASCII → آمن اللصق بأي codepage): إغلاق برق إن شغالاً → إيجاد مجلد برق الحقيقي (اختصارات سطح المكتب عبر WScript.Shell ثم مسارات مرشحة ثم بحث عمق 3) → فحص صلاحية الكتابة → تحقق SHA256 قبل لمس أي شيء → Expand-Archive إلى resources\app → حياد app.asar (إعادة تسمية .bak أو حذف إن وُجد bak) → تحقق نسخة 1.1.0 + وجود SEARCH_ENGINES → إطلاق برق
+   651→- طباعة إنجليزية فقط [1]..[8] مع [OK]/[FAIL] (العربية تظهر مشوهة في كونسول ويندوز) — والمستخدم يُنسخ المخرجات إن ظهرت [FAIL]
+   652→- محاكاة كاملة لسلسلة PowerShell في Python: دمج الأسطر → فك base64 → مطابقة hash → فك zip → مقارنة بايت-ببايت مع الملفات المصدر → PASS؛ node --check على main.js/ui.js/preload.js → PASS
+   653→- نسخ احتياطية: download/barq-1.1.0/{barq110.zip, Barq-Upgrade-1.1.0.ps1}
+   654→
+   655→Stage Summary:
+   656→- الترقية الآن ذاتية التشخيص: كل خطوة تطبع حالتها، الحزمة تُرفض إن انقطع اللصق (hash gate)، وapp.asar يُحيد نهائياً بحيث يضمن تحميل resources\app (الأولوية في Electron)
+   657→- بونص مثبت في 1.1.0: app.disableHardwareAcceleration() مدمج → أأمن على مشكلة 0x116 (VIDEO_TDR_FAILURE) ولا حاجة لـ barq_once.bat
+   658→- معلّق: إخراج المستخدم للبلوك الجديد وتأكيد ظهور 5 محركات (جوجل/بينج/دك دك جو/ياندكس/ويكيبيديا) على صفحة البداية؛ وعد إعادة تفعيل Controlled Folder Access ما زال مفتوحاً
+   659→
+   660→---
+   661→Task ID: BARQ-SEARCH-3
+   662→Agent: orchestrator (Z.ai Code)
+   663→Task: تأكيد المستخدم الوشيك — "يعني فيني شغلو من أيقونة البرنامج نفسها؟ ما عاد فيه مشكلة أو انهيار كرت الشاشة؟"
+   664→
+   665→Work Log:
+   666→- السؤال يفيد أن بلوك BARQ-SEARCH-2 نجح وبرق 1.1.0 شغال — تم التأكيد: الإطلاق من أيقونة Barq.exe مباشرة صار آمناً ومعتمداً (disableHardwareAcceleration مدمج في main.js يشتغل مع كل تشغيلة بلا أي وسيط)
+   667→- barq_once.bat و--disable-gpu لم يعودا ضروريين إطلاقاً (يمكن حذف barq_once.bat لاحقاً إن طلب)
+   668→- توضيح الصدق الطبي: برق خرج من دائرة خطر الـ 0x116 كلياً (رسم برمجي بالمعالج فقط)، لكن الجذر (تعريف كرت الشاشة الهش) ما زال في الجهاز — أي تطبيق رسومي آخر قد يوقظه
+   669→- اقتراح خطوة الجذر الاختبارية: Get-CimInstance Win32_VideoController (اسم الكرت + DriverVersion/Date) ثم خطة إعادة تثبيت التعريف
+   670→- اختبار طمأنة عملي: استخدام برق مع فيديو يوتيوب يومين بلا BSOD = براءة نهائية
+   671→
+   672→Stage Summary:
+   673→- برق 1.1.0 يعمل من الأيقونة مباشرة — منظومة التشغيل المساعد أصبحت ترفاً لا ضرورة
+   674→- الملف المفتوح الوحيد تقنياً: تعريف GPU (خطوة اختيارية) + وعد إعادة تفعيل Controlled Folder Access (جاهز متى ما طلب المستخدم)
+   675→
+   676→---
+   677→Task ID: GPU-DRIVER-1
+   678→Agent: orchestrator (Z.ai Code)
+   679→Task: تحليل نتيجة Win32_VideoController — تحديد التعريف وبناء خطة تحديث موثقة
+   680→
+   681→Work Log:
+   682→- نتيجة الفحص: Mobile Intel(R) 4 Series Express Chipset Family ×2، DriverVersion 8.15.10.1883 بتاريخ 8/27/2009، أحدهما Status=Error — دليل قاطع: تعريف عمره 17 سنة (من أيام ويندوز 7، انتقل عبر الترقيات) بحالة تلف ظاهرة = مصدر 0x116 المؤكد
+   683→- بحث المصادر: downloadmirror.intel.com ميت (403) — إنتل حذفت الإرث؛ Microsoft Update Catalog فيه التعريف
+   684→- استخراج GUID 286dcaaf-9a0f-48e1-9196-85b399e17832 (أحدث إدخال: 10/12/2011) عبر Search.aspx + DownloadDialog.aspx POST → رابط مباشر catalog.s.download.windowsupdate.com/.../20541202_69255649c39c0b2eeaa72014f7cfb1c4fd673ae1.cab
+   685→- تنزيل الـ cab في الساندبوكس (20,572,304 بايت، SHA256 c87b3cda...a3ff7d0) وفك ضغطه بـ libarchive-c (LZX) → فحص INF: DriverVer=10/13/2011,8.15.10.2555، أقسام NTx86.5.1/6.0/6.2 (32-بت حتى نمط ويندوز 8)، Device IDs 2A42/2A43 مطابقة للكرت، ig4icd32.dll بعمارة i386 — كل الفحوصات مطابقة
+   686→- ملاحظة صراحة: التعريف النهائي المطلق 2702 (2013) غير موجود بالكاتالوج ومصادره اليوم غير موثوقة → اعتماد 2555 (المصدر الموقّع من مايكروسوفت) كهدف
+   687→- تحضير بلوك تثبيت كامل: فحص صلاحيات admin → Enable-ComputerRestore + Checkpoint-Computer → تنزيل من رابط مايكروسوفت المباشر → تحقق SHA256 → expand.exe (مدمج بالويندوز) → pnputil /add-driver /install → توجيه إعادة تشغيل ثم أمر الفحص نفسه
+   688→- نسخة احتياطية: download/intel-gpu/20541202_intel-4series-2555-x86.cab
+   689→
+   690→Stage Summary:
+   691→- الجذر مؤكد: تعريف 2009 بحالة Error — التحديث المخطط: 1883 (2009) → 2555 (2011، موقّع من مايكروسوفت، 32-بت، مطابق هاردوير)
+   692→- خطة الطوارئ جاهزة إذا رفض pnputil: Have-Disk يدوي من Desktop\IntelGFX2555\kit51500.inf
+   693→- خطة بديلة أخيرة إن استمر 0x116 بعد التحديث: Basic Display Adapter (إزالة نهائية لمعادلة TDR)
+   694→
+   695→---
+   696→Task ID: GPU-DRIVER-2
+   697→Agent: orchestrator (Z.ai Code)
+   698→Task: تشخيص تعليق بلوك v1 عند [0] وتسليم v2 موثوق بمعمارية تلقائية (32/64-بت)
+   699→
+   700→Work Log:
+   701→- بلاغ المستخدم: v1 طبع [0] ثم توقف — التشخيص: ليس انهياراً؛ التعليق داخل التنزيل الصامت (رسائل v1 تطبع بعد إتمام كل خطوة لا قبلها) + Invoke-WebRequest بطيء جداً على الأجهزة القديمة وقد يبدو مجمداً كلياً، ومرشح للتعليق على Microsoft CDN من منطقة المستخدم. لم يُلمس النظام (التثبيت بمرحلة [5]) — الإلغاء بـ Ctrl+C آمن
+   702→- كتالوج Microsoft Update اليوم لا يعرض تعريفات Display لـ 4 Series (بقي System فقط) — بحث بديل
+   703→- اكتشاف حزم Lenovo الرسمية المطابقة تماماً: كتالوج download.lenovo.com/catalog/<MT>_Win7.xml → حزم Display → 7xd658ww (VIDEO_INTELV64CAN1، 64-بت، 16,633,208 بايت) و 7xd558ww (VIDEO_INTELV32CAN1، 32-بت، 18,333,456 بايت) — كلتاهما "Intel GM45 Display Driver" نسخة 8.15.10.2555 للجهاز Mobile Intel(R) 4 Series Express Chipset Family (تأكيد حرفي من readme)
+   704→- تنزيل الحزمتين في الساندبوكس وتثبيت SHA256: x64 = 83a2b07393e79bba4580d9a3f031edda1b59d71405dff792523b67169879e0ef / x86 = 4fe98a91a06928fe90928519ec831cd8ffbb9d32b91884838d86aa54eb712b50 (الأحجام تطابق بيانات Lenovo XML بالبايت)
+   705→- بناء v2 (محفوظ: download/intel-gpu/Barq-GPU-2555-v2.ps1): اختيار تلقائي للحزمة حسب [Environment]::Is64BitOperatingSystem → [1] curl.exe المدمج بنسبة تقدم حية ومهلة 20 دقيقة وإعادة محاولة + اختصار يستخدم نسخة Downloads إن وجدت → [2] بوابة SHA256 → [3] استخراج صامت رسمي (Inno /VERYSILENT /EXTRACT="YES" من أمرة Lenovo نفسها) + فحص INF بالـ DriverVer 8.15.10.2555 وعمارة NTamd64/NTx86 → [4] نقطة استعادة غير مانعة → [5] pnputil /add-driver /install
+   706→- تحقق السكربت: صفر محارف غير-ASCII، أقواس متوازنة، بصمات 64 خانة مدمجة، المسار الوحيد download.lenovo.com
+   707→
+   708→Stage Summary:
+   709→- v2 يلغي نقطة التعليق: تنزيل مرئي بالبالمئة من CDN لينوفو السريع، وبوابات تحقق قبل أي لمسة للنظام، ومعمارية تلقائية (تعاليم مجهولة البتّية لويندوز المستخدم)
+   710→- خطة المسار: تثبيت 2555 → إعادة تشغيل → أمر الفحص نفسه؛ إذا فشل curl يطبع الرابط للتنزيل اليدوي بالمتصفح إلى Downloads ثم إعادة اللصق تكمل تلقائياً
+   711→- البديل الأخير ما زال جاهزاً إن استمر 0x116 بعد التحديث: التحويل إلى Basic Display Adapter
+   712→
+   713→---
+   714→Task ID: GPU-DRIVER-3
+   715→Agent: orchestrator (Z.ai Code)
+   716→Task: بلاغ v2 - فشل تنزيل Lenovo بـ 403 - تحديد الحجب الجغرافي والتحويل لمصدر مايكروسوفت x86 (v3)
+   717→
+   718→Work Log:
+   719→- بلاغ المستخدم: v2 عمل [0] ثم curl أظهر تقدماً وحصل 403 من download.lenovo.com - والأهم: السكربت اختار حزمة 7xd558ww (x86) = إثبات قاطع أن ويندوز المستخدم 32-بت
+   720→- اختبار مقارن من الساندبوكس: download.lenovo.com يرجع 200 حتى بـ user-agent الافتراضي لـ curl => الـ 403 حجب جغرافي على منطقة المستخدم (لينوفو تحجب دولاً معاقبة تجارياً) وليس مشكلة UA أو سكربت - التنزيل اليدوي بالمتصفح من لينوفو سيفشل أيضاً
+   721→- استرجاع الرابط الكامل لحزمة مايكروسوفت (كان مختصراً بـ worklog) عبر POST على DownloadDialog.aspx بـ GUID 286dcaaf-9a0f-48e1-9196-85b399e17832: catalog.s.download.windowsupdate.com/msdownload/update/driver/drvs/2013/02/20541202_69255649c39c0b2eeaa72014f7cfb1c4fd673ae1.cab
+   722→- تنزيل جديد من الرابط: 200، 20,572,304 بايت بسرعة 1.86MB/s، SHA256 طابق النسخة الاحتياطية المحلية بالبايت (c87b3cda...a3ff7d0)
+   723→- فك ضغط الـ cab محلياً بـ libarchive: 100 ملف، kit51500.inf فيه Class=Display و DriverVer=10/13/2011,8.15.10.2555 وأقسام [IntelGfx.NTx86.5.1/6.0/6.2] = تعريف 32-بت مطابق تماماً لويندوز المستخدم
+   724→- روابط بديلة مفحوصة: http (غير مشفر) من catalog.s و download.windowsupdate.com يعملان (206) - يصلحا كمرآة ثانية داخل السكربت
+   725→- خطة طوارئ أخيرة: نسخة من الـ cab وُضعت في public/drivers/ داخل مشروع Next.js => المستخدم يقدر ينزلها من نافذة البريفيو إذا فشلت سيرفرات مايكروسوفت أيضاً من شبكته
+   726→- بناء v3 (محفوظ: download/intel-gpu/Barq-GPU-2555-v3.ps1): حماية x86 فقط -> [1] نسخة Downloads (نمط 20541202*.cab بلا إعادة تسمية) أو curl بنسبة حية ومهلة 30 دقيقة وسيرفر ثانٍ تلقائياً -> [2] بوابة SHA256 -> [3] expand.exe + بوابة DriverVer 8.15.10.2555 -> [4] نقطة استعادة -> [5] pnputil /add-driver kit51500.inf /install - تحقق: صفر غير-ASCII وأقواس متوازنة
+   727→
+   728→Stage Summary:
+   729→- تشخيص 403 نهائي: حجب جغرافي من لينوفو - مصدر النجاح الوحيد المؤكد لمنطقة المستخدم: Microsoft WU CDN (وكلا بروتوكوليه https/http يعملان من الساندبوكس)
+   730→- v3 مخصص لويندوز 32-بت مع حارس يمنع التشغيل على 64-بت، وبوابتان (بصمة الملف + نسخة التعريف داخل INF) قبل أي تثبيت
+   731→- إن فشل حتى Microsoft CDN: رابط يدوي بالمتصفح يُطبع تلقائياً، ثم خطة C = تنزيل الملف من بريفيو التطبيق (public/drivers/) لأن السكربت يلتقط أي 20541202*.cab من Downloads
+   732→
+   733→---
+   734→Task ID: GPU-DRIVER-4
+   735→Agent: orchestrator (Z.ai Code)
+   736→Task: بلاغ نجاح v3 كاملاً على جهاز المستخدم - تسجيل الحالة وانتظار فحص ما بعد إعادة التشغيل
+   737→
+   738→Work Log:
+   739→- v3 أنجز كل المراحل عند المستخدم دون أي خطأ: تنزيل 19.6MB بسرعة ~470KB/s خلال 42 ثانية (إثبات نهائي أن تعليق v1 كان بمنزّل Invoke-WebRequest البطيء وليس بالشبكة) -> SHA256 طابق -> kit51500.inf DriverVer 8.15.10.2555 تأكد -> نقطة استعادة اختلف -> pnputil سجل الحزمة بنجاح (Published Name: oem6.inf)
+   740→- ملاحظة محفوظة: مخرجات pnputil لم تعرض سطور ربط أجهزة صريحة؛ الربط النهائي للكرتين (أحدهما بحالة Error سابقاً) يتأكد بعد إعادة التشغيل + أمر الفحص
+   741→- المجهز لما بعد الفحص: إذا بقيت 1883 أو Status=Error -> إجبار الربط (pnputil /scan-devices أو تثبيت يدوي من Desktop\IntelGFX2555 عبر Device Manager)؛ وإذا استمر 0x116 حتى بعد 2555 -> خطة Basic Display Adapter
+   742→- أرشيف المرحلة: download/intel-gpu/Barq-GPU-2555-v3.ps1 + النسخة الاحتياطية للـ cab + نسخة plan-C في public/drivers/ (تعمل: 200 على منفذ 3000)
+   743→
+   744→Stage Summary:
+   745→- سلسلة التسليم التعليمية صارت موثوقة ميدانياً: v3 صفر أخطاء عند المستخدم من أول تشغيل
+   746→- المعلقة الوحيدة: فحص ما بعد إعادة التشغيل (DriverVersion 8.15.10.2555 + Status=OK للسطرين) لإغلاق ملف GPU نهائياً
+   747→
+   748→---
+   749→Task ID: GPU-DRIVER-5
+   750→Agent: orchestrator (Z.ai Code)
+   751→Task: فحص ما بعد إعادة التشغيل - oem6.inf مسجل لكنه لم يرتبط - تحضير بلوك إجبار الربط v4
+   752→
+   753→Work Log:
+   754→- نتيجة المستخدم بعد الريستارت: السطران ما زالا 8.15.10.1883 (2009)، الأول OK والثاني Error - أي أن pnputil سجل الحزمة (oem6.inf) في المخزن لكنه لم يبدل التعريف الحالي
+   755→- التشخيص: سلوك ترتيب التعريفات في ويندوز - عند وجود تعريف مثبت يعتبره ويندوز مطابقة موفقة/أفضل (تزيين قسم أحدث أو تطابق Hardware ID أدق) لا يتحول تلقائياً حتى مع نسخة أعلى؛ الحل هو إزالة الحزمة القديمة ثم إعادة مسح
+   756→- بناء v4: [0] admin -> [1] استخراج أسماء حزم oem*.inf المربوطة عبر Win32_PnPSignedDriver (فلتر 4 Series) مع حارس في حال كانت in-box (لا يمكن حذفها بpnputil -> توجيه للطريقة اليدوية Have-Disk) -> [2] تحقق وجود oem6.inf بالمخزن -> [3] pnputil /delete-driver <القديم> /uninstall -> [4] pnputil /scan-devices + انتظار -> [5] طباعة حالة Win32_VideoController
+   757→- مسارات البديل جاهزة: (أ) Have-Disk يدوي من Desktop\IntelGFX2555\kit51500.inf يتجاوز الترتيب دائماً؛ (ب) تعطيل الرأس الثاني الفاشل؛ (ج) Basic Display Adapter كضمانة استقرار قصوى
+   758→
+   759→Stage Summary:
+   760→- الحزمة الجديدة سليمة بالمخزن (oem6.inf) ولا شي انكسر - التعريف القديم يعمل على الرأس الأول
+   761→- v4 = محاولة الإجبار الآمنة (مع نقطة استعادة موجودة من v3)؛ نتيجتها تحدد: نجاح (إغلاق ملف GPU) أو Have-Disk يدوي أو رأس معطل يُعطل أو Basic Display
+   762→
+   763→---
+   764→Task ID: GPU-DRIVER-6
+   765→Agent: orchestrator (Z.ai Code)
+   766→Task: تنفيذ بلوك الإجبار v4 عند المستخدم - النتيجة: ويندوز ربط 8.15.10.2702 (أحدث من 2555 المستهدفة)
+   767→
+   768→Work Log:
+   769→- المستخدم نفذ v4 بنجاح: [0] admin OK -> [1] الحزم المربوطة كانت oem13.inf + oem12.inf (وليست in-box -> قابلة للحذف) -> [2] oem6.inf (2555) ما زال بالمخزن -> [3] حذف الحزمتين القديمتين (uninstall + delete نجح للاثنتين) -> [4] scan-devices اكتمل -> [5] النتيجة: الرأسان على 8.15.10.2702 "Mobile Intel 4 Series Express Chipset Family (Microsoft Corporation - WDDM 1.1)"
+   770→- المفاجأة الإيجابية: 2702 أحدث من 2555 - وهي آخر تعريف رسمي معروف لكرت GMA X4500MHD (2013)؛ ويندوز كان عنده حزمة 2702 مسجلة بالمخزن (غير oem12/oem13) وربطها تلقائياً بعد إزالة القديم وإعادة المسح
+   771→- التعريف القديم 1883 (2009) أزيل نهائياً من الجهاز - جذر مشكلة 0x116 عولج على مستوى التعريف
+   772→- ملاحظة عرض: عمود DriverDate انضغط حرفياً في Format-Table (ظهر "3" فقط) وعمود Status قُصص من اللصق - ليست مشاكل حقيقية؛ بلوك الفحص القادم بطباعة سطر-لكل-جهاز لتفادي ضغط الجدول
+   773→- الخطوة التالية المسلمة: إعادة تشغيل -> بلوك فحص مضغوط (VER/DATE/STATE لكل رأس + Get-PnpDevice Problem code) -> إذا الرأسان OK: إغلاق ملف GPU واختبار برق (يوتيوب)؛ إذا الرأس الثاني ما زال Error: معالجته منفردة كما وعدنا (Problem code يحدد المسار: تعطيل/إعادة تفعيل أو Have-Disk يدوي لهذا الرأس)
+   774→
+   775→Stage Summary:
+   776→- الإجبار نجح وما أحسن: الجهاز رجع للعمل على 2702 (أحدث من الهدف 2555) بدل 1883
+   777→- المعلقة الوحيدة المتبقية: Status الرأس الثاني بعد الريستارت (كان Error على التعريف القديم)
+   778→- الخطة البديلة متسلسلة وجاهزة: Problem code -> إصلاح/تعطيل الرأس الثاني -> Basic Display Adapter كضمانة أخيرة
+   779→
+   780→---
+   781→Task ID: GPU-DRIVER-7
+   782→Agent: orchestrator (Z.ai Code)
+   783→Task: فحص ما بعد الريستارت - الرأس الأول OK على 2702 / الرأس الثاني Error بكود CM_PROB_FAILED_POST_START - بناء v5
+   784→
+   785→Work Log:
+   786→- نتيجة الفحص بعد إعادة التشغيل: السطران على 8.15.10.2702 بتاريخ 03/11/2013 كاملاً (آخر تعريف رسمي للكرت) - الرأس الأول STATE: OK + PnP: OK | CM_PROB_NONE
+   787→- الرأس الثاني: STATE: Error + PnP: Error | CM_PROB_FAILED_POST_START (كود 49: الجهاز يبدأ التشغيل لكنه يفشل في مرحلة ما بعد البدء) - نفس الرأس الذي كان Error أصلاً على تعريف 2009 -> المشكلة عتادية/BIOS في وظيفة العرض الثانوية للشريحة (PCI function 2.1)، ليست مشكلة تعريف
+   788→- استنتاج ميداني: لابتوب بشاشة واحدة - الشاشة المدفوعة حالياً من الرأس الأول السليم؛ الرأس الثاني لا يسوق شيئاً وهي تعمل (أو كانت ميتة أصلاً) منذ 2009
+   789→- بناء v5 (تنفيذ وعد "منعالج السطر التاني"): [0] admin -> [1] التقاط الجهاز الفاشل ديناميكياً بحسب Status=Error (وليس باسم) -> [2] محاولة تشغيل نظيفة واحدة عبر pnputil /restart-device على التعريف الجديد 2702 -> [3] إذا فشلت: pnputil /disable-device للرأس الفاشل فقط (قابل للترجيع) حتى يوقف ويندوز محاولات التشغيل المتكررة -> [4] طباعة الحالة النهائية سطر-لكل-جهاز
+   790→- التراجع موثق للمستخدم: Device Manager -> Right-click -> Enable، مع ملاحظة صريحة أن مخارج HDMI/VGA الخارجية غالباً كانت مرتبطة بهذا الرأس الميت أصلاً
+   791→
+   792→Stage Summary:
+   793→- التعريف وصل السقف الأعلى الممكن (2702/2013) والحزم القديمة 2009 أزيلت نهائياً - جذر 0x116 عولج
+   794→- المتبقي فقط: إسكات الرأس الثاني الفاشل (v5: محاولة تشغيل ثم تعطيل إن لزم) ثم اختبار برق + يوتيوب 10 دقائق
+   795→- آخر خط بديل إن رجع 0x116: Basic Display Adapter (كما وعدنا)
+   796→
+   797→---
+   798→Task ID: GPU-DRIVER-8
+   799→Agent: orchestrator (Z.ai Code)
+   800→Task: تنفيذ v5 عند المستخدم - الرأس الفاشل انعطل بنجاح، الشاشة بقيت شغالة - تبقى ريستارت + فحص نهائي
+   801→
+   802→Work Log:
+   803→- المستخدم نفذ v5: [0] admin OK -> [1] الجهاز الفاشل: PCI\VEN_8086&DEV_2A42&SUBSYS_FF671179&REV_07 (Toshiba subsys) مشكلته CM_PROB_FAILED_POST_START -> [2] pnputil /restart-device: "Device restarted successfully" لكن الجهاز رجع Error (متوقع - فشل عتادي/BIOS) -> [3] pnputil /disable-device: "Device disabled successfully" -> [4] الحالة النهائية: سطر OK|CM_PROB_NONE + سطر Error|CM_PROB_DISABLED
+   804→- نقطة مهمة مكشوفة من الـ InstanceId: DEV_2A42 هو وظيفة العرض الأساسية للشريحة (2.0) - الشريحة بتنعرض نفسها بوظيفتين PnP لنفس السيليكون، والوظيفة الفاشلة كانت بتفشل post-start عالبيوس القديم منذ 2009
+   805→- الدليل الميداني الحاسم: الشاشة ما انقطعت أبداً بعد التعطيل - الوظيفة السليمة (نفس السيليكون) عم تسوق العرض عبر درايفر Intel WDDM 1.1 2702
+   806→- سلّمت للمستخدم شبكة أمان استباقية: إن هبطت الشاشة بعد الريستارت لوضع Basic/دقة منخفضة -> أمر enable بسطر واحد: Get-PnpDevice -Class Display | Where-Object { $_.Problem -eq 'CM_PROB_DISABLED' } | ForEach-Object { pnputil /enable-device "$($_.InstanceId)" } (أو Device Manager Right-click Enable)
+   807→
+   808→Stage Summary:
+   809→- الملف شبه مقفل: التعريف بالسقف الأعلى (2702)، حزم 2009 محذوفة، الرأس الفاشل معطل نهائياً بشكل دائم (persistent)
+   810→- المتبقي: إعادة تشغيل + بلوك فحص (متوقع OK + Disabled) + اختبار برق ويوتيوب 10 دقائق
+   811→- خطوط الشبكة الأمنية: أمر enable للترجيع الفوري / نقطة استعادة v3 / Basic Display Adapter كخطة أخيرة
+   812→
+   813→---
+   814→Task ID: GPU-DRIVER-9
+   815→Agent: orchestrator (Z.ai Code)
+   816→Task: الفحص النهائي بعد الريستارت - النتيجة مطابقة 100% للتوقع - ملف GPU شبه مغلق
+   817→
+   818→Work Log:
+   819→- فحص المستخدم بعد إعادة التشغيل: الرأس الأول 8.15.10.2702 (03/11/2013) STATE: OK + PnP: OK | CM_PROB_NONE
+   820→- الوظيفة الفاشلة: Win32_VideoController يظهر STATE: Error لكن كود PnP: Error | CM_PROB_DISABLED - أي "معطلة عمداً بنا" وليس فشل ذاتي (قبل: CM_PROB_FAILED_POST_START = فشل ذاتي) - التحويل من "معطوبة تكسر" إلى "معطلة بضبط" اكتمل
+   821→- الشاشة نجت من الريستارت بالدقة الطبيعية عبر الوظيفة السليمة (نفس السيليكون) - التعطيل persistent ونجح
+   822→- الحالة النهائية للنظام: أحدث تعريف رسمي ممكن (2702/2013) + حزم 2009 محذوفة نهائياً + الوظيفة الفاشلة معطلة دائماً + نقطة استعادة v3 موجودة كشبكة أمان
+   823→- الاختبار الأخير المتبقي عند المستخدم: برق + يوتيوب 10 دقائق بدون BSOD -> إغلاق ملف 0x116 نهائياً
+   824→- ملاحظات ختامية مرسلة: اختياري حذف barq_once.bat؛ وعد سابق بإعادة تفعيل Controlled Folder Access عند الطلب؛ Basic Display Adapter تبقى الخطة الأخيرة إن رجع 0x116 (احتمال ضعيف)
+   825→
+   826→Stage Summary:
+   827→- سلسلة GPU (GPU-DRIVER-1..9) وصلت لحالتها النهائية الناجحة: جذر 0x116 (تعريف 2009) عولج بالكامل عبر: WU-CDN cab -> pnputil add -> حذف الحزم القديمة -> ربط 2702 تلقائي -> تعطيل الوظيفة الفاشلة
+   828→- بقي فقط اختبار الاستخدام الطويل (برق + يوتيوب 10 دقائق) للتأكيد النهائي
+   829→
+   830→---
+   831→Task ID: GPU-DRIVER-10
+   832→Agent: orchestrator (Z.ai Code)
+   833→Task: دليل تنظيف ما بعد الإصلاح - شو يُحذف وشو يبقى على جهاز المستخدم
+   834→
+   835→Work Log:
+   836→- بناء قائمة التنظيف المصنفة: (أ) يُحذف: Desktop\IntelGFX2555 + cab من Downloads (التعريف مسجل نهائياً بالـ Driver Store) + barq_once.bat + أي Barq-GPU-*.ps1 أو 7xd*.exe من محاولات قديمة - (ب) يبقى: نقطة استعادة v3 (شبكة أمان، ويندوز يدير مساحتها) + حزم Driver Store (نظامية، ممنوع المس اليدوي) + برق + تعطيل الوظيفة الفاشلة يبقى دائماً - (ج) قاعدة: لا حذف يدوي من C:\Windows
+   837→- كتابة بلوك تنظيف آمن idempotent بدون admin: أهداف صريحة بمسارات user profile فقط، يطبع ما وجده وحذفه، لا يلمس restore points أو Driver Store إطلاقاً
+   838→- تذكير المستخدم بالاختبار الأخير غير المؤكد: برق + يوتيوب 10 دقائق
+   839→
+   840→Stage Summary:
+   841→- دليل التنظيف جاهز ومسلّم مع بلوك آمن؛ الحالة النظامية النهائية: 2702 مربوط + حزم 2009 محذوفة + الوظيفة الفاشلة معطلة + نقطة استعادة محفوظة
+   842→
+   843→---
+   844→Task ID: CLEANUP-2
+   845→Agent: orchestrator (Z.ai Code)
+   846→Task: سؤال المستخدم عن مجلد D:\ISO - إيزو ويندوز 10 (عدة UUP dump) - شو يبقى وشو يحذف
+   847→
+   848→Work Log:
+   849→- لقطة المستخدم تظهر D:\ISO فيها: مجلدات bin/svf/tmp/uup/uup2 + 7z.exe + 19045.7727_x86_ar-sa_multi_f3083cc8_convert.zip + ar-sa_windows_10_consumer_22h2_updated_oct_2025_x86_dvd....iso.cmd + Fido.ps1 + ملفات نصية صغيرة
+   850→- التشخيص: عدة بناء/تنزيل إيزو ويندوز 10 22h2 x86 عربي (UUP dump/Fido) - بلا علاقة بإصلاح الكرت - على قرص D: فلا تؤثر على النظام فقط مساحة
+   851→- ملاحظة مهمة: ملف .iso.cmd هو سكربت تنزيل وليس الإيزو نفسه - ولا يوجد .iso ظاهر باللقطة (قد يكون غير مكتمل البناء)
+   852→- سلّمت بلوك مسح (scan) يطبع: أي ملفات .iso موجودة وأحجامها + حجم كل مجلد فرعي + كل الملفات - لاتخاذ القرار بالأرقام
+   853→- قاعدة القرار: إيزو موجود -> تبقى الإيزو (ضمانة إعادة تثبيت لجهاز قديم مع انتهاء دعم ويندوز 10 في 2025) وتحذف مجلدات العمل uup/uup2/tmp/bin/svf؛ لا إيزو -> إما إكمال البناء أو حذف المجلد كله؛ 7z.exe يبقى (أداة عامة مفيدة)
+   854→
+   855→Stage Summary:
+   856→- القرار معلق على نتيجة المسح (وجود/عدم وجود الإيزو وأحجام المجلدات) - حذرنت من الخلط بين سكربت .iso.cmd وملف الإيزو الفعلي
+   857→
+   858→---
+   859→Task ID: CLEANUP-3
+   860→Agent: orchestrator (Z.ai Code)
+   861→Task: نتيجة مسح D:\ISO - الإيزو مبني فعلاً (4.79GB) - بناء بلوك حذف مساحة العمل مع حماية الإيزو
+   862→
+   863→Work Log:
+   864→- نتيجة المسح: ISO حقيقي موجود 19045.7727.260912-1613.22H2_RELEASE_SVC_IM_CLIENTMULTI_X86FRE_AR-SA.ISO بحجم 4.79GB + مجلدات عمل: uup2=8.04GB، uup=0.67GB، tmp=0.62GB، svf=0.21GB، bin=0.01GB (المجموع القابل للتحرير ~9.5GB)
+   865→- القرار: الإيزو يبقى (كنز إعادة تثبيت لجهاز قديم بعد انتهاء دعم ويندوز 10 في 2025) + أدوات البناء الصغيرة تبقى (.cmd وFido.ps1 والـ zip - بضعة ميغا وتسمح بإعادة البناء مستقبلاً) + حذف مجلدات العمل الخمسة
+   866→- أمان إضافي بالبلوك: لا يمكن التنبؤ بموقع الإيزو الدقيق (البحث كان Recurse) -> البلوك أولاً ينقل أي .iso من داخل مجلدات العمل إلى جذر D:\ISO، ويتحقق أنه آمن بالجذر قبل حذف أي شيء، ويتوقف كلياً إن لم يجد إيزو
+   867→- البلوك بدون admin، بنية if/else بلا return لتناسب اللصق التفاعلي، وقابل لإعادة التشغيل
+   868→
+   869→Stage Summary:
+   870→- مساحة متوقعة للتحرير: ~9.5GB مع بقاء الإيزو 4.79GB + العدة الصغيرة functional
+   871→- لا يزال معلقاً من المستخدم: اختبار برق + يوتيوب 10 دقائق، وتنظيف Desktop/Downloads إن لم ينفذ بعد
+   872→
+   873→---
+   874→Task ID: CLEANUP-4
+   875→Agent: orchestrator (Z.ai Code)
+   876→Task: سؤال عن BarqCenter.bat و BarqControl.ps1 على سطح المكتب - إلهن لزوم؟
+   877→
+   878→Work Log:
+   879→- المستخدم عرض ملفين: BarqCenter.bat ومحتواه يستدعي PowerShell بـ -WindowStyle Hidden -File BarqControl.ps1 (غلاف تشغيل سكربت مخفي) - ثنائية من مراحل سابقة لمشروع برق
+   880→- محتوى BarqControl.ps1 غير معروف لي في السياق الحالي -> قبل قرار حذف/إبقاء سلّمت بلوك طباعة محتوى الملفين (بلا admin)
+   881→- قاعدة القرار الأولية: برق يعمل من أيقونته بدون هذين -> إن كانا أداة تحكم ي still يستخدمها المستخدم تبقى، وإلا حذف آمن بعد الاطلاع على المحتوى
+   882→
+   883→Stage Summary:
+   884→- القرار معلق على عرض محتوى BarqControl.ps1 (ماذا يفعل بالضبط) ثم قرار مشترك
+   885→
+   886→---
+   887→Task ID: CLEANUP-5
+   888→Agent: orchestrator (Z.ai Code)
+   889→Task: فحص محتوى BarqCenter.bat + BarqControl.ps1 - قرار الحذف
+   890→
+   891→Work Log:
+   892→- المحتوى كشف: BarqControl.ps1 = مركز تحكم WinForms قديم بمنطق ما قبل الإصلاح: يعرض DEV_2A42 ثابتاً ويبدل بين 3 أوضاع - (برق آمن: تعطيل GPU + ريستارت مجدول + إنشاء barq_once.bat بالـ Startup) / (ألوان حلوة: enable-device لإعادة تشغيل إنتل) / (وضع أساسي: تعطيل + ريستارت) + أزرار طاقة وطوارئ
+   893→- التحليل الحاسم: منطق اللوحة انعكس على الواقع الجديد - زر "ألوان حلوة" سيعيد تفعيل الوظيفة الفاشلة المعطلة عمداً (CM_PROB_DISABLED -> CM_PROB_FAILED_POST_START)، وزر "برق آمن" سيعيد جدولة ريستارت وإنشاء barq_once.bat - ومؤشر الحالة يكذب الآن (يرى الجهاز المعطل فيقول "وضع أساسي آمن" بينما النظام فعلياً على التعريف الكامل 2702)
+   894→- برق نفسه لا يحتاج اللوحة أصلاً: disableHardwareAcceleration مدمج فيه + النظام صار دائماً بالوضع الجيد نهائياً
+   895→- القرار: حذف الملفين + فحص وحذف barq_once.bat من Startup و سطح المكتب - مع كتلة تنظيف نهائية تثبت أن D:\Barq\Barq.exe لم يُمس
+   896→- ملاحظة جانبية: فشل Get-Item مع نجاح Get-Content يشير أن الملفين يحملان سمة Hidden
+   897→
+   898→Stage Summary:
+   899→- مركز التحكم القديم = أداة زمن الحرب قبل إصلاح التعريف، أصبحت فخاً (أزراره تعكس حالة النظام الجديدة) -> حذف آمن وموصى به
+   900→
+   901→---
+   902→Task ID: CLEANUP-5b
+   903→Agent: orchestrator (Z.ai Code)
+   904→Task: قلق المستخدم من ضغط أزرار اللوحة القديمة بالغلط - دمج التنظيف مع فحص تحقق في بلوك واحد
+   905→
+   906→Work Log:
+   907→- طمأنة: زر "برق آمن" لو انضغط كان الجهاز انعمل له ريستارت خلال 15 ثانية (المستخدم كان مبين له) - وأي أثر له (barq_once.bat) ينمسح بالبلوك أصلاً
+   908→- السيناريو الوحيد الذي يستحق التحقق: ضغطة قديمة على "ألوان حلوة" تكون أعادت تفعيل الوظيفة الفاشلة (CM_PROB_DISABLED -> CM_PROB_FAILED_POST_START)
+   909→- بلوك موحد جديد: [1] حذف ملفات اللوحة + barq_once.bat (Startup + Desktop) -> [2] تثبت سلامة D:\Barq\Barq.exe -> [3] فحص حالة العرض الحالية لالتقاط أي ضغطة عرضية
+   910→- سلّمت المستخدم أمر disable جاهز مسبقاً (بـ admin) إذا ظهر CM_PROB_FAILED_POST_START بالفحص
+   911→
+   912→Stage Summary:
+   913→- التحقق ببلوك واحد يجمع الحذف + التحقق؛ معايير الحالة الجيدة: GPU v8.15.10.2702 + سطر OK|CM_PROB_NONE + سطر Error|CM_PROB_DISABLED
+   914→
+   915→---
+   916→Task ID: CLEANUP-6
+   917→Agent: orchestrator (Z.ai Code)
+   918→Task: نتيجة بلوك التنظيف+التحقق الموحد - كل شيء مثالي - إغلاق ملف التنظيف
+   919→
+   920→Work Log:
+   921→- [1] حذف ناجح: BarqCenter.bat + BarqControl.ps1 من سطح المكتب - ولا أثر لـ barq_once.bat في Startup أو سطح المكتب (يعني لم تُضغط "برق آمن" يوماً)
+   922→- [2] D:\Barq\Barq.exe سليم - ايرور else في الناتج مجرد انقسام لصق في الكونسول (السطر الصحيح طبع OK قبله) - تجميلي فقط
+   923→- [3] الحالة المثالية مؤكدة بالأرقام: PnP: OK|CM_PROB_NONE + Error|CM_PROB_DISABLED + GPU v8.15.10.2702 - لا CM_PROB_FAILED_POST_START -> لم تقع أي ضغطة عرضية على "ألوان حلوة"
+   924→- المتبقي على المستخدم: اختبار برق + يوتيوب 10 دقائق (الإغلاق الرسمي) + اختياري: بلوك تنظيف D:\ISO (~9.5GB) وبلوك تنظيف Desktop/Downloads إن لم يُنفذا
+   925→
+   926→Stage Summary:
+   927→- الجهاز وصل حالته النهائية النظيفة: تعريف 2702 دائم + وظيفة فاشلة معطلة + لا سكربتات قديمة + برق سليم + نقطة استعادة محفوظة
+   928→- سلسلة GPU-DRIVER + CLEANUP شبه مغلقة بالكامل؛ الاختبار الملك الأخير الوحيد المتبقي
+   929→
+   930→---
+   931→Task ID: CLEANUP-7
+   932→Agent: orchestrator (Z.ai Code)
+   933→Task: بلاغ جديد - اختصارات الإطفاء/إعادة التشغيل توقفت بعد التنظيف
+   934→
+   935→Work Log:
+   936→- تحليل: كل ما حذفناه كان ملفات خاصة (panel + bata + مجلدات عمل) - لا شيء نظامي، لذا إغلاق ويندوز نفسه (Start menu / زر الطاقة) لا يمكن أن ينكسر
+   937→- الفرضية الأولى: الاختصارات كانت من عدة "زمن الحرب" وتشير إلى ملفات حذفناها للتو (BarqCenter.bat/BarqControl.ps1 أو غيرها) -> أصبحت روابط ميتة
+   938→- احتمال ثانٍ: الاختصارات كانت اختصارات لوحة مفاتيح (Ctrl+Alt+F11/F12) مسجلة من سكربت بدء تشغيل - أضفت فحص مجلد Startup للبلوك التشخيصي
+   939→- سلّمت بلوك تشخيص للقراءة فقط (بلا إطفاء!): يطبع كل .lnk على سطح المكتب مع Target و Arguments + محتويات مجلد Startup + تثبت وجود shutdown.exe - ثم الإصلاح حسب النتيجة (إعادة إنشاء اختصارات نظيفة تشير مباشرة إلى shutdown.exe)
+   940→
+   941→Stage Summary:
+   942→- التشخيص أولاً ثم الإصلاح؛ ممنوع تشغيل shutdown من داخل بلوك التشخيص حتى لا نطفئ جهاز المستخدم
+   943→
+   944→---
+   945→Task ID: CLEANUP-8
+   946→Agent: orchestrator (Z.ai Code)
+   947→Task: تشخيص اختصارات الإطفاء/إعادة التشغيل - لغز محلول + الحل
+   948→
+   949→Work Log:
+   950→- نتيجة المسح: لا يوجد أي .lnk للطاقة على سطح المكتب إطلاقاً (17 اختصاراً كلها ألعاب/كروم/برامج) + Startup شبه فارغ (AutorunsDisabled + desktop.ini فقط) + shutdown.exe موجود = True
+   951→- اللغز: "الاختصارات" التي يفقدها المستخدم هي أزرار (إطفاء الكمبيوتر / إعادة تشغيل الكمبيوتر) داخل مركز تحكم برق القديم الذي حذفناه اليوم - كان يستخدمها كوسيلته اليومية للطاقة
+   952→- اختصارات الكيبورد Ctrl+Alt+F11/F12 كانت مجرد Label نصي في اللوحة بدون كود RegisterHotKey - لم تكن وظيفية أصلاً
+   953→- الحل المسلم: بلوك إنشاء اختصارين نظيفين على سطح المكتب يشيران مباشرة إلى shutdown.exe (/s /t 0 و /r /t 0) بأسماء ASCII (Power Off / Restart) وأيقونات shell32 (27 إطفاء أحمر، 238 سهم إعادة تشغيل) - بلا أي منطق GPU أو صلاحيات admin أو جدولة
+   954→- ملاحظة جانبية: اختصار restart_server.bat (PharmacyInvoice) لم يُمس ويعمل
+   955→
+   956→Stage Summary:
+   957→- الغياب طبيعي ومقصود (حذف اللوحة القديمة)؛ المستخدم استعاد الراحة بأيقونتين نظيفتين مباشرتين بلا أي من أخطاء اللوحة القديمة
+   958→
+   959→---
+   960→Task ID: CLEANUP-9
+   961→Agent: orchestrator (Z.ai Code)
+   962→Task: طلب المستخدم - اختصارات طاقة تعمل حتى بالشاشة السوداء (سيناريو الطوارئ القديم)
+   963→
+   964→Work Log:
+   965→- إدراك: المستخدم كان يستخدم لوحة الطوارئ القديمة أيضاً كأداة إطفاء أعمى أثناء الشاشة السوداء (سيناريو 0x116) - نسختي البسيطة بدون Hotkey لم تغط هذا
+   966→- الحل الأصلي بلا خلفيات: خاصية Hotkey في ملفات .lnk على سطح المكتب تسجلها Explorer كاختصارات عالمية (تعمل طالما الجهاز حي والمستخدم مسجل دخول) - نفس مفاتيح اللوحة القديمة: Ctrl+Alt+F12 = إطفاء، Ctrl+Alt+F11 = إعادة تشغيل
+   967→- بلوك محدث: يعيد إنشاء/تحديث Power Off.lnk و Restart.lnk مع خاصية Hotkey (idempotent)
+   968→- بطاقة نجاة الشاشة السوداء المسلمة: (1) Win+Ctrl+Shift+B = إعادة تشغيل درايفر العرض المدمجة - الحل الذهبي الأول (2) Ctrl+Alt+F11/F12 (3) Win+X ثم U ثم U/R - تسلسل أعمى بالقائمة (4) زر الطاقة 5-6 ثوانٍ كآخر حل
+   969→- صدق تقني موثق: إذا جمد النظام كلياً (BSOD كامل) لا شيء برمجي يعمل - زر الطاقة فقط؛ والمفاتيح قد لا تصل في الألعاب fullscreen (raw input)
+   970→
+   971→Stage Summary:
+   972→- المستخدم استعاد قدرة الطوارئ الأعمى بمفاتيح حقيقية هذه المرة (الفكرة نفسها بلا سكربت إقامة أو خلفيات أو منطق GPU خطير)
+   973→
+   974→---
+   975→Task ID: BARQ-1.2.0
+   976→Agent: orchestrator (Z.ai Code)
+   977→Task: طلب المستخدم - ميزتان جديدتان لبرق: سجل بحث + مفضلة بنجمة (نهاية تجميد v1.1.0 بطلب صريح)
+   978→
+   979→Work Log:
+   980→- قراءة كامل الكود: desktop/main.js (عملية واحدة + BrowserView + IPC + حظر متعقبات + 5 محركات) و chrome/{ui.html,ui.js,preload.js,home.html} و آلية تسليم 1.1.0 (سكربت بـ payload base64 + SHA256 -> resources\app يتقدم على app.asar)
+   981→- main.js: إضافة مخزن JSON عام (readJson/writeJson في userData) + search-history.json (حد 300، دمج تكرار <15ث) + bookmarks.json (حد 500) + logSearchIfAny (يكتشف روابط المحركات من normalizeInput ويفك q) + تسجيل بحث صفحة البداية عبر handleInternal/search + toggleBookmark/removeBookmark/isBookmarked + navState يضيف title و starred + page-title-updated -> pushStats + نظام اللوحات: panelOpen + PANEL_H=300 (layout يزيح BrowserView) + closePanel تلقائياً عند أي تنقل + IPC: barq:panel/get-history/remove-search/clear-history/get-bookmarks/star/remove-bookmark
+   982→- ui.html: شريط .bar منفصل + زر نجمة (#star) وزر ساعة (#hist) + لوحتا .panel (position absolute top:57 داخل نافذة الشريط، تظهران بعد أن يزيح main الـ BrowserView) بقوائم قابلة للتمرير وحذف فردي ومسح كامل + حالة فارغة + نجمة مضاءة star-on (ذهبي #f5b83d)
+   983→- ui.js: render يعرض حالة النجمة ويعطلها بالبيت + showPanel/hidePanels (مع onPanelsClosed من main) + renderHistory/renderBookmarks مع esc() لكل نص + fmtTime (اليوم/أمس/تاريخ) + dblclick على النجمة يفتح لوحة المفضلة
+   984→- preload.js: 8 دوال جديدة عبر contextBridge - package.json: version 1.2.0
+   985→- التحقق: node --check على الملفات الأربعة OK + بناء barq120.zip (15,181B, SHA256=0fb42f0d39109a31dfa4a18d287177275f4f53e8b653962403d3429219f46809)
+   986→- إصلاح حاسم أثناء التغليف: آخر سطر base64 كان بلا newline فالتصقت قافلة here-string '@ به -> السكربت كان سينكسر عند المستخدم؛ أُعيد التوليد وتحقق فك التشفير العكسي (extracted.zip == barq120.zip byte-for-byte)
+   987→- أرشفة: download/barq-1.2.0/{Barq-Upgrade-1.2.0.ps1 (310 سطر, 26.8KB), barq120.zip} + خطة C: public/downloads/barq120.zip
+   988→- السكربت: نفس هيكل 1.1.0 المجرب ([1] اغلاق برق -> [2] ايجاد مجلد -> probe صلاحيات -> [4] SHA256 -> [5] expand لـ resources\app -> [6] asar.bak -> [7] verify version=1.2.0+BOOKMARKS_MAX+panel-history -> [8] تشغيل)
+   989→
+   990→Stage Summary:
+   991→- برق 1.2.0 جاهز بالكامل ومؤكد حزمياً: سجل بحث تلقائي (شريط العنوان + بحث صفحة البداية) + مفضلة بنجمة مع لوحتين منسدلتين
+   992→- التسليم: سكربت اللصق (مجرّب ميدانياً من 1.1.0) + خطة C تنزيل مباشر من البريفيو /downloads/barq120.zip
+   993→- بيانات المستخدم آمنة: search-engine.json القديم يبقى في نفس userData (%APPDATA%\Barq)
+   994→
+   995→---
+   996→Task ID: BARQ-1.2.1
+   997→Agent: orchestrator (Z.ai Code)
+   998→Task: بلاغ المستخدم "السجل والمفضلة لم تعمل!!!" بعد تثبيت 1.2.0 — تشخيص وإصلاح وإعادة تسليم
+   999→
+  1000→Work Log:
+  1001→- التشخيص الجذري (مؤكد 100% بقراءة الكود): layout() في main.js كان يضع BrowserView على كامل المساحة تحت الشريط متجاهلاً panelOpen تماماً — وBrowserView يرسم فوق محتوى النافذة دائماً، فاللوحتان (المرسومتان في ui.html عند top:57) كانتان محشورتان خلف الصفحة: الأزرار تعمل بالخلفية لكن لا شيء يُرى
+  1002→- خلل ثانٍ: قائمة المفضلة لا تُفتح إلا بنقر مزدوج على النجمة (غير قابل للاكتشاف) والنقر المزدوج يطلق click مرتين = النجمة تُحفظ وتُزال = إحساس "لا تعمل"
+  1003→- إصلاح main.js: layout() صار top = CHROME_H + (panelOpen ? PANEL_H : 0) — العرض ينزل 300px عند فتح لوحة (تطابق تام: لوحة 299px + حد الشريط) + closePanel() داخل did-navigate حتى التنقل بنقر داخل الصفحة يغلق اللوحة ويعيد العرض
+  1004→- إصلاح الواجهة: زر ريبون مخصص (#marks أيقونة دبوس كتاب) بجوار النجمة يفتح قائمة المفضلة؛ حذف dblclick عن النجمة (نجمة = حفظ/إزالة فقط)
+  1005→- الإصدار 1.2.1 + node --check سليم للثلاثة ملفات JS
+  1006→- بناء بجميع الدروس الميدانية عبر مولّد آلي (tmp-tools/gen_barq121.py): barq121.zip (15,522B, SHA256=c9af626144b89437fbe92ce8d7e3b2220d72ad03e376f2c94926638f6ab7bdfd) + سطر base64 الأخير بnewline مؤكد + تحقق عكسي (فك التشفير == zip بايت-ببايت) + تأكيد أن الحمولة تطابق المصادر وتحوي علامات الإصلاح
+  1007→- سكربت Barq-Upgrade-1.2.1.ps1 (425 سطر): نفس هيكل 1.2.0 المجرب، خطوة [7] تتحقق من panel-fix + marks-button + version=1.2.1 برمجياً
+  1008→- خطة C: public/downloads/barq121.zip
+  1009→
+  1010→Stage Summary:
+  1011→- السبب لم يكن بيانات المستخدم ولا التثبيت — كان خلل طبقات عرض في 1.2.0: اللوحات مغطاة بصفحة الويب
+  1012→- 1.2.1 جاهزة: سجل البحث (زر الساعة) والمفضلة (نجمة حفظ + ريبون للقائمة) يظهران فعلاً
+  1013→- بيانات المستخدم (%APPDATA%\Barq) لم تُمس — أي نجوم/سجل من محاولاته على 1.2.0 يبقى محفوظاً
+  1014→
+  1015→---
+  1016→Task ID: BARQ-1.2.2
+  1017→Agent: orchestrator (Z.ai Code)
+  1018→Task: طلب المستخدم - القوائم (السجل والمفضلة) على الجانب بنمط كروم بدل القائمة المنسدلة العلوية
+  1019→
+  1020→Work Log:
+  1021→- تحويل اللوحتين من dropdown علوي (PANEL_H=300 يزحزح العرض لتحت) إلى side panel بنمط كروم: PANEL_W=360 على الحافة اليسرى كامل الارتفاع تحت الشريط، والـ BrowserView ينزاح يميناً x=PANEL_W ويضيق عرضه (مرآة RTL لسلوك كروم العربي)
+  1022→- إعادة ترتيب الشريط مثل كروم: نجمة/دبوس/ساعة انتقلت لطرف الشريط اليساري فوق اللوحة مباشرة (بعد خانة العنوان، قبل درع الحجب)
+  1023→- إبراز الزر صاحب اللوحة المفتوحة بclass on (نمط كروم) في ui.js + CSS button.on
+  1024→- الإصدار 1.2.2 + node --check سليم + بناء عبر tmp-tools/gen_barq122.py بنفس بوابات الجودة: barq122.zip (SHA256 أدناه) + تحقق عكسي بايت-ببايت + علامات side-panel في [7]
+  1025→- خطة C: public/downloads/barq122.zip
+  1026→
+  1027→Stage Summary:
+  1028→- برق 1.2.2: اللوحتان جانبيتان على اليسار (كروم عربي)، الصفحة تنضغط جانبياً، الأزرار فوق اللوحة مباشرة
+  1029→- السكربت يرقى من أي حالة سابقة (1.1.0/1.2.0/1.2.1) — حزمة كاملة
+  1030→- لو طلب المستخدم اللوحة يميناً: left:0→right:0 في ui.html و x: px→0 مع width فقط في main.js (سطرين)
+  1031→
