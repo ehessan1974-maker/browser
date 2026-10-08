@@ -1200,3 +1200,26 @@ Work Log:
 Stage Summary:
 - التنظيف صار آمناً بالكامل لأن GitHub صار هو النسخة الاحتياطية: كل مثبّت كامل موجودة هناك، فلا حاجة لأي zip/bak محلي.
 - المستخدم يملك الآن: روابط exe ثابتة للتحميل المستقبلي + سكربت تنظيف لاصق + قائمة حماية من المسح الخاطئ.
+
+---
+Task ID: BARQ-PORTABLE-1.2.8
+Agent: orchestrator (Z.ai Code)
+Task: المستخدم طلب تشغيل برق بدون تثبيت (نسخة محمولة)
+
+Work Log:
+- الحل الفوري موجود أصلاً: Barq-Setup-win7-1.2.7-ia32.zip (فك وتشغيل Barq.exe — بيانات من %APPDATA%).
+- 1.2.8 محمولة حقيقية: main.js — كتلة فوق الملف قبل ready: وجود portable.txt بجوار exe (path.dirname(app.getPath("exe"))) يضبط userData إلى مجلد Data بجواره (ينخلق تلقائياً). بدون العلامة سلوك عادي تماماً.
+- اختبار harness بـapp مزيّف: 6/6 PASS (علامة → setPath+خلق Data؛ لا علامة → لا شيء؛ getPath يرمي → نجو).
+- desktop/portable/portable.txt (شرح عربي) + desktop/electron-builder.portable.yml (zip ia32 فقط، artifactName Barq-Portable-${version}-ia32، extraFiles من portable/portable.txt إلى portable.txt).
+- تحقق محلي: بناء فعلي على لينكس (مع -c.win.signAndEditExecutable=false لتجاوز rcedit/wine) — zip 88MB وفيه portable.txt جنب Barq.exe، asar يحوي كود 1.2.8.
+- workflow build-desktop.yml: خطوة "Build true portable zip" + مسار desktop/dist/Barq-Portable-*.zip بالرفع.
+- .gitignore: أضيف desktop/dist/ (كان غير متجاهل).
+- دفع 469edb3 (كود) + 4d085d4 (توثيق BARQ-DESKTOP.md بجدول 1.2.8 وقسم Portable).
+- CI نجح كاملاً (run 37820709090، خطوة portable success)، والأصل منشور على release «stable».
+- تحقق نهائي من الملف المنشور (بدون توكن، HTTP 200): portable.txt جنب Barq.exe + asar فيه كود 1.2.8 + version 1.2.8. SHA256: 39e8f69fe841fb10263ee450fcb064e32918836af1ce414a214d8c147131898c.
+- ملاحظة: التوكن الثاني صار 401 أثناء الفحص (انلغى) — كل تحققات النشر تمت بروابط عامة.
+
+Stage Summary:
+- برق صار له 3 طرق تشغيل: مثبّت NSIS، zip عادي (بيانات بالنظام)، ومحمولة حقيقية Barq-Portable-1.2.8-ia32.zip (بياناتها بجوارها تمشي مع الفلاش).
+- الرابط الثابت: https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Portable-1.2.8-ia32.zip
+- نمط قابل لإعادة الاستخدام: علامة نصية + setPath(userData) قبل ready = أي تطبيق إلكترون يصير محمولاً.
