@@ -4,6 +4,7 @@
 // 1.2.0 — سجل بحث + مفضلة بنجمة (تخزين محلي JSON في userData)
 // 1.2.1 — إصلاح حاسم: اللوحتان كانتا مخفيتين خلف BrowserView — layout() ينزل العرض عند فتح اللوحة
 // 1.2.2 — اللوحتان صارتا جانبيتين بنمط كروم: على الحافة اليسرى (مرآة RTL لكروم) والعرض ينضغط جانبياً
+// 1.2.3 — اللوحة تبقى مفتوحة أثناء التنقل مثل كروم تماماً (الإغلاق بزرها فقط فقط)
 "use strict";
 
 const {
@@ -284,13 +285,11 @@ function normalizeInput(raw) {
 
 function navigate(target) {
   if (!view || !target) return;
-  closePanel();
   view.webContents.loadURL(target).catch(() => {});
 }
 
 function goHome() {
   if (!view || view.webContents.isDestroyed()) return;
-  closePanel();
   view.webContents
     .loadFile(HOME_FILE, { query: { engine: currentEngine } })
     .catch(() => {});
@@ -327,7 +326,7 @@ function attachViewEvents() {
 
   wc.on("did-navigate", () => {
     blockedCurrent = 0;
-    closePanel(); // أي تنقل حتى بالنقر داخل الصفحة نفسها يغلق اللوحة ويعيد العرض لوضعه
+    // 1.2.3: اللوحة الجانبية تبقى مفتوحة أثناء التنقل — مثل كروم تماماً
     pushStats();
   });
   wc.on("did-navigate-in-page", pushStats);

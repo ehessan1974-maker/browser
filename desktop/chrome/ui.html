@@ -58,17 +58,18 @@
   .logo { flex: 0 0 auto; font-weight: 800; font-size: 15px; color: #34d399; padding: 0 2px; }
 
   /* اللوحتان الجانبيتان بنمط كروم (1.2.2): على الحافة اليسرى كامل الارتفاع تحت الشريط،
-     والعرض الفعلي 360px يطابق PANEL_W في main.js — الصفحة تنضغط جانبياً لا تحت */
+     والعرض الفعلي 360px يطابق PANEL_W في main.js — الصفحة تنضغط جانبياً لا تحت
+     1.2.3: خلفية أفتح وخط أبيض كبير — الوضوح على شاشات الأجهزة القديمة الضعيفة */
   .panel {
     position: absolute; top: 57px; bottom: 0; left: 0; width: 360px;
-    background: #0e1714; border-right: 1px solid rgba(255,255,255,.1);
+    background: #18251f; border-right: 1px solid rgba(255,255,255,.18);
     display: none; flex-direction: column; gap: 8px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     box-shadow: 10px 0 30px rgba(0,0,0,.5);
   }
   .panel.open { display: flex; }
   .panel-head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-  .panel-head b { font-size: 13.5px; color: #34d399; }
+  .panel-head b { font-size: 15px; color: #3ee0a2; }
   .panel-head .grow { flex: 1; }
   .panel-head button.act {
     width: auto; height: 28px; padding: 0 12px; font-size: 12px; border-radius: 8px;
@@ -77,28 +78,28 @@
   .panel-head button.act:hover { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
   .plist {
     flex: 1 1 auto; overflow-y: auto;
-    border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
-    background: rgba(0,0,0,.25);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
+    background: rgba(0,0,0,.3);
   }
   .row {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 10px; cursor: pointer;
     border-bottom: 1px solid rgba(255,255,255,.05);
   }
-  .row:hover { background: rgba(52,211,153,.08); }
+  .row:hover { background: rgba(52,211,153,.16); }
   .row:last-child { border-bottom: none; }
   .row .main { flex: 1 1 auto; min-width: 0; }
   .row .t1 {
-    font-size: 13px; color: #e7f0ec;
+    font-size: 14px; font-weight: 600; color: #ffffff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .row .t2 {
-    font-size: 11px; color: #6f877e; margin-top: 1px;
+    font-size: 12px; color: #c3d6cc; margin-top: 2px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     direction: ltr; text-align: left;
   }
-  .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; }
-  .empty { color: #6f877e; font-size: 12.5px; text-align: center; padding: 26px 12px; }
+  .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; color: #d9e6df; }
+  .empty { color: #e2efe9; font-size: 14px; line-height: 1.8; text-align: center; padding: 26px 14px; }
 </style>
 </head>
 <body>

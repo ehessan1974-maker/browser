@@ -2,6 +2,8 @@
 // 1.2.0 — زر نجمة للمفضلة + لوحة سجل البحث
 // 1.2.1 — زر مخصص لقائمة المفضلة (بدل النقر المزدوج على النجمة)
 // 1.2.2 — اللوحتان جانبيتين بنمط كروم + الزر صاحب اللوحة المفتوحة يبقى مضيئاً
+// 1.2.3 — اللوحة تبقى مفتوحة أثناء التنقل مثل كروم تماماً (تُغلق بزرها فقط)،
+//         والنجمة تحدّث قائمة المفضلة فوراً لو هي مفتوحة
 "use strict";
 
 const el = {
@@ -61,7 +63,6 @@ window.barq.engines().then((data) => {
 
 el.form.addEventListener("submit", (e) => {
   e.preventDefault();
-  hidePanels(true);
   window.barq.navigate(el.url.value);
   el.url.blur();
 });
@@ -86,7 +87,10 @@ el.home.addEventListener("click", () => window.barq.home());
 
 el.star.addEventListener("click", () => {
   window.barq.star().then((r) => {
-    if (r && r.ok) el.star.classList.toggle("star-on", !!r.starred);
+    if (r && r.ok) {
+      el.star.classList.toggle("star-on", !!r.starred);
+      if (openPanel === "bookmarks") renderBookmarks();
+    }
   });
 });
 
@@ -152,7 +156,6 @@ function renderHistory() {
         '<div class="main"><div class="t1">' + esc(x.q) + "</div>" +
         '<div class="t2">' + esc(x.engine || "") + " • " + fmtTime(x.t) + "</div></div>";
       row.addEventListener("click", function () {
-        hidePanels(true);
         window.barq.navigate(x.q);
       });
       const del = document.createElement("button");
@@ -188,7 +191,6 @@ function renderBookmarks() {
         '<div class="main"><div class="t1">' + esc(b.title || b.url) + "</div>" +
         '<div class="t2">' + esc(b.url) + "</div></div>";
       row.addEventListener("click", function () {
-        hidePanels(true);
         window.barq.navigate(b.url);
       });
       const del = document.createElement("button");
