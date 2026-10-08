@@ -7,6 +7,12 @@
 // 1.2.3 — اللوحة تبقى مفتوحة أثناء التنقل مثل كروم تماماً (الإغلاق بزرها فقط فقط)
 // 1.2.4 — جهة اللوحة الجانبية قابلة للتبديل يسار/يمين بزر داخل رأس اللوحة،
 //         والاختيار يُحفظ لدى الواجهة ويُطبّق على تخطيط العرض فوراً
+// 1.2.5 — إصلاح التغطية: فك/إرفاق الصفحة حول اللوحة (أخفى الصفحة — انحدار أُصلح بعده)
+// 1.2.6 — اللوحة BrowserView مستقل يُرفق آخراً فترسم فوق الصفحة دائماً (لا تغطية معكوسة)
+// 1.2.7 — سلوك كروم الحقيقي: عند فتح اللوحة الصفحة تنزاح/تنضغط جانباً لتفرغ مكانها
+//         (لا تبقى مخبوأة وراءها)، وعند الغلق ترجع لكامل المساحة.
+//         اللوحة تبقى BrowserView مستقلاً بأعلى طبقة كضمان — فلو تعذّرت الإزاحة
+//         على جهاز قديم فأسوأ حالة أن ترسم اللوحة فوق الصفحة (سلوك 1.2.6) — لا اختفاء أبداً.
 "use strict";
 
 const {
@@ -175,15 +181,21 @@ function removeBookmark(url) {
   }
 }
 
-// 1.2.6 — اللوحة BrowserView مستقل يُرفق آخراً فيرسم فوق صفحة الويب دائماً:
-// الصفحة تضل ظاهرة جواره (بحدود ثابتة لا تُلمس إطلاقاً) واللوحة مستحيل تُغطى.
-// فتحها/غلقها = إرفاق/فك اللوحة فقط — لا تغيير بحدود الصفحة ولا إعادة رسم حساسة.
+// 1.2.7 — اللوحة BrowserView مستقل يُرفق آخراً فيرسم فوق صفحة الويب دائماً (ضمان الظهور)،
+// والصفحة تنزاح/تنضغط جانباً عند فتح اللوحة (سلوك كروم) وترجع لكامل المساحة عند الغلق.
+// 1.2.7 — عرض اللوحة مصدر واحد تستخدمه حدود اللوحة وإزاحة الصفحة معاً حتى لا يتعارضا أبداً
+function panelWidth() {
+  const size = win && !win.isDestroyed() ? win.getContentSize() : [PANEL_W, 0];
+  return Math.min(PANEL_W, Math.max(0, size[0]));
+}
+
 function panelBounds() {
   const [w, h] = win.getContentSize();
+  const pw = panelWidth();
   return {
-    x: panelSide === "left" ? 0 : Math.max(0, w - PANEL_W),
+    x: panelSide === "left" ? 0 : Math.max(0, w - pw),
     y: CHROME_H,
-    width: PANEL_W,
+    width: pw,
     height: Math.max(0, h - CHROME_H),
   };
 }
@@ -215,12 +227,17 @@ function setPanel(name) {
     return;
   }
   panelOpenName = n;
+  layout(); // 1.2.7: الصفحة تنزاح أولاً لتفرغ مكان اللوحة (سلوك كروم)
   if (win.getBrowserViews().indexOf(panelView) === -1) {
     win.addBrowserView(panelView); // آخر من أُرفق = أعلى طبقة فوق الصفحة
   }
   panelView.setBounds(panelBounds());
   panelView.webContents.send("barq:panel-show", { name: n, side: panelSide });
   pushPanelButtons();
+  // تأمين للأجهزة القديمة: إعادة تطبيق التخطيط بعد استقرار الطبقات — الاستدعاء لا ضرر منه
+  setImmediate(function () {
+    if (panelOpenName === n) layout();
+  });
 }
 
 function closePanel() {
@@ -232,6 +249,7 @@ function closePanel() {
       win.removeBrowserView(panelView);
     }
   } catch {}
+  layout(); // 1.2.7: الصفحة ترجع تكبر على كامل المساحة بعد غلق اللوحة
   pushPanelButtons();
 }
 
@@ -414,14 +432,22 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
-  // 1.2.6: الصفحة دائماً بكامل المساحة تحت الشريط — حدودها لا تتغير أبداً،
-  // واللوحة طبقة مستقلة فوقها فلا حاجة لأي إزاحة حساسة لإعادة الرسم
-  view.setBounds({
-    x: 0,
-    y: CHROME_H,
-    width: Math.max(0, w),
-    height: Math.max(0, h - CHROME_H),
-  });
+  const top = CHROME_H;
+  const height = Math.max(0, h - CHROME_H);
+  // 1.2.7 — سلوك كروم: اللوحة مفتوحة => الصفحة تنزاح للجهة المقابلة وتنضغط،
+  // اللوحة مغلقة => الصفحة كامل المساحة. واللوحة تبقى أعلى طبقة، فلو تعذّرت
+  // الإزاحة على جهاز قديم فأسوأ حالة رسمها فوق الصفحة — لا اختفاء ولا تغطية معكوسة.
+  if (panelOpenName) {
+    const pw = panelWidth();
+    view.setBounds({
+      x: panelSide === "left" ? pw : 0,
+      y: top,
+      width: Math.max(0, w - pw),
+      height: height,
+    });
+  } else {
+    view.setBounds({ x: 0, y: top, width: Math.max(0, w), height: height });
+  }
   if (panelOpenName && panelView && !panelView.webContents.isDestroyed()) {
     panelView.setBounds(panelBounds());
   }
@@ -494,6 +520,12 @@ if (!app.requestSingleInstanceLock()) {
 
     layout();
     win.on("resize", layout);
+    // 1.2.7: كل تغيير لحجم/وضع النافذة يعيد حساب إزاحة الصفحة وحدود اللوحة معاً
+    win.on("maximize", layout);
+    win.on("unmaximize", layout);
+    win.on("restore", layout);
+    win.on("enter-full-screen", layout);
+    win.on("leave-full-screen", layout);
     win.on("closed", () => {
       win = null;
     });
