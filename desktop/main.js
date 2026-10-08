@@ -13,6 +13,9 @@
 //         (لا تبقى مخبوأة وراءها)، وعند الغلق ترجع لكامل المساحة.
 //         اللوحة تبقى BrowserView مستقلاً بأعلى طبقة كضمان — فلو تعذّرت الإزاحة
 //         على جهاز قديم فأسوأ حالة أن ترسم اللوحة فوق الصفحة (سلوك 1.2.6) — لا اختفاء أبداً.
+// 1.2.8 — النسخة المحمولة الحقيقية: إن وُجد ملف portable.txt بجوار Barq.exe
+//         تصبح كل بيانات المستخدم (مفضلة/سجل/جلسات) بمجلد Data بجواره،
+//         فيشتغل برق من فلاش USB أو أي مجلد بدون تثبيت ومعه ملفاته.
 "use strict";
 
 const {
@@ -26,6 +29,19 @@ const {
 const fs = require("fs");
 const path = require("path");
 const { blockedHosts } = require("./trackers");
+
+/* ------------------------- الوضع المحمول (1.2.8) ------------------------- */
+// إن وُجد ملف portable.txt بجوار Barq.exe: كل بيانات المستخدم تُخزَّن
+// بمجلد Data بجواره بدلاً من %APPDATA% — النسخة تنتقل مع فلاش USB
+// وتحمل مفضلتها وسجلها معها. بدون الملف يبقى السلوك العادي تماماً.
+try {
+  const EXE_DIR = path.dirname(app.getPath("exe"));
+  if (fs.existsSync(path.join(EXE_DIR, "portable.txt"))) {
+    const PORTABLE_DATA = path.join(EXE_DIR, "Data");
+    if (!fs.existsSync(PORTABLE_DATA)) fs.mkdirSync(PORTABLE_DATA, { recursive: true });
+    app.setPath("userData", PORTABLE_DATA);
+  }
+} catch (e) { /* لا portable.txt — الوضع العادي */ }
 
 const HOME_FILE = path.join(__dirname, "chrome", "home.html");
 const CHROME_H = 56;

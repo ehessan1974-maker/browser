@@ -67,3 +67,4 @@ android/local.properties/
 # internal tool outputs (not part of the program)
 tool-results/
 dev.log
+desktop/dist/

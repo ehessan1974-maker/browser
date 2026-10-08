@@ -1,0 +1,23 @@
+# بناء النسخة المحمولة الحقيقية (1.2.8) — ZIP يستخرج ويشتغل مباشرة
+# والفرق عن Barq-Setup-win7-*.zip العادي: هذا يتضمن portable.txt بجوار Barq.exe
+# فيخزّن برق بياناته بمجلد Data بجواره (تنتقل مع الفلاش) بدلاً من %APPDATA%.
+# يُستخدم حصريًا في مهمة build-win7 داخل .github/workflows/build-desktop.yml
+appId: com.ehessan1974.barq
+productName: Barq
+copyright: برق — متصفح خفيف
+directories:
+  output: dist
+files:
+  - main.js
+  - trackers.js
+  - chrome/**
+  - package.json
+artifactName: "Barq-Portable-${version}-ia32.${ext}"
+extraFiles:
+  - from: portable/portable.txt
+    to: portable.txt
+win:
+  target:
+    - target: zip
+      arch:
+        - ia32
