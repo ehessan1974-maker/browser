@@ -63,3 +63,7 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties/
+
+# internal tool outputs (not part of the program)
+tool-results/
+dev.log
