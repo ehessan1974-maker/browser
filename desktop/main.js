@@ -3,6 +3,7 @@
 // 1.1.0 — البحث في كل محركات البحث: جوجل، بينج، دك دك جو، ياندكس، ويكيبيديا
 // 1.2.0 — سجل بحث + مفضلة بنجمة (تخزين محلي JSON في userData)
 // 1.2.1 — إصلاح حاسم: اللوحتان كانتا مخفيتين خلف BrowserView — layout() ينزل العرض عند فتح اللوحة
+// 1.2.2 — اللوحتان صارتا جانبيتين بنمط كروم: على الحافة اليسرى (مرآة RTL لكروم) والعرض ينضغط جانبياً
 "use strict";
 
 const {
@@ -63,7 +64,7 @@ function saveEngine(id) {
 
 const SEARCH_HISTORY_MAX = 300;
 const BOOKMARKS_MAX = 500;
-const PANEL_H = 300;
+const PANEL_W = 360; // عرض اللوحة الجانبية — لازم يطابق width: 360px في ui.html
 
 let searchHistory = []; // { q, engine, t }
 let bookmarks = [];     // { url, title, t }
@@ -367,14 +368,14 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
-  // إصلاح 1.2.1: عند فتح لوحة (سجل/مفضلة) يُنزَل العرض تحت اللوحة حتى تظهر فعلاً —
-  // BrowserView يرسم فوق محتوى النافذة دائماً، فبدون هذه الإزاحة تبقى اللوحة مخفية خلفه
-  const top = CHROME_H + (panelOpen ? PANEL_H : 0);
+  // 1.2.2: اللوحة جانبية على يسار النافذة — العرض ينزاح لليمين بمقدار عرض اللوحة
+  // (إحداثيات BrowserView فيزيائية دائماً، واللوحة مرسومة في ui.html عند left:0)
+  const px = panelOpen ? PANEL_W : 0;
   view.setBounds({
-    x: 0,
-    y: top,
-    width: w,
-    height: Math.max(0, h - top),
+    x: px,
+    y: CHROME_H,
+    width: Math.max(0, w - px),
+    height: Math.max(0, h - CHROME_H),
   });
 }
 

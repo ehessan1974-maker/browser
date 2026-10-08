@@ -1,6 +1,7 @@
 // برق — منطق شريط الأدوات (يعمل بمعزل تام عبر contextIsolation)
 // 1.2.0 — زر نجمة للمفضلة + لوحة سجل البحث
 // 1.2.1 — زر مخصص لقائمة المفضلة (بدل النقر المزدوج على النجمة)
+// 1.2.2 — اللوحتان جانبيتين بنمط كروم + الزر صاحب اللوحة المفتوحة يبقى مضيئاً
 "use strict";
 
 const el = {
@@ -95,6 +96,8 @@ function hidePanels(notifyMain) {
   openPanel = null;
   el.panelHistory.classList.remove("open");
   el.panelBookmarks.classList.remove("open");
+  el.hist.classList.remove("on");
+  el.marks.classList.remove("on");
   if (notifyMain) window.barq.panel(false);
 }
 
@@ -106,6 +109,8 @@ function showPanel(name) {
   openPanel = name;
   el.panelHistory.classList.toggle("open", name === "history");
   el.panelBookmarks.classList.toggle("open", name === "bookmarks");
+  el.hist.classList.toggle("on", name === "history");
+  el.marks.classList.toggle("on", name === "bookmarks");
   window.barq.panel(true);
   if (name === "history") renderHistory();
   else renderBookmarks();
