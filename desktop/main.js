@@ -21,6 +21,9 @@
 //         تُجلب من العملية الرئيسية بالتوازي وكل قسم يظهر لحظة جهوزه،
 //         + محركات جديدة: يوتيوب، إكس، خرائط جوجل (المجموع 8)،
 //         + زر «الكل» في الشريط والرئيسية يفتح صفحة البحث الشامل.
+// 1.3.1 — خانة تفعيل أمام كل محرك في صفحة البحث الشامل: المستخدم يفعّل/يلغي
+//         أي محرك ويبقى اختياره محفوظاً (omni-engines.json) ويُطبَّق فوراً
+//         حتى أثناء البحث الجاري — إلغاء يخفي القسم، وتفعيل يجلب النتائج لحضاً.
 "use strict";
 
 const {
@@ -276,6 +279,41 @@ function searchBing(q, cb) {
   httpGet("https://www.bing.com/search?q=" + encodeURIComponent(q) + "&setlang=ar", (e, d) => {
     cb(e || !d ? [] : parseBing(d));
   });
+}
+
+/* ------------------- تفعيل/إلغاء المحركات (1.3.1) ------------------- */
+// خانة اختيار أمام كل محرك بصفحة البحث الشامل. الاختيار محفوظ على القرص
+// وmain هو مصدر الحقيقة: يتحقق من المعرّفات ولا يقبل قائمة فارغة أبداً
+// (محرك واحد على الأقل يبقى مفعّلاً) — وملف فاسد = كل المحركات مفعّلة.
+
+let omniEnabled = Object.keys(SEARCH_ENGINES); // الكل مفعّل افتراضياً
+
+function sanitizeOmniEnabled(arr) {
+  if (!Array.isArray(arr)) return null;
+  const seen = {};
+  const out = [];
+  for (const id of arr) {
+    if (SEARCH_ENGINES[id] && !seen[id]) { seen[id] = true; out.push(id); }
+  }
+  return out.length ? out : null; // قائمة فارغة = ارفضها
+}
+
+function loadOmniEnabled() {
+  try {
+    const f = dataFile("omni-engines.json");
+    if (f && fs.existsSync(f)) {
+      const ok = sanitizeOmniEnabled(JSON.parse(fs.readFileSync(f, "utf8")));
+      if (ok) return ok;
+    }
+  } catch {}
+  return Object.keys(SEARCH_ENGINES);
+}
+
+function saveOmniEnabled(arr) {
+  try {
+    const f = dataFile("omni-engines.json");
+    if (f) fs.writeFileSync(f, JSON.stringify(arr), "utf8");
+  } catch {}
 }
 
 function isBookmarked(url) {
@@ -607,6 +645,7 @@ if (!app.requestSingleInstanceLock()) {
     currentEngine = loadEngine();
     searchHistory = readJson("search-history.json", []);
     bookmarks = readJson("bookmarks.json", []);
+    omniEnabled = loadOmniEnabled(); // 1.3.1 — محركات البحث الشامل المفعّلة
     panelSide = readJson("panel-side.json", {}).side === "right" ? "right" : "left"; // 1.2.6
 
     // حظر المتعقبات قبل أي اتصال
@@ -694,6 +733,15 @@ ipcMain.on("barq:omni-open", (_e, q) => {
   view.webContents
     .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: s ? { q: s } : {} })
     .catch(() => {});
+});
+
+/* تفعيل/إلغاء محركات البحث الشامل (1.3.1): main يتحقق ويحفظ — الواجهة ترسم فقط */
+ipcMain.handle("barq:omni-enabled", () => ({ enabled: omniEnabled.slice() }));
+ipcMain.on("barq:omni-set-enabled", (_e, arr) => {
+  const ok = sanitizeOmniEnabled(arr);
+  if (!ok) return; // لا قائمة فارغة ولا معرّفات غريبة
+  omniEnabled = ok;
+  saveOmniEnabled(omniEnabled);
 });
 
 ipcMain.on("barq:navigate", (_e, raw) => {

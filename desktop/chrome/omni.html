@@ -37,6 +37,27 @@
   }
   .open-row a:hover { border-color: rgba(52,211,153,.45); color: #34d399; }
   .open-row a:active { transform: translateY(1px); background: rgba(52,211,153,.25); }
+  /* 1.3.1 — خانة تفعيل أمام كل محرك: اختيارك يُحفظ ويُطبّق فوراً */
+  .engines-set { margin: 2px 0 16px; }
+  .engines-set .lbl { color: #93a8a0; font-size: 13px; display: block; margin-bottom: 8px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips label.eng {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 14px; border-radius: 999px; cursor: pointer; user-select: none;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    color: #cfe0d9; font-size: 13px;
+    transition: background .06s, color .06s, border-color .06s;
+  }
+  .chips label.eng:hover { border-color: rgba(52,211,153,.45); color: #34d399; }
+  .chips label.eng:active { transform: translateY(1px); }
+  .chips label.eng.on {
+    border-color: rgba(52,211,153,.55); background: rgba(52,211,153,.1);
+    color: #34d399; font-weight: 700;
+  }
+  .chips label.eng input { accent-color: #34d399; width: 15px; height: 15px; cursor: pointer; margin: 0; }
+  .chips label.eng .live { font-size: 10.5px; color: #6f877e; font-weight: 400; }
+  .chips label.eng.on .live { color: rgba(52,211,153,.85); }
+  .zero { color: #f5b83d; font-size: 13px; margin: 10px 0 0; display: none; }
   section {
     background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
     border-radius: 16px; padding: 16px 18px; margin-bottom: 16px;
@@ -64,6 +85,13 @@
       <input id="q" type="text" spellcheck="false" placeholder="اكتب ما تبحث عنه…" aria-label="البحث الشامل" />
       <button type="submit">🔍 ابحث</button>
     </form>
+
+    <!-- 1.3.1 — خانة تفعيل أمام كل محرك: الاختيار يُحفظ ويُطبّق فوراً -->
+    <div class="engines-set">
+      <span class="lbl">محركات البحث الشامل — فعّل أو ألغِ أي محرك:</span>
+      <div class="chips" id="chips"></div>
+      <p class="zero" id="zero">ما في أي محرك مفعّل — فعّل محرك واحد على الأقل ☝</p>
+    </div>
 
     <div class="open-row" id="open-row">
       افتح نفس البحث فوراً في:
@@ -103,11 +131,25 @@
       google: "جوجل", youtube: "يوتيوب", x: "إكس", maps: "خرائط جوجل",
       yandex: "ياندكس", bing: "بينج", duckduckgo: "دك دك جو", wikipedia: "ويكيبيديا"
     };
+    var ICONS = {
+      google: "🔎", youtube: "▶️", x: "𝕏", maps: "🗺",
+      yandex: "🌐", bing: "🅑", duckduckgo: "🦆", wikipedia: "📚"
+    };
+    /* 1.3.1 — المحركات «الحية» تجيب نتائج مضمّنة، والباقي يُفتح بنقرة */
+    var LIVE = ["wikipedia", "duckduckgo", "bing"];
+    var ORDER = ["google", "bing", "duckduckgo", "yandex", "wikipedia", "youtube", "x", "maps"];
+    var FETCHERS = {
+      wikipedia:  { api: "wiki", sec: "sec-wiki",  st: "st-wiki",  list: "list-wiki"  },
+      duckduckgo: { api: "ddg",  sec: "sec-ddg",   st: "st-ddg",   list: "list-ddg"   },
+      bing:       { api: "bing", sec: "sec-bing",  st: "st-bing",  list: "list-bing"  }
+    };
+    var enabled = {}; // معرف المحرك → مفعّل؟ (main مصدر الحقيقة — هنا نسخة للرسم)
+    var CACHE = {};   // نتائج وصلت سابقاً — التفعيل ثانية لا يعيد الجلب
 
     document.getElementById("q").value = Q;
     document.getElementById("q").focus();
 
-    // أزرار «افتح نفس البحث في» — تمرر الاستعلام للمحرك المختار
+    /* روابط «افتح نفس البحث في» — نفس الاستعلام للمحرك المختار */
     var row = document.getElementById("open-row");
     var links = row.getElementsByTagName("a");
     for (var i = 0; i < links.length; i++) {
@@ -118,6 +160,76 @@
         a.target = "_self";
         a.title = Q ? "ابحث عن: " + Q : "اختر هذا المحرك";
       })(links[i]);
+    }
+
+    /* صف خانات التفعيل: واحد لكل محرك — النقر يطبّق فوراً ويُحفظ */
+    var chips = document.getElementById("chips");
+    ORDER.forEach(function (id) {
+      var lb = document.createElement("label");
+      lb.className = "eng";
+      lb.setAttribute("data-e", id);
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.setAttribute("aria-label", "تفعيل " + NAMES[id]);
+      cb.addEventListener("change", function () { setEngine(id, cb.checked); });
+      var nm = document.createElement("span");
+      nm.textContent = (ICONS[id] || "") + " " + NAMES[id];
+      lb.appendChild(cb);
+      lb.appendChild(nm);
+      if (LIVE.indexOf(id) !== -1) {
+        var lv = document.createElement("span");
+        lv.className = "live";
+        lv.textContent = "نتائج حية";
+        lb.appendChild(lv);
+      }
+      chips.appendChild(lb);
+    });
+
+    /* تغيير تفعيل محرك: حفظ + تطبيق + جلب فوري لو محرك حي بمنتصف بحث */
+    function setEngine(id, on) {
+      enabled[id] = on;
+      try {
+        omni.setEnabled(ORDER.filter(function (i) { return enabled[i]; }));
+      } catch (e) {}
+      applyAll();
+      if (Q && on && LIVE.indexOf(id) !== -1 && !CACHE[id]) fetchOne(id);
+    }
+
+    /* تطبيق التفعيلات: القسم/الزر يظهر أو يختفي لحضاً + تنبيه لو الكل ملغى */
+    function applyAll() {
+      var any = false;
+      ORDER.forEach(function (id) {
+        var lab = chips.querySelector('label.eng[data-e="' + id + '"]');
+        if (lab) {
+          lab.className = "eng" + (enabled[id] ? " on" : "");
+          var cb = lab.getElementsByTagName("input")[0];
+          if (cb) cb.checked = !!enabled[id];
+        }
+        if (enabled[id]) any = true;
+        var link = document.querySelector('#open-row a[data-e="' + id + '"]');
+        if (link) link.style.display = enabled[id] ? "" : "none";
+      });
+      LIVE.forEach(function (id) {
+        var sec = document.getElementById(FETCHERS[id].sec);
+        if (sec) sec.style.display = enabled[id] ? "" : "none";
+      });
+      document.getElementById("zero").style.display = any ? "none" : "block";
+      document.getElementById("open-row").style.display = any ? "" : "none";
+    }
+
+    /* جلب نتائج محرك حي — النتيجة تُرسم فقط لو ما زال مفعّلاً */
+    function fetchOne(id) {
+      var f = FETCHERS[id];
+      if (CACHE[id]) { render(f, CACHE[id], id); return; }
+      document.getElementById(f.st).textContent = "جارٍ البحث…";
+      omni[f.api](Q).then(function (r) {
+        CACHE[id] = r || [];
+        if (enabled[id]) render(f, CACHE[id], id);
+      });
+    }
+
+    function runSearch() {
+      LIVE.forEach(function (id) { if (enabled[id]) fetchOne(id); });
     }
 
     document.getElementById("sf").addEventListener("submit", function (e) {
@@ -131,9 +243,9 @@
         .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
-    function render(sec, st, list, results, engineId) {
-      var stEl = document.getElementById(st);
-      var listEl = document.getElementById(list);
+    function render(f, results, engineId) {
+      var stEl = document.getElementById(f.st);
+      var listEl = document.getElementById(f.list);
       if (results && results.length) {
         stEl.textContent = results.length + " نتيجة";
         var html = "";
@@ -155,16 +267,28 @@
       }
     }
 
-    // الاستعلام يذهب للمحركات الثلاثة في نفس اللحظة، وكل قسم يظهر لحظة جهوزه
-    if (Q) {
-      window.omni.wiki(Q).then(function (r) { render("wiki", "st-wiki", "list-wiki", r, "wikipedia"); });
-      window.omni.ddg(Q).then(function (r)  { render("ddg",  "st-ddg",  "list-ddg",  r, "duckduckgo"); });
-      window.omni.bing(Q).then(function (r) { render("bing", "st-bing", "list-bing", r, "bing"); });
-    } else {
-      ["st-wiki", "st-ddg", "st-bing"].forEach(function (id) {
-        document.getElementById(id).textContent = "اكتب ما تبحث عنه في الخانة أعلاه";
+    /* البحث ينتظر معرفة التفعيلات (IPC سريع جداً) — وفشل الجسر = الكل مفعّل */
+    function allOn() { ORDER.forEach(function (id) { enabled[id] = true; }); }
+    function idleText() {
+      LIVE.forEach(function (id) {
+        if (enabled[id]) document.getElementById(FETCHERS[id].st).textContent =
+          "اكتب ما تبحث عنه في الخانة أعلاه";
       });
     }
+    omni.enabled().then(function (d) {
+      var list = (d && d.enabled) || [];
+      if (list.length) {
+        ORDER.forEach(function (id) { enabled[id] = list.indexOf(id) !== -1; });
+      } else {
+        allOn(); // ملف فاسد أو فارغ — main أرسل الكل
+      }
+      applyAll();
+      if (Q) runSearch(); else idleText();
+    }).catch(function () {
+      allOn();
+      applyAll();
+      if (Q) runSearch(); else idleText();
+    });
   </script>
 </body>
 </html>
