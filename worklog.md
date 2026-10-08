@@ -1118,3 +1118,19 @@ Stage Summary:
 - برق 1.2.6: الصفحة تضل ظاهرة جنب اللوحة (طلب المستخدم الصريح) واللوحة مستحيل تُغطى (درس 1.2.1/1.2.4) — التوتر بين الشرطين حل بالطبقات: أحدث BrowserView يرسم فوق القديم دائماً بلا أي setBounds على الصفحة.
 - كل منطق اللوحة (قوائم/جهة/مسح/إغلاق) انتقل لملف مستقل بمصدر حقيقة واحد (main) — لا localStorage ولا مزامنة جهتين بعد اليوم.
 - جاهز للتسليم: /downloads/barq126.zip + لصقة واحدة. GitHub: commit محلي جاهز، انتظار PAT من المستخدم للدفع إلى browser.
+
+---
+Task ID: BARQ-GITHUB-PUSH
+Agent: orchestrator (Z.ai Code)
+Task: دفع كل شيء إلى GitHub — المستودع browser (بالـPAT اللي أرسله المستخدم)
+
+Work Log:
+- فحص التوكن عبر API: صالح — الحساب ehessan1974-maker، الصلاحيات repo+workflow.
+- فحص أماني قبل الدفع: git grep "ghp_" على الملفات المتتبعة — المطابقات كلها إشارات مقتطعة/أسطر توثيقية داخل tool-results (لا يوجد توكن كامل بنمط ghp_[A-Za-z0-9]{30,})، فالتاريخ آمن للدفع.
+- تنظيف ما قبل الدفع: tool-results/ و dev.log أُضيفا إلى .gitignore وgit rm -r --cached — commit e0078af "chore: exclude internal tool-results from repository".
+- الدفع: git push عبر URL مؤقت يحمل التوكن (بدون تخزينه في .git/config أو أي ملف) — نجح: 51d2a33..e0078af main->main.
+- تحقق نهائي عبر API: SHA الـmain البعيد = المحلي e0078af191f0b3aa1d0ce80657b924a345cec1b4، ومحتويات desktop/ (main.js, trackers.js, chrome/, electron-builder.win7.yml) و download/barq-1.2.6/ (barq126.zip + Barq-Upgrade-1.2.6.ps1) ظاهرة على المستودع.
+
+Stage Summary:
+- المستودع العام github.com/ehessan1974-maker/browser («بروزر») يحوي الآن كل شيء: مصدر برق الكامل بتاريخه (1.1.0 → 1.2.6)، كل حزم zip وسكربتات التثبيت في download/، مجلد النشر public/downloads، التوثيق BARQ-DESKTOP.md، وسجل العمل worklog.md.
+- التوكن استُخدم في أمر الدفع فقط ولم يُخزَّن في أي ملف — ويُنصح المستخدم بإلغائه (revoke) من إعدادات GitHub بعد التأكد من نجاح الرفع لأنه تنشارك نصاً في المحادثة.
