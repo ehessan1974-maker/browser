@@ -67,12 +67,10 @@ function saveEngine(id) {
 
 const SEARCH_HISTORY_MAX = 300;
 const BOOKMARKS_MAX = 500;
-const PANEL_W = 360; // عرض اللوحة الجانبية — لازم يطابق width: 360px في ui.html
 
 let searchHistory = []; // { q, engine, t }
 let bookmarks = [];     // { url, title, t }
 let panelOpen = false;
-let panelSide = "left"; // 1.2.4 — جهة اللوحة: يسار افتراضياً، والتبديل من زر داخل اللوحة
 
 function dataFile(name) {
   try {
@@ -288,11 +286,14 @@ function normalizeInput(raw) {
 
 function navigate(target) {
   if (!view || !target) return;
+  // 1.2.5: الصفحة مفكوكة طالما اللوحة مفتوحة — أي تنقل يعيدها للعرض
+  closePanel();
   view.webContents.loadURL(target).catch(() => {});
 }
 
 function goHome() {
   if (!view || view.webContents.isDestroyed()) return;
+  closePanel(); // 1.2.5: نفس منطق navigate — التنقل يعرض الصفحة ويغلق اللوحة
   view.webContents
     .loadFile(HOME_FILE, { query: { engine: currentEngine } })
     .catch(() => {});
@@ -329,7 +330,7 @@ function attachViewEvents() {
 
   wc.on("did-navigate", () => {
     blockedCurrent = 0;
-    // 1.2.3: اللوحة الجانبية تبقى مفتوحة أثناء التنقل — مثل كروم تماماً
+    closePanel(); // 1.2.5: شبكة أمان — أي وصول للصفحة يعني إغلاق اللوحة وعرضها
     pushStats();
   });
   wc.on("did-navigate-in-page", pushStats);
@@ -370,20 +371,20 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
-  // 1.2.2: اللوحة الجانبية بدل المنسدلة — 1.2.4: جهتها قابلة للتبديل
-  // يسار: العرض ينزاح يميناً بمقدار عرض اللوحة / يمين: العرض يبقى ويضيق عرضه فقط
-  let vx = 0;
-  let vw = w;
-  if (panelOpen) {
-    vw = Math.max(0, w - PANEL_W);
-    if (panelSide === "left") vx = PANEL_W;
-  }
   view.setBounds({
-    x: vx,
+    x: 0,
     y: CHROME_H,
-    width: vw,
+    width: Math.max(0, w),
     height: Math.max(0, h - CHROME_H),
   });
+  // 1.2.5 — إصلاح جذري لبلاغ "القائمة تحت الصفحة": آلية إزاحة حدود العرض
+  // (1.2.2–1.2.4) حساسة لمزامنة الحالة وإعادة الرسم على أجهزة قديمة بمسرّيات
+  // معطّلة، فتتغطى اللوحة بالصفحة. الحل: طالما اللوحة مفتوحة نفك الصفحة
+  // تماماً من النافذة فتصبح اللوحة هي المحتوى الوحيد — يستحيل تغطيتها —
+  // وعند الإغلاق تعود الصفحة كما كانت (حالتها محفوظة، بلا إعادة تحميل).
+  const attached = win.getBrowserViews().indexOf(view) !== -1;
+  if (panelOpen && attached) win.removeBrowserView(view);
+  else if (!panelOpen && !attached) win.addBrowserView(view);
 }
 
 // نسخة واحدة فقط من برق — النقر المتكرر على الأيقونة لا يفتح نسخًا إضافية (سبب رئيسي لامتلاء الذاكرة)
@@ -502,14 +503,9 @@ ipcMain.handle("barq:engines", () => ({
 
 ipcMain.on("barq:panel", (_e, open) => setPanel(open));
 
-// 1.2.4 — تبديل جهة اللوحة الجانبية (يسار/يمين) مع إعادة التخطيط فوراً إن كانت مفتوحة
-ipcMain.on("barq:panel-side", (_e, side) => {
-  const s = side === "right" ? "right" : "left";
-  if (s !== panelSide) {
-    panelSide = s;
-    if (panelOpen) layout();
-  }
-});
+// 1.2.5 — جهة اللوحة صارت CSS بحتاً داخل الواجهة (يسار/يمين) — لا تأثير لها
+// على تخطيط main بعد آلية الفك/الإرفاق، والقناة تبقى للاستقبال الصامت فقط
+ipcMain.on("barq:panel-side", () => {});
 
 ipcMain.handle("barq:get-history", () => ({
   list: searchHistory.slice(0, 150),

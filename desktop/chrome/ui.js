@@ -134,7 +134,20 @@ function hidePanels(notifyMain) {
   el.panelBookmarks.classList.remove("open");
   el.hist.classList.remove("on");
   el.marks.classList.remove("on");
-  if (notifyMain) window.barq.panel(false);
+  // 1.2.5: إشعار main محمي — أي خلل بالجسر لا يمنع إخفاء اللوحة بصرياً
+  if (notifyMain) {
+    try {
+      window.barq.panel(false);
+    } catch (e) {}
+  }
+}
+
+// 1.2.5: لو الجبر (window.barq) غير موجود إطلاقاً نعرض الخطأ داخل اللوحة نفسها
+// بدل أن تبقى صامتة — لا يمكن أن تظهر اللوحة فارغة بلا تفسير بعد اليوم
+function bridgeError() {
+  const box = openPanel === "history" ? el.historyList : el.bookmarkList;
+  box.innerHTML =
+    '<div class="empty err">تعذّر الاتصال بمحرك برق — أغلق البرنامج وافتحه من جديد</div>';
 }
 
 function showPanel(name) {
@@ -147,9 +160,14 @@ function showPanel(name) {
   el.panelBookmarks.classList.toggle("open", name === "bookmarks");
   el.hist.classList.toggle("on", name === "history");
   el.marks.classList.toggle("on", name === "bookmarks");
-  window.barq.panel(true);
+  // 1.2.5: نرسم المحتوى أولاً ثم نبلّغ main — لو فشل الإشعار يبقى المحتوى ظاهراً
   if (name === "history") renderHistory();
   else renderBookmarks();
+  try {
+    window.barq.panel(true);
+  } catch (e) {
+    bridgeError();
+  }
 }
 
 function fmtTime(t) {
