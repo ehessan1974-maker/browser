@@ -1223,3 +1223,23 @@ Stage Summary:
 - برق صار له 3 طرق تشغيل: مثبّت NSIS، zip عادي (بيانات بالنظام)، ومحمولة حقيقية Barq-Portable-1.2.8-ia32.zip (بياناتها بجوارها تمشي مع الفلاش).
 - الرابط الثابت: https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Portable-1.2.8-ia32.zip
 - نمط قابل لإعادة الاستخدام: علامة نصية + setPath(userData) قبل ready = أي تطبيق إلكترون يصير محمولاً.
+
+---
+Task ID: BARQ-TINY-UPGRADE-128
+Agent: orchestrator (Z.ai Code)
+Task: شكوى المستخدم — تنزيل 84MB مع كل تجربة/تحديث (نص ساعة على اتصاله البطيء) غير مقبول
+
+Work Log:
+- تحليل الحجم: 84MB = محرّك Chromium كامل (Barq.exe وحده 136MB مفكوك)؛ كود برق الفعلي 9 ملفات ≈ 21KB. المحرّك لا يتغير بين الإصدارات — التنزيل الكامل مضيعة.
+- بناء download/barq-1.2.8/barq128.zip (21,484B، 9 ملفات، SHA256 0bb785ad…db7584) + نشره public/downloads/barq128.zip (بريفيو HTTP 200).
+- سكربت Barq-Upgrade-1.2.8.ps1 متعدد الأهداف: بوابة SHA256 → يغلق برق → يجمع كل النسخ (D:\Barq + أي مجلد فيه Barq.exe+portable.txt عبر فحص Desktop/Downloads/D:/E:/F: بعمق واحد) → يفك الـzip فوق resources\app لكل نسخة → يحيّد app.asar → يتحقق (version=1.2.8 + panelWidth + portable.txt) → يشغّل المثبتة.
+- سكربت Barq-Make-Portable.ps1: يصنع نسخة محمولة من التثبيت الحالي بصفر تحميل — robocopy /E مع /XD Data و/XF portable.txt (لا يمس بيانات محمول موجود)، تنظف مخلفات، يكتب portable.txt، يتحقق، يشغّل. $dst قابل للتغيير لفلاش USB.
+- لا pwsh بالبيئة — الاعتماد على أنماط سكربت 1.2.7 المجرّبة حرفياً (نفس الدوال والمسات نفسها) + مراجعة يدوية.
+- BARQ-DESKTOP.md: «الطريقة الأولى» صارت الترقية الصغيرة 21KB + «الطريقة 1.5» المحمول بدون تحميل.
+- commit 86c289e — الدفع فشل (التوكن الثاني ميت فعلاً: Invalid username or token). الملفات محلية + منشورة بالبريفيو؛ رفعها لـGitHub يحتاج توكن جديد من المستخدم.
+- download/** لا يثير workflow البناء (paths: desktop/**) — لا بناء عبثي.
+
+Stage Summary:
+- قاعدة جديدة للمشروع: التنزيل الكامل (exe/zip كبير) مرة واحدة فقط لبناء الأساس؛ كل تحديث لاحق = barqNNN.zip بحجم ~21KB + لصقة واحدة بترقّي كل النسخ.
+- المحمول لا يحتاج تنزيل الملف الكامل أصلاً: Make-Portable ينسخ التثبيت القائم.
+- معلّق: دفع 86c289e لـGitHub يحتاج توكن جديد.
