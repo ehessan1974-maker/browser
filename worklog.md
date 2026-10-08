@@ -1099,3 +1099,22 @@ Stage Summary:
 - جهة اللوحة (يسار افتراضياً + زر تبديل محفوظ) CSS بحت، النجمة/السجل/المفضلة كما هي، وإحساس الضغط محفوظ من 1.2.4.
 - التسليم للمستخدم: تنزيل /downloads/barq125.zip من البريفيو + لصقة واحدة 87 سطر في PowerShell (لا base64 لا تقسيم — الحزمة تُنزَّل واللصقة تتحقق وتثبّت).
 - درس مزدوج: (1) آليات العرض الحساسة للمزامنة انكسرت مرتين — أي تغيير مستقبلي باللوحات لا يلمس layout(). (2) عند اختبار ui.html بستَب، كل دالة يستدعيها ui.js بـ.then يجب أن ترجع Promise وإلا اختُبر سكربت ميت بأعراض زائفة.
+
+---
+Task ID: BARQ-1.2.6
+Agent: orchestrator (Z.ai Code)
+Task: بلاغ المستخدم بعد 1.2.5 — (1) القائمة تفتح تمام لكن صفحة البحث تختفي ولا يريدها أن تختفي (2) حفظ كل شيء على GitHub مستودع browser
+
+Work Log:
+- إعادة هندسة عرض اللوحة في 1.2.6 (حل تناقض "ضمان ظهور اللوحة" مع "الصفحة تبقى ظاهرة"): اللوحة صارت BrowserView مستقلة (chrome/panel.html + chrome/panel.js) تُرفق آخراً عبر win.addBrowserView(panelView) فترسم فوق الصفحة دائماً — الصفحة بحدود ثابتة كاملة لا تُمسّ إطلاقاً (لا إزاحة لا فك)، واللوحة مستحيل تُغطى لأنها أعلى طبقة. الفتح/الغلق = إرفاق/فك اللوحة فقط.
+- main.js: panelBounds() حسب الجهة، setPanel(name) بمنطق toggle (نفس الاسم = غلق)، closePanel يفك اللوحة فقط، pushPanelButtons يبث حالة الأزرار للشريط، pushPanelRefresh يحدّث القائمة المفتوحة فوراً بعد نجمة/بحث، panelSide مصدر حقيقة وحيد في main يُحفظ بpanel-side.json (بديل localStorage)، layout() لمس الحدود صفحة كاملة + حدود اللوحة عند الحاجة فقط. أُلغي closePanel من التنقل (1.2.5) لأن الصفحة بقت ظاهرة بجانب اللوحة.
+- ui.html/ui.js تخفيف: حُذفت divs اللوحات وستايلاتها وكل كود الرسم (انتقل لpanel.html/panel.js حرفياً بنفس الستايلات المجرّبة)؛ بقي شريط الأزرار يرسل panel('history'|'bookmarks') ويستلم الإضاءة من main عبر barq:panel-buttons. preload: panel(name) + onPanelShow/onPanelSideChanged/onPanelButtons.
+- تحقق: node --check للأربعة + لا بقايا كود لوحة في ui. بناء barq126.zip (20,065B، SHA256=bd2301ea4879f443ca1eaa88300d2370e1f7c6d02ef322a1ec32fa5c28606a39، 9 ملفات) مع 8 بوابات علامات (panelView created / attached last / page bounds never move / side persisted / channels / version).
+- اختبار متصفح حقيقي بصفحتي ستَب (ستَب سليم هذه المرة من أولها — Promise بكل الدوال): panel.html — سجل صفان أبيض يسار افتراضياً، التبديل يرسل للـmain ويؤكد main بpanel-side-changed (مصدر واحد)، المفضلة تُخفي "مسح الكل"، الإغلاق يرسل panel(null)، مسح الكل يفرّغ برسالة بيضاء. ui.html — hist يرسل history وmarks يرسل bookmarks والإضاءة تأتي من barq:panel-buttons. لقطة شاشة مؤكدة. حُذفت صفحات الاختبار وdev.log نظيف.
+- GitHub: الـremote موجود أصلاً (github.com/ehessan1974-maker/browser) والمنصة تعمل auto-commit، لكن الدفع اليدوي يفشل بلا توكن (could not read Username). كُتب BARQ-DESKTOP.md (توثيق شامل: بنية/معمارية/تاريخ 9 إصدارات/تثبيت/خصوصية) + commit وصفي 2bc1241 لكل شيء (desktop/ + download/barq-1.2.6/ + public/downloads/barq126.zip + التوثيق). الدفع الفعلي يحتاج PAT من المستخدم.
+- Barq-Upgrade-1.2.6.ps1 (100 سطر): نفس الهيكل المجرّب + يبحث barq126.zip في resources/Downloads/Desktop مع fallback نمط barq126*.zip + تنظيف يشمل barq125.zip القديم + علامات [7]: panel.html موجود + addBrowserView(panelView) + onPanelShow.
+
+Stage Summary:
+- برق 1.2.6: الصفحة تضل ظاهرة جنب اللوحة (طلب المستخدم الصريح) واللوحة مستحيل تُغطى (درس 1.2.1/1.2.4) — التوتر بين الشرطين حل بالطبقات: أحدث BrowserView يرسم فوق القديم دائماً بلا أي setBounds على الصفحة.
+- كل منطق اللوحة (قوائم/جهة/مسح/إغلاق) انتقل لملف مستقل بمصدر حقيقة واحد (main) — لا localStorage ولا مزامنة جهتين بعد اليوم.
+- جاهز للتسليم: /downloads/barq126.zip + لصقة واحدة. GitHub: commit محلي جاهز، انتظار PAT من المستخدم للدفع إلى browser.
