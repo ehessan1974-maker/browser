@@ -70,60 +70,8 @@
      والعرض الفعلي 360px يطابق PANEL_W في main.js — الصفحة تنضغط جانبياً لا تحت
      1.2.3: خلفية أفتح وخط أبيض كبير — الوضوح على شاشات الأجهزة القديمة الضعيفة
      1.2.4: جهة اللوحة قابلة للتبديل يسار/يمين بزر في رأس اللوحة والاختيار محفوظ */
-  .panel {
-    position: absolute; top: 57px; bottom: 0; left: 0; width: 360px;
-    background: #18251f; border-right: 1px solid rgba(255,255,255,.18);
-    display: none; flex-direction: column; gap: 8px;
-    padding: 12px 14px;
-    box-shadow: 10px 0 30px rgba(0,0,0,.5);
-  }
-  .panel.open { display: flex; }
-  /* 1.2.4 — وضع اللوحة على اليمين: المرآة الكاملة لوضع اليسار */
-  body.panel-right .panel {
-    left: auto; right: 0;
-    border-right: none; border-left: 1px solid rgba(255,255,255,.18);
-    box-shadow: -10px 0 30px rgba(0,0,0,.5);
-  }
-  .panel-head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-  .panel-head b { font-size: 15px; color: #3ee0a2; }
-  .panel-head .grow { flex: 1; }
-  .panel-head button.act {
-    width: auto; height: 28px; padding: 0 12px; font-size: 12px; border-radius: 8px;
-    font-family: inherit;
-  }
-  .panel-head button.act:hover { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
-  /* زر تبديل جهة اللوحة — بلون مميز حتى يُلاحظ فوراً */
-  .panel-head button.act.side { color: #f5b83d; border-color: rgba(245,184,61,.45); }
-  .panel-head button.act.side:hover { color: #ffd479; border-color: rgba(245,184,61,.75); background: rgba(245,184,61,.12); }
-  .plist {
-    flex: 1 1 auto; overflow-y: auto;
-    border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
-    background: rgba(0,0,0,.3);
-  }
-  .row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; cursor: pointer;
-    border-bottom: 1px solid rgba(255,255,255,.05);
-    transition: background .05s;
-  }
-  .row:hover { background: rgba(52,211,153,.16); }
-  .row:active { background: rgba(52,211,153,.34); }
-  .row:last-child { border-bottom: none; }
-  .row .main { flex: 1 1 auto; min-width: 0; }
-  .row .t1 {
-    font-size: 14px; font-weight: 600; color: #ffffff;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .row .t2 {
-    font-size: 12px; color: #c3d6cc; margin-top: 2px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    direction: ltr; text-align: left;
-  }
-  .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; color: #d9e6df; }
-  .empty { color: #e2efe9; font-size: 14px; line-height: 1.8; text-align: center; padding: 26px 14px; }
-  .empty.err { color: #f8b4b4; }
-  select:active:not(:disabled) { color: #34d399; border-color: rgba(52,211,153,.6); }
-</style>
+  /* 1.2.6: ستايلات اللوحة انتقلت إلى panel.html */
+  </style>
 </head>
 <body>
   <div class="bar">
@@ -165,24 +113,8 @@
     </span>
   </div>
 
-  <div class="panel" id="panel-history" role="region" aria-label="سجل البحث">
-    <div class="panel-head">
-      <b>🕘 سجل البحث</b>
-      <span class="grow"></span>
-      <button class="act" id="clear-history" title="حذف كل السجل">مسح الكل</button>
-      <button class="act side" id="side-history" title="انقل اللوحة إلى الجهة الأخرى">إلى اليمين</button>
-    </div>
-    <div class="plist" id="history-list"></div>
-  </div>
-
-  <div class="panel" id="panel-bookmarks" role="region" aria-label="المفضلة">
-    <div class="panel-head">
-      <b>★ المفضلة</b>
-      <span class="grow"></span>
-      <button class="act side" id="side-bookmarks" title="انقل اللوحة إلى الجهة الأخرى">إلى اليمين</button>
-    </div>
-    <div class="plist" id="bookmark-list"></div>
-  </div>
+  <!-- 1.2.6: اللوحتان انتقلتا إلى panel.html — BrowserView مستقل يرسم فوق الصفحة
+       (زر الساعة/المفضلة هنا يرسل طلب الفتح فقط، والإضاءة تأتي من main) -->
 
   <script src="ui.js"></script>
 </body>

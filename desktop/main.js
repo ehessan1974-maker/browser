@@ -67,10 +67,12 @@ function saveEngine(id) {
 
 const SEARCH_HISTORY_MAX = 300;
 const BOOKMARKS_MAX = 500;
+const PANEL_W = 360; // عرض اللوحة المستقلة
 
 let searchHistory = []; // { q, engine, t }
 let bookmarks = [];     // { url, title, t }
-let panelOpen = false;
+let panelOpenName = null; // null | "history" | "bookmarks"
+let panelSide = "left";   // جهة اللوحة — main هو مصدر الحقيقة الوحيد ويُحفظ على القرص
 
 function dataFile(name) {
   try {
@@ -120,6 +122,7 @@ function addSearchEntry(q, engineId) {
     }
   }
   writeJson("search-history.json", searchHistory);
+  pushPanelRefresh("history"); // 1.2.6: لو السجل مفتوح يتحدث فوراً
 }
 
 function logSearchIfAny(raw, url) {
@@ -159,6 +162,7 @@ function toggleBookmark() {
   }
   writeJson("bookmarks.json", bookmarks);
   pushStats();
+  pushPanelRefresh("bookmarks"); // 1.2.6: لو المفضلة مفتوحة تتحدث فوراً
   return { ok: true, starred };
 }
 
@@ -171,22 +175,64 @@ function removeBookmark(url) {
   }
 }
 
-// فتح/غلق اللوحتين = تحريك حدود العرض، واللوحة نفسها مرسومة في واجهة الشريط
-function setPanel(open) {
-  const v = !!open;
-  if (v !== panelOpen) {
-    panelOpen = v;
-    layout();
+// 1.2.6 — اللوحة BrowserView مستقل يُرفق آخراً فيرسم فوق صفحة الويب دائماً:
+// الصفحة تضل ظاهرة جواره (بحدود ثابتة لا تُلمس إطلاقاً) واللوحة مستحيل تُغطى.
+// فتحها/غلقها = إرفاق/فك اللوحة فقط — لا تغيير بحدود الصفحة ولا إعادة رسم حساسة.
+function panelBounds() {
+  const [w, h] = win.getContentSize();
+  return {
+    x: panelSide === "left" ? 0 : Math.max(0, w - PANEL_W),
+    y: CHROME_H,
+    width: PANEL_W,
+    height: Math.max(0, h - CHROME_H),
+  };
+}
+
+function pushPanelButtons() {
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("barq:panel-buttons", {
+      history: panelOpenName === "history",
+      bookmarks: panelOpenName === "bookmarks",
+    });
   }
 }
 
-function closePanel() {
-  if (!panelOpen) return;
-  panelOpen = false;
-  layout();
-  if (win && !win.isDestroyed()) {
-    win.webContents.send("barq:panels-closed");
+function pushPanelRefresh(name) {
+  if (panelOpenName === name && panelView && !panelView.webContents.isDestroyed()) {
+    panelView.webContents.send("barq:panel-show", { name, side: panelSide });
   }
+}
+
+function setPanel(name) {
+  if (!win || win.isDestroyed() || !panelView) return;
+  const n = name === "history" || name === "bookmarks" ? name : null;
+  if (n && panelOpenName === n) {
+    closePanel(); // نفس الزر ثانية = إغلاق
+    return;
+  }
+  if (!n) {
+    closePanel();
+    return;
+  }
+  panelOpenName = n;
+  if (win.getBrowserViews().indexOf(panelView) === -1) {
+    win.addBrowserView(panelView); // آخر من أُرفق = أعلى طبقة فوق الصفحة
+  }
+  panelView.setBounds(panelBounds());
+  panelView.webContents.send("barq:panel-show", { name: n, side: panelSide });
+  pushPanelButtons();
+}
+
+function closePanel() {
+  if (!panelOpenName) return;
+  panelOpenName = null;
+  try {
+    if (panelView && !panelView.webContents.isDestroyed() && win && !win.isDestroyed() &&
+        win.getBrowserViews().indexOf(panelView) !== -1) {
+      win.removeBrowserView(panelView);
+    }
+  } catch {}
+  pushPanelButtons();
 }
 
 /* ------------------- استقرار الأجهزة القديمة / 32-bit ------------------- */
@@ -205,6 +251,7 @@ app.commandLine.appendSwitch("disk-cache-size", "33554432");
 
 let win = null;
 let view = null;
+let panelView = null;
 let blockedTotal = 0;
 let blockedCurrent = 0;
 let badgeTimer = null;
@@ -286,14 +333,11 @@ function normalizeInput(raw) {
 
 function navigate(target) {
   if (!view || !target) return;
-  // 1.2.5: الصفحة مفكوكة طالما اللوحة مفتوحة — أي تنقل يعيدها للعرض
-  closePanel();
   view.webContents.loadURL(target).catch(() => {});
 }
 
 function goHome() {
   if (!view || view.webContents.isDestroyed()) return;
-  closePanel(); // 1.2.5: نفس منطق navigate — التنقل يعرض الصفحة ويغلق اللوحة
   view.webContents
     .loadFile(HOME_FILE, { query: { engine: currentEngine } })
     .catch(() => {});
@@ -330,7 +374,6 @@ function attachViewEvents() {
 
   wc.on("did-navigate", () => {
     blockedCurrent = 0;
-    closePanel(); // 1.2.5: شبكة أمان — أي وصول للصفحة يعني إغلاق اللوحة وعرضها
     pushStats();
   });
   wc.on("did-navigate-in-page", pushStats);
@@ -371,20 +414,17 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
+  // 1.2.6: الصفحة دائماً بكامل المساحة تحت الشريط — حدودها لا تتغير أبداً،
+  // واللوحة طبقة مستقلة فوقها فلا حاجة لأي إزاحة حساسة لإعادة الرسم
   view.setBounds({
     x: 0,
     y: CHROME_H,
     width: Math.max(0, w),
     height: Math.max(0, h - CHROME_H),
   });
-  // 1.2.5 — إصلاح جذري لبلاغ "القائمة تحت الصفحة": آلية إزاحة حدود العرض
-  // (1.2.2–1.2.4) حساسة لمزامنة الحالة وإعادة الرسم على أجهزة قديمة بمسرّيات
-  // معطّلة، فتتغطى اللوحة بالصفحة. الحل: طالما اللوحة مفتوحة نفك الصفحة
-  // تماماً من النافذة فتصبح اللوحة هي المحتوى الوحيد — يستحيل تغطيتها —
-  // وعند الإغلاق تعود الصفحة كما كانت (حالتها محفوظة، بلا إعادة تحميل).
-  const attached = win.getBrowserViews().indexOf(view) !== -1;
-  if (panelOpen && attached) win.removeBrowserView(view);
-  else if (!panelOpen && !attached) win.addBrowserView(view);
+  if (panelOpenName && panelView && !panelView.webContents.isDestroyed()) {
+    panelView.setBounds(panelBounds());
+  }
 }
 
 // نسخة واحدة فقط من برق — النقر المتكرر على الأيقونة لا يفتح نسخًا إضافية (سبب رئيسي لامتلاء الذاكرة)
@@ -403,6 +443,7 @@ if (!app.requestSingleInstanceLock()) {
     currentEngine = loadEngine();
     searchHistory = readJson("search-history.json", []);
     bookmarks = readJson("bookmarks.json", []);
+    panelSide = readJson("panel-side.json", {}).side === "right" ? "right" : "left"; // 1.2.6
 
     // حظر المتعقبات قبل أي اتصال
     const ses = session.defaultSession;
@@ -439,6 +480,18 @@ if (!app.requestSingleInstanceLock()) {
     });
     win.addBrowserView(view);
     attachViewEvents();
+
+    // 1.2.6 — اللوحة المستقلة: تُحمّل مرة واحدة وتُرفق/تفك عند الفتح/الغلق فقط،
+    // وتُرفق آخراً فتبقى أعلى طبقة فوق الصفحة مهما حدث
+    panelView = new BrowserView({
+      webPreferences: {
+        preload: path.join(__dirname, "chrome", "preload.js"),
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+    panelView.webContents.loadFile(path.join(__dirname, "chrome", "panel.html"));
+
     layout();
     win.on("resize", layout);
     win.on("closed", () => {
@@ -501,11 +554,17 @@ ipcMain.handle("barq:engines", () => ({
 
 /* ---------------------- سجل البحث والمفضلة: IPC ---------------------- */
 
-ipcMain.on("barq:panel", (_e, open) => setPanel(open));
+ipcMain.on("barq:panel", (_e, name) => setPanel(name));
 
-// 1.2.5 — جهة اللوحة صارت CSS بحتاً داخل الواجهة (يسار/يمين) — لا تأثير لها
-// على تخطيط main بعد آلية الفك/الإرفاق، والقناة تبقى للاستقبال الصامت فقط
-ipcMain.on("barq:panel-side", () => {});
+// 1.2.6 — جهة اللوحة: main هو مصدر الحقيقة الوحيد — يحفظها ويخبر اللوحة ويحرّك حدودها
+ipcMain.on("barq:panel-side", (_e, side) => {
+  panelSide = side === "right" ? "right" : "left";
+  writeJson("panel-side.json", { side: panelSide });
+  if (panelView && !panelView.webContents.isDestroyed()) {
+    panelView.webContents.send("barq:panel-side-changed", { side: panelSide });
+  }
+  if (panelOpenName) layout();
+});
 
 ipcMain.handle("barq:get-history", () => ({
   list: searchHistory.slice(0, 150),

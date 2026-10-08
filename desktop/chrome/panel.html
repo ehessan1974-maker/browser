@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'" />
+<title>برق — اللوحة</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: #18251f; color: #e7f0ec;
+    user-select: none;
+  }
+
+  button {
+    flex: 0 0 auto; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04);
+    color: #a7bdb4; cursor: pointer;
+    transition: background .06s, color .06s, border-color .06s, transform .05s;
+  }
+  button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
+  /* إحساس الضغط: كل زر ينخفض ويغمق لحظة الضغط الفعلية عليه */
+  button:active:not(:disabled) {
+    transform: translateY(1px) scale(.92);
+    background: rgba(52,211,153,.35);
+    border-color: rgba(52,211,153,.75);
+    color: #eafff6;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.5);
+  }
+
+  /* 1.2.6 — اللوحة صارت نافذة مستقلة فوق الصفحة: كامل ارتفاع هذا العرض */
+  .panel {
+    height: 100%; display: flex; flex-direction: column; gap: 8px;
+    padding: 12px 14px;
+    background: #18251f;
+    border-right: 1px solid rgba(255,255,255,.18);
+    box-shadow: 10px 0 30px rgba(0,0,0,.5);
+  }
+  /* وضع اللوحة على اليمين: المرآة الكاملة لوضع اليسار */
+  body.panel-right .panel {
+    border-right: none; border-left: 1px solid rgba(255,255,255,.18);
+    box-shadow: -10px 0 30px rgba(0,0,0,.5);
+  }
+  .panel-head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .panel-head b { font-size: 15px; color: #3ee0a2; }
+  .panel-head .grow { flex: 1; }
+  .panel-head button.act {
+    width: auto; height: 28px; padding: 0 12px; font-size: 12px; border-radius: 8px;
+    font-family: inherit;
+  }
+  .panel-head button.act:hover { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+  /* زر تبديل جهة اللوحة — بلون مميز حتى يُلاحظ فوراً */
+  .panel-head button.act.side { color: #f5b83d; border-color: rgba(245,184,61,.45); }
+  .panel-head button.act.side:hover { color: #ffd479; border-color: rgba(245,184,61,.75); background: rgba(245,184,61,.12); }
+  .panel-head button.act.close:hover { color: #f87171; border-color: rgba(248,113,113,.6); background: rgba(248,113,113,.14); }
+  .plist {
+    flex: 1 1 auto; overflow-y: auto;
+    border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
+    background: rgba(0,0,0,.3);
+  }
+  .row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .05s;
+  }
+  .row:hover { background: rgba(52,211,153,.16); }
+  .row:active { background: rgba(52,211,153,.34); }
+  .row:last-child { border-bottom: none; }
+  .row .main { flex: 1 1 auto; min-width: 0; }
+  .row .t1 {
+    font-size: 14px; font-weight: 600; color: #ffffff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row .t2 {
+    font-size: 12px; color: #c3d6cc; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    direction: ltr; text-align: left;
+  }
+  .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; color: #d9e6df; }
+  .empty { color: #e2efe9; font-size: 14px; line-height: 1.8; text-align: center; padding: 26px 14px; }
+  .empty.err { color: #f8b4b4; }
+
+  /* شريط تمرير رقيق وواضح */
+  .plist::-webkit-scrollbar { width: 8px; }
+  .plist::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 4px; }
+  .plist::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+  <div class="panel" role="region" aria-label="لوحة السجل والمفضلة">
+    <div class="panel-head">
+      <b id="panel-title">🕘 سجل البحث</b>
+      <span class="grow"></span>
+      <button class="act" id="clear-history" title="حذف كل السجل">مسح الكل</button>
+      <button class="act side" id="side-btn" title="انقل اللوحة إلى الجهة الأخرى">إلى اليمين</button>
+      <button class="act close" id="close-btn" title="إغلاق اللوحة">✕</button>
+    </div>
+    <div class="plist" id="list"></div>
+  </div>
+  <script src="panel.js"></script>
+</body>
+</html>
