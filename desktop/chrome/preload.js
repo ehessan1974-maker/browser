@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld("barq", {
   setEngine: (id) => ipcRenderer.send("barq:set-engine", id),
   // 1.2.0 — سجل البحث والمفضلة
   panel: (open) => ipcRenderer.send("barq:panel", open),
+  // 1.2.4 — تبديل جهة اللوحة الجانبية
+  panelSide: (s) => ipcRenderer.send("barq:panel-side", s),
   onPanelsClosed: (cb) => ipcRenderer.on("barq:panels-closed", () => cb()),
   getHistory: () => ipcRenderer.invoke("barq:get-history"),
   removeSearch: (t) => ipcRenderer.send("barq:remove-search", t),

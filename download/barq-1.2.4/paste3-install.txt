@@ -1,0 +1,146 @@
+# ============================================================
+#  Barq 1.2.4 upgrade - PASTE 3 of 3  (install)
+#  Paste this WHOLE block and it runs by itself. Barq will open
+#  automatically at the end. Wait for:  ===== DONE =====
+# ============================================================
+$ErrorActionPreference = 'Continue'
+$ProgressPreference   = 'SilentlyContinue'
+& {
+
+  Write-Host '===== Barq 1.2.4 upgrade - panel side toggle + pressed buttons =====' -ForegroundColor Cyan
+
+  # [1] payload from the two saved parts
+  $fa = Join-Path $env:TEMP 'barq124_a.b64'
+  $fb = Join-Path $env:TEMP 'barq124_b.b64'
+  if (-not (Test-Path -LiteralPath $fa)) { Write-Host '[FAIL] part 1 not saved yet - run PASTE 1 first' -ForegroundColor Red; return }
+  if (-not (Test-Path -LiteralPath $fb)) { Write-Host '[FAIL] part 2 not saved yet - run PASTE 2 first' -ForegroundColor Red; return }
+  $b64 = ([IO.File]::ReadAllText($fa) + [IO.File]::ReadAllText($fb)) -replace '\s', ''
+  try { $bytes = [Convert]::FromBase64String($b64) } catch {
+    Write-Host '[FAIL] payload broken - run PASTE 1 and PASTE 2 again' -ForegroundColor Red; return }
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  $hash = [BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('-', '').ToLower()
+  if ($hash -ne 'fed2efe9c4b963dfc24bdf4154380cd1301a55e654e219f29e4391d998fb85ad') {
+    Write-Host '[FAIL] payload hash mismatch - run PASTE 1 and PASTE 2 again' -ForegroundColor Red; return }
+  Write-Host ('[1] payload OK: ' + $bytes.Length + ' bytes, SHA256 verified') -ForegroundColor Green
+
+  # [2] close running Barq (locked files = silent failure)
+  $proc = Get-Process -Name 'Barq' -ErrorAction SilentlyContinue
+  if ($proc) {
+    $proc | Stop-Process -Force
+    Start-Sleep -Seconds 2
+    Write-Host '[2] Barq was running -> closed it (OK)' -ForegroundColor Yellow
+  } else {
+    Write-Host '[2] Barq is not running (OK)' -ForegroundColor Green
+  }
+
+  # [3] find the real Barq folder
+  $barq = $null
+  $sh = New-Object -ComObject WScript.Shell
+  $desk = [Environment]::GetFolderPath('Desktop')
+  Get-ChildItem -LiteralPath $desk -Filter '*.lnk' -ErrorAction SilentlyContinue | ForEach-Object {
+    if (-not $barq) {
+      try {
+        $t = $sh.CreateShortcut($_.FullName).TargetPath
+        if ($t -like '*Barq.exe') { $barq = Split-Path -Parent $t }
+      } catch {}
+    }
+  }
+  if (-not $barq) {
+    $candidates = @('D:\Barq','C:\Barq',"$env:USERPROFILE\Desktop\Barq","$env:USERPROFILE\Downloads\Barq","$env:USERPROFILE\Barq","$env:LOCALAPPDATA\Programs\barq","$env:LOCALAPPDATA\Programs\Barq")
+    foreach ($c in $candidates) {
+      if (Test-Path -LiteralPath (Join-Path $c 'Barq.exe')) { $barq = $c; break }
+    }
+  }
+  if (-not $barq) {
+    $roots = @('D:\', $desk, "$env:USERPROFILE\Downloads", "$env:LOCALAPPDATA\Programs")
+    foreach ($r in $roots) {
+      if ($barq) { break }
+      $hit = Get-ChildItem -Path $r -Filter 'Barq.exe' -Recurse -Depth 3 -Force -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($hit) { $barq = $hit.DirectoryName }
+    }
+  }
+  if (-not $barq) {
+    Write-Host '[FAIL] Barq.exe not found anywhere. Tell me where you extracted it.' -ForegroundColor Red
+    return
+  }
+  Write-Host ('[3] found: ' + $barq) -ForegroundColor Green
+
+  $res     = Join-Path $barq 'resources'
+  $appDir  = Join-Path $res 'app'
+  $asar    = Join-Path $res 'app.asar'
+  $asarBak = Join-Path $res 'app.asar.bak'
+
+  # OLD version diagnostic
+  $oldVer = '?'
+  try { $oldVer = (Get-Content -LiteralPath (Join-Path $appDir 'package.json') -Raw | ConvertFrom-Json).version } catch {}
+  Write-Host ('[3] installed version before this upgrade: ' + $oldVer)
+
+  try {
+    New-Item -ItemType Directory -Force -Path $res -ErrorAction Stop | Out-Null
+    Set-Content -LiteralPath (Join-Path $res '.barq_test') -Value 'x' -ErrorAction Stop
+    Remove-Item -LiteralPath (Join-Path $res '.barq_test') -Force
+  } catch {
+    Write-Host '[FAIL] no write permission to the Barq folder. Open PowerShell AS ADMINISTRATOR and paste again.' -ForegroundColor Red
+    return
+  }
+
+  Write-Host ('[4] state: asar=' + (Test-Path -LiteralPath $asar) + ' bak=' + (Test-Path -LiteralPath $asarBak) + ' app=' + (Test-Path -LiteralPath $appDir))
+
+  # [5] write resources\app
+  $zipPath = Join-Path $env:TEMP 'barq-1.2.4.zip'
+  [IO.File]::WriteAllBytes($zipPath, $bytes)
+  New-Item -ItemType Directory -Force -Path $appDir | Out-Null
+  Expand-Archive -Path $zipPath -DestinationPath $appDir -Force
+  if (-not (Test-Path -LiteralPath (Join-Path $appDir 'chrome\ui.html'))) {
+    Write-Host '[FAIL] extraction failed' -ForegroundColor Red
+    return
+  }
+  Write-Host '[5] 1.2.4 files written to resources\app (OK)' -ForegroundColor Green
+
+  # [6] neutralize old app.asar (backup kept, fully reversible)
+  try {
+    if (Test-Path -LiteralPath $asar) {
+      if (Test-Path -LiteralPath $asarBak) {
+        Remove-Item -LiteralPath $asar -Force -ErrorAction Stop
+        Write-Host '[6] old app.asar removed (backup already existed) (OK)' -ForegroundColor Green
+      } else {
+        Rename-Item -LiteralPath $asar -NewName 'app.asar.bak' -Force -ErrorAction Stop
+        Write-Host '[6] app.asar -> app.asar.bak backup (OK)' -ForegroundColor Green
+      }
+    } else {
+      Write-Host '[6] no app.asar present (already upgraded before) (OK)' -ForegroundColor Green
+    }
+  } catch {
+    Write-Host ('[6] warning: ' + $_.Exception.Message) -ForegroundColor Yellow
+  }
+
+  # [7] verify
+  try { $ver = (Get-Content -LiteralPath (Join-Path $appDir 'package.json') -Raw | ConvertFrom-Json).version } catch { $ver = '?' }
+  $mainRaw = ''
+  $uiRaw = ''
+  $homeRaw = ''
+  try { $mainRaw = Get-Content -LiteralPath (Join-Path $appDir 'main.js') -Raw } catch {}
+  try { $uiRaw = Get-Content -LiteralPath (Join-Path $appDir 'chrome\ui.html') -Raw } catch {}
+  try { $homeRaw = Get-Content -LiteralPath (Join-Path $appDir 'chrome\home.html') -Raw } catch {}
+  $sideOk  = $mainRaw.Contains('panelSide === "left"')
+  $ipcOk   = $mainRaw.Contains('barq:panel-side')
+  $uiOk    = $uiRaw.Contains('width: 360px')
+  $flipOk  = $uiRaw.Contains('id="side-history"') -and $uiRaw.Contains('id="side-bookmarks"') -and $uiRaw.Contains('body.panel-right .panel')
+  $pressOk = $uiRaw.Contains('button:active') -and $homeRaw.Contains('a.tile:active')
+  $whiteOk = $uiRaw.Contains('color: #ffffff')
+  $bgOk    = $uiRaw.Contains('#18251f')
+  $btnOk   = $uiRaw.Contains('id="marks"')
+  $featOk  = $mainRaw.Contains('BOOKMARKS_MAX')
+  $stayOk  = -not $mainRaw.Contains('closePanel(); // ')
+  Write-Host ('[7] verify: version=' + $ver + '  side-panel=' + $(if ($sideOk) {'OK'} else {'MISSING'}) + '  side-ipc=' + $(if ($ipcOk) {'OK'} else {'MISSING'}) + '  ui-side=' + $(if ($uiOk) {'OK'} else {'MISSING'}) + '  side-toggle=' + $(if ($flipOk) {'OK'} else {'MISSING'}) + '  pressed-buttons=' + $(if ($pressOk) {'OK'} else {'MISSING'}) + '  white-text=' + $(if ($whiteOk) {'OK'} else {'MISSING'}) + '  new-bg=' + $(if ($bgOk) {'OK'} else {'MISSING'}) + '  buttons=' + $(if ($btnOk) {'OK'} else {'MISSING'}) + '  features=' + $(if ($featOk) {'OK'} else {'MISSING'}))
+  if (-not ($sideOk -and $ipcOk -and $uiOk -and $flipOk -and $pressOk -and $whiteOk -and $bgOk -and $btnOk -and $featOk -and $stayOk)) { Write-Host '[FAIL] verification failed' -ForegroundColor Red; return }
+
+  # [8] launch
+  Start-Process -FilePath (Join-Path $barq 'Barq.exe')
+  Write-Host '[8] Barq launched' -ForegroundColor Green
+  Write-Host '===== DONE =====' -ForegroundColor Cyan
+  Write-Host 'NEW: the history/bookmarks panel opens on the LEFT edge with white text.'
+  Write-Host 'Inside the panel header there is a small button ("to the right" /'
+  Write-Host '"to the left") that moves the panel to the other side - it remembers.'
+  Write-Host 'ALL buttons now visibly press down when clicked.'
+}

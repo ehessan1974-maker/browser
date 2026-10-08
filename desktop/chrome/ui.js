@@ -4,6 +4,8 @@
 // 1.2.2 — اللوحتان جانبيتين بنمط كروم + الزر صاحب اللوحة المفتوحة يبقى مضيئاً
 // 1.2.3 — اللوحة تبقى مفتوحة أثناء التنقل مثل كروم تماماً (تُغلق بزرها فقط)،
 //         والنجمة تحدّث قائمة المفضلة فوراً لو هي مفتوحة
+// 1.2.4 — زر نقل اللوحة يمين/يسار في رأس كل لوحة (الاختيار محفوظ)،
+//         وحالة تحميل ورسالة خطأ بيضاء واضحة إن تعذر جلب القائمة
 "use strict";
 
 const el = {
@@ -23,10 +25,40 @@ const el = {
   historyList: document.getElementById("history-list"),
   bookmarkList: document.getElementById("bookmark-list"),
   clearHistory: document.getElementById("clear-history"),
+  sideHistory: document.getElementById("side-history"),
+  sideBookmarks: document.getElementById("side-bookmarks"),
 };
 
 let focused = false;
 let openPanel = null;
+
+/* ---------------- 1.2.4: جهة اللوحة — يسار افتراضياً أو يمين، وتُحفظ ---------------- */
+
+let panelSide = "left";
+try {
+  const savedSide = localStorage.getItem("barq-panel-side");
+  if (savedSide === "right" || savedSide === "left") panelSide = savedSide;
+} catch (e) {}
+
+function applyPanelSide(notify) {
+  document.body.classList.toggle("panel-right", panelSide === "right");
+  const label = panelSide === "left" ? "إلى اليمين" : "إلى اليسار";
+  el.sideHistory.textContent = label;
+  el.sideBookmarks.textContent = label;
+  try { localStorage.setItem("barq-panel-side", panelSide); } catch (e) {}
+  if (notify) {
+    try { window.barq.panelSide(panelSide); } catch (e) {}
+  }
+}
+
+function flipPanelSide() {
+  panelSide = panelSide === "left" ? "right" : "left";
+  applyPanelSide(true);
+}
+
+applyPanelSide(true);
+el.sideHistory.addEventListener("click", flipPanelSide);
+el.sideBookmarks.addEventListener("click", flipPanelSide);
 
 function render(s) {
   el.back.disabled = !s.canBack;
@@ -139,8 +171,24 @@ function esc(s) {
 }
 
 function renderHistory() {
-  window.barq.getHistory().then((data) => {
+  el.historyList.innerHTML = '<div class="empty">جارٍ فتح السجل…</div>';
+  window.barq.getHistory().then(function (data) {
     if (openPanel !== "history") return;
+    try {
+      paintHistory(data);
+    } catch (e) {
+      historyError();
+    }
+  }).catch(historyError);
+}
+
+function historyError() {
+  if (openPanel !== "history") return;
+  el.historyList.innerHTML =
+    '<div class="empty err">تعذّر تحميل السجل — اضغط زر الساعة مرة أخرى</div>';
+}
+
+function paintHistory(data) {
     el.historyList.innerHTML = "";
     const list = (data && data.list) || [];
     if (!list.length) {
@@ -170,12 +218,27 @@ function renderHistory() {
       row.appendChild(del);
       el.historyList.appendChild(row);
     });
-  });
 }
 
 function renderBookmarks() {
-  window.barq.getBookmarks().then((data) => {
+  el.bookmarkList.innerHTML = '<div class="empty">جارٍ فتح المفضلة…</div>';
+  window.barq.getBookmarks().then(function (data) {
     if (openPanel !== "bookmarks") return;
+    try {
+      paintBookmarks(data);
+    } catch (e) {
+      bookmarksError();
+    }
+  }).catch(bookmarksError);
+}
+
+function bookmarksError() {
+  if (openPanel !== "bookmarks") return;
+  el.bookmarkList.innerHTML =
+    '<div class="empty err">تعذّر تحميل المفضلة — اضغط زر الدبوس مرة أخرى</div>';
+}
+
+function paintBookmarks(data) {
     el.bookmarkList.innerHTML = "";
     const list = (data && data.list) || [];
     if (!list.length) {
@@ -205,7 +268,6 @@ function renderBookmarks() {
       row.appendChild(del);
       el.bookmarkList.appendChild(row);
     });
-  });
 }
 
 el.hist.addEventListener("click", () => showPanel("history"));

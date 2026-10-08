@@ -37,8 +37,16 @@
     padding: 7px 16px; border-radius: 999px; cursor: pointer;
     border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
     color: #cfe0d9; font-size: 13px; font-family: inherit;
+    transition: background .06s, color .06s, border-color .06s, transform .05s;
   }
   .chips button:hover { border-color: rgba(52,211,153,.45); color: #34d399; }
+  /* 1.2.4 — إحساس الضغط الفعلي على كل الأزرار */
+  .chips button:active {
+    transform: translateY(1px) scale(.94);
+    background: rgba(52,211,153,.32); border-color: rgba(52,211,153,.75);
+    color: #eafff6;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.5);
+  }
   .chips button.on {
     background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.55);
     color: #34d399; font-weight: 700;
@@ -51,6 +59,7 @@
     color: #cfe0d9; font-size: 12px; transition: .15s;
   }
   a.tile:hover { border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.08); transform: translateY(-2px); }
+  a.tile:active { transform: translateY(0) scale(.95); background: rgba(52,211,153,.18); border-color: rgba(52,211,153,.6); }
   .tile i {
     font-style: normal; font-size: 22px;
     width: 44px; height: 44px; border-radius: 12px;

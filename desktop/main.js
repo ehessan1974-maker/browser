@@ -5,6 +5,8 @@
 // 1.2.1 — إصلاح حاسم: اللوحتان كانتا مخفيتين خلف BrowserView — layout() ينزل العرض عند فتح اللوحة
 // 1.2.2 — اللوحتان صارتا جانبيتين بنمط كروم: على الحافة اليسرى (مرآة RTL لكروم) والعرض ينضغط جانبياً
 // 1.2.3 — اللوحة تبقى مفتوحة أثناء التنقل مثل كروم تماماً (الإغلاق بزرها فقط فقط)
+// 1.2.4 — جهة اللوحة الجانبية قابلة للتبديل يسار/يمين بزر داخل رأس اللوحة،
+//         والاختيار يُحفظ لدى الواجهة ويُطبّق على تخطيط العرض فوراً
 "use strict";
 
 const {
@@ -70,6 +72,7 @@ const PANEL_W = 360; // عرض اللوحة الجانبية — لازم يطا
 let searchHistory = []; // { q, engine, t }
 let bookmarks = [];     // { url, title, t }
 let panelOpen = false;
+let panelSide = "left"; // 1.2.4 — جهة اللوحة: يسار افتراضياً، والتبديل من زر داخل اللوحة
 
 function dataFile(name) {
   try {
@@ -367,13 +370,18 @@ function attachViewEvents() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
-  // 1.2.2: اللوحة جانبية على يسار النافذة — العرض ينزاح لليمين بمقدار عرض اللوحة
-  // (إحداثيات BrowserView فيزيائية دائماً، واللوحة مرسومة في ui.html عند left:0)
-  const px = panelOpen ? PANEL_W : 0;
+  // 1.2.2: اللوحة الجانبية بدل المنسدلة — 1.2.4: جهتها قابلة للتبديل
+  // يسار: العرض ينزاح يميناً بمقدار عرض اللوحة / يمين: العرض يبقى ويضيق عرضه فقط
+  let vx = 0;
+  let vw = w;
+  if (panelOpen) {
+    vw = Math.max(0, w - PANEL_W);
+    if (panelSide === "left") vx = PANEL_W;
+  }
   view.setBounds({
-    x: px,
+    x: vx,
     y: CHROME_H,
-    width: Math.max(0, w - px),
+    width: vw,
     height: Math.max(0, h - CHROME_H),
   });
 }
@@ -493,6 +501,15 @@ ipcMain.handle("barq:engines", () => ({
 /* ---------------------- سجل البحث والمفضلة: IPC ---------------------- */
 
 ipcMain.on("barq:panel", (_e, open) => setPanel(open));
+
+// 1.2.4 — تبديل جهة اللوحة الجانبية (يسار/يمين) مع إعادة التخطيط فوراً إن كانت مفتوحة
+ipcMain.on("barq:panel-side", (_e, side) => {
+  const s = side === "right" ? "right" : "left";
+  if (s !== panelSide) {
+    panelSide = s;
+    if (panelOpen) layout();
+  }
+});
 
 ipcMain.handle("barq:get-history", () => ({
   list: searchHistory.slice(0, 150),

@@ -21,8 +21,17 @@
     flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
     border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04);
     color: #a7bdb4; font-size: 15px; cursor: pointer; display: grid; place-items: center;
+    transition: background .06s, color .06s, border-color .06s, transform .05s;
   }
   button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
+  /* 1.2.4 — إحساس الضغط: كل زر ينخفض ويغمق لحظة الضغط الفعلية عليه */
+  button:active:not(:disabled) {
+    transform: translateY(1px) scale(.92);
+    background: rgba(52,211,153,.35);
+    border-color: rgba(52,211,153,.75);
+    color: #eafff6;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.5);
+  }
   button:disabled { opacity: .35; cursor: default; }
   button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* النجمة وهي مضاءة */
@@ -59,7 +68,8 @@
 
   /* اللوحتان الجانبيتان بنمط كروم (1.2.2): على الحافة اليسرى كامل الارتفاع تحت الشريط،
      والعرض الفعلي 360px يطابق PANEL_W في main.js — الصفحة تنضغط جانبياً لا تحت
-     1.2.3: خلفية أفتح وخط أبيض كبير — الوضوح على شاشات الأجهزة القديمة الضعيفة */
+     1.2.3: خلفية أفتح وخط أبيض كبير — الوضوح على شاشات الأجهزة القديمة الضعيفة
+     1.2.4: جهة اللوحة قابلة للتبديل يسار/يمين بزر في رأس اللوحة والاختيار محفوظ */
   .panel {
     position: absolute; top: 57px; bottom: 0; left: 0; width: 360px;
     background: #18251f; border-right: 1px solid rgba(255,255,255,.18);
@@ -68,6 +78,12 @@
     box-shadow: 10px 0 30px rgba(0,0,0,.5);
   }
   .panel.open { display: flex; }
+  /* 1.2.4 — وضع اللوحة على اليمين: المرآة الكاملة لوضع اليسار */
+  body.panel-right .panel {
+    left: auto; right: 0;
+    border-right: none; border-left: 1px solid rgba(255,255,255,.18);
+    box-shadow: -10px 0 30px rgba(0,0,0,.5);
+  }
   .panel-head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .panel-head b { font-size: 15px; color: #3ee0a2; }
   .panel-head .grow { flex: 1; }
@@ -76,6 +92,9 @@
     font-family: inherit;
   }
   .panel-head button.act:hover { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+  /* زر تبديل جهة اللوحة — بلون مميز حتى يُلاحظ فوراً */
+  .panel-head button.act.side { color: #f5b83d; border-color: rgba(245,184,61,.45); }
+  .panel-head button.act.side:hover { color: #ffd479; border-color: rgba(245,184,61,.75); background: rgba(245,184,61,.12); }
   .plist {
     flex: 1 1 auto; overflow-y: auto;
     border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
@@ -85,8 +104,10 @@
     display: flex; align-items: center; gap: 8px;
     padding: 7px 10px; cursor: pointer;
     border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .05s;
   }
   .row:hover { background: rgba(52,211,153,.16); }
+  .row:active { background: rgba(52,211,153,.34); }
   .row:last-child { border-bottom: none; }
   .row .main { flex: 1 1 auto; min-width: 0; }
   .row .t1 {
@@ -100,6 +121,8 @@
   }
   .row .x { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 12px; color: #d9e6df; }
   .empty { color: #e2efe9; font-size: 14px; line-height: 1.8; text-align: center; padding: 26px 14px; }
+  .empty.err { color: #f8b4b4; }
+  select:active:not(:disabled) { color: #34d399; border-color: rgba(52,211,153,.6); }
 </style>
 </head>
 <body>
@@ -147,6 +170,7 @@
       <b>🕘 سجل البحث</b>
       <span class="grow"></span>
       <button class="act" id="clear-history" title="حذف كل السجل">مسح الكل</button>
+      <button class="act side" id="side-history" title="انقل اللوحة إلى الجهة الأخرى">إلى اليمين</button>
     </div>
     <div class="plist" id="history-list"></div>
   </div>
@@ -155,6 +179,7 @@
     <div class="panel-head">
       <b>★ المفضلة</b>
       <span class="grow"></span>
+      <button class="act side" id="side-bookmarks" title="انقل اللوحة إلى الجهة الأخرى">إلى اليمين</button>
     </div>
     <div class="plist" id="bookmark-list"></div>
   </div>
