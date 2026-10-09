@@ -5,6 +5,7 @@
 // 1.2.6 — اللوحتان صارتا panel.html (BrowserView مستقل فوق الصفحة):
 //         هنا فقط زرا الساعة/المفضلة يرسلان الطلب، والإضاءة تأتي من main
 // 1.3.0 — زر البحث الشامل: استعلام واحد ← عدة محركات في نفس اللحظة
+// 1.4.2 — زر حساب برق (دخول اختياري — بلا حساب يعمل كل شيء طبيعياً)
 "use strict";
 
 const el = {
@@ -15,6 +16,7 @@ const el = {
   star: document.getElementById("star"),
   marks: document.getElementById("marks"),
   hist: document.getElementById("hist"),
+  accountbtn: document.getElementById("accountbtn"),
   form: document.getElementById("go"),
   url: document.getElementById("url"),
   engine: document.getElementById("engine"),
@@ -33,6 +35,7 @@ window.barq.onPanelButtons(function (s) {
 });
 
 function render(s) {
+  // 1.4.2 — برق يعمل طبيعياً دائماً — الحساب اختياري: الزر يضيء فقط والجلسة مفتوحة
   el.back.disabled = !s.canBack;
   el.fwd.disabled = !s.canFwd;
   if (!focused) el.url.value = s.isHome ? "" : s.url;
@@ -42,6 +45,10 @@ function render(s) {
   }
   el.star.disabled = !!s.isHome;
   el.star.classList.toggle("star-on", !!s.starred);
+  el.accountbtn.classList.toggle("on", !!s.account);
+  el.accountbtn.title = s.account
+    ? "الحساب: " + s.account + " — فتح لوحة الحساب"
+    : "حساب برق — تسجيل الدخول (اختياري)";
   const engName = s.engineName || "دك دك جو";
   el.url.placeholder = s.isHome
     ? "برق • صفحة البداية — ابحث في " + engName + " أو اكتب عنوانًا…"
@@ -83,6 +90,13 @@ el.back.addEventListener("click", () => window.barq.back());
 el.fwd.addEventListener("click", () => window.barq.forward());
 el.reload.addEventListener("click", () => window.barq.reload());
 el.home.addEventListener("click", () => window.barq.home());
+
+// 1.4.2 — حساب برق: يفتح لوحة الحساب (دخول/إنشاء/خروج — كلها اختيارية)
+el.accountbtn.addEventListener("click", () => {
+  try {
+    window.barq.account();
+  } catch (e) {}
+});
 
 // 1.3.0 — البحث الشامل: يرسل نص الخانة (إن وجد) لصفحة كل المحركات
 el.omni.addEventListener("click", () => {

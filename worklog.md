@@ -1394,3 +1394,42 @@ Stage Summary:
 - 1.4.1 على GitHub كاملاً: كود + ترقية 33KB + سكربت + 8 حزم كاملة built تلقائياً على stable — المنظومة الواحدة: مسح السجل (كلياً/جزئياً) ينعكس على رجوع/تقدم فوراً.
 - جميع ميزات 1.3.1/1.4.0 محفوظة داخل الحزم الجديدة (العلامات متسلسلة).
 - التوكن السادس يستحق الإلغاء الآن (استُعمل للدفع والتحقق فقط).
+
+---
+Task ID: BARQ-LOCK-142
+Agent: Z.ai Code (main)
+Task: 1.4.2 — زر تسجيل الدخول إلى برق 🔒 (قفل/دخول بكلمة مرور) + فحص حالة GitHub بعد شكوى المستخدم
+
+Work Log:
+- شكوى المستخدم «ما وصل شي على جيت هاب»: الفحص أظهر أن 1.4.1 موجود فعلاً على origin/main (e247dfb) و8 حزمه على stable — الجديد هو أن كود 1.4.2 كان موجوداً محلياً في كومِت 8d3cddc (برسالة UUID من الجلسة المفقودة) بلا حزمة ولا سكربت ولا دفع.
+- مراجعة كود 1.4.2 كاملاً: lock.html (شاشة دخول/إنشاء بتصميم أخضر داكن RTL) + barqLock bridge في omni-preload (attempt/cancel فقط) + barq.lock() في preload الشريط + main.js: doLock/loginRec/hashPassword (salt+SHA-256)/showLockOrHome + قفل كل مسارات IPC (navigate/back/forward/reload/home/omni/panels/history/bookmarks/star/resize) + get-history وget-bookmarks يرجعان فارغين والمقفل + navState يعرض locked فيعطّل الشريط كله.
+- اكتشاف 3 إخفاقات في اختبار انحدار 1.4.1 (barq-regression.js المكتوب في الجلسة المفقودة): توقعات خاطئة مخالفة للسلوك الموثق (المرساة تبقى بعد المسح؛ التنقل الجديد يقلم الأمام) — تتبّع trackNav/goNav/pruneNavUrls سطرياً وأثبت أن الكود سليم والاختبار هو الخاطئ، صحّحت التوقعات الثلاثة عبر python3.
+- النتيجة: انحدار 8/8 + قفل 22/22 = 30 PASS / 0 FAIL.
+- تحديث BARQ-DESKTOP.md (صف 1.4.2 في جدول الإصدارات).
+- بناء download/barq-1.4.2/barq142.zip: 12 ملفاً (11 من 1.4.1 + chrome/lock.html)، 36KB، SHA256 202d2204f26484c3e1b38b0969cd881c22ae6e358fc2be9f9ea5011da9a2f48c، version=1.4.2 داخل الحزمة.
+- كتابة Barq-Upgrade-1.4.2.ps1 بنمط 1.4.1: BOM + CRLF + بوابة SHA256 + جمع كل النسخ (D:\Barq + المكتب/التنزيلات/D:/E:/F: بشرط Barq.exe+portable.txt) + Expand-Archive إلى resources\app + إعادة تسمية app.asar إلى .bak + علامات التحقق (version=1.4.2 + lock.html + function doLock + barq:login-attempt) — نُسخ إلى public/downloads/.
+
+Stage Summary:
+- 1.4.2 جاهز للدفع: كود + اختبارات 30/30 + حزمة 36KB + سكربت ترقية بعلامات جديدة + وثائق.
+- قرارات تصميم محفوظة: الكلمة تُخزَّن hash فقط؛ المقفل يجمد المسار (trackNav يرفض)؛ lock.html ليست محطة في مسار رجوع/تقدم؛ الإنشاء يقفل لحظاً (دخول بالكلمة الجديدة فوراً)؛ login.json فاسد = عمل بلا قفل (لا حبس).
+- الدفع يحتاج token7 (السادس يجب أن يكون ملغى).
+
+---
+Task ID: BARQ-ACCOUNT-142
+Agent: Z.ai Code (main)
+Task: إعادة تصميم 1.4.2 بناءً على رفض المستخدم للقفل: حساب اختياري كامل الحرية + الدفع بtoken7
+
+Work Log:
+- المستخدم رفض تصميم القفل صراحة: «لا أريد إنشاء كلمة مرور للبرنامج — المستخدم يعمل بشكل طبيعي، ومن أراد الدخول بحسابه يدخل ومن لم يرد فله الحرية». أعدت التصميم بالكامل.
+- main.js: حذفت متغير locked وكل حواجزه الـ20+ من trackNav/trackInPageNav/goNav/setPanel/كل معالجات IPC — برق لا يُقفل أبداً. استبدلت قسم القفل بقسم الحساب: accountRec/accountHash/accountRestore + IPC: barq:account-state/register/login/logout. بدء التشغيل: accountRestore() ثم goHome() دائماً — لا شاشة دخول أبداً. navState يعيد account بدل locked. setPanel يقبل "account" كلوحة ثالثة. الملف account.json: {user, salt, hash(salt+SHA-256), signedIn} — الفاسد يعامل كلا حساب.
+- preload.js: حذفت barq.lock، أضفت account() (يفتح لوحة الحساب عبر barq:panel) + getAccount/accountLogin/accountRegister/accountLogout.
+- ui.html/ui.js: الزر صار accountbtn بأيقونة شخص — لا تعطيل لأي زر أبداً؛ الزر يضيء (on) والجلسة مفتوحة والتلميح يعرض الاسم.
+- omni-preload.js: حذفت جسر barqLock بالكامل — المواقع لا ترى شيئاً من الحساب.
+- panel.html/panel.js: لوحة «الحساب» كتبويب ثالث: مسجّل = ترحيب + خروج؛ زائر = تبديل دخول/إنشاء مع تطبيع الاسم ورسائل عربية واضحة + ملاحظة «اختياري تماماً». حذفت lock.html نهائياً.
+- إصلاح خطأ خطير في مولّد السكربت: بايثون فسّر \b و\r في المسارات كأحرف تحكم (Downloadsarq142.zip!) — أعدت التوليد بشرطات مزدوجة في المصدر + 12 فحصاً آلياً للمسارات وBOM وCRLF.
+- الاختبارات: harness جديد كامل للحساب — 32 PASS / 0 FAIL + انحدار 1.4.1 — 8/8 = 40 PASS (تصحيحان لتوقعاتي: الجلسة الجارية تستمر في الذاكرة ولو فسد الملف — سلوك مقصود بلا انقطاع مفاجئ).
+- الحزمة: barq142.zip 11 ملفاً 36KB — SHA256 dce87f68befec8e3deed583934a9535accf1748eefaeb9a97a689793735f7683، والعلامات: function accountRec + barq:account-register + renderAccount + حذف lock.html القديم عند الترقية.
+
+Stage Summary:
+- 1.4.2 الصيغة النهائية: حساب محلي اختياري 100% — الحرية الكاملة للمستخدم كما أراد صاحبه بالضبط.
+- token7 المستعمل في هذه الدفعة يجب أن يُلغى فور انتهائها.

@@ -100,6 +100,31 @@
   .empty { color: #e2efe9; font-size: 14px; line-height: 1.8; text-align: center; padding: 26px 14px; }
   .empty.err { color: #f8b4b4; }
 
+  /* 1.4.2 — لوحة الحساب: نموذج دخول/إنشاء اختياري (بلا حساب يعمل برق طبيعياً) */
+  .acct { padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .acct .hello { font-size: 15px; font-weight: 700; color: #3ee0a2; text-align: center; }
+  .acct .note { font-size: 11.5px; color: #8fa39a; line-height: 1.9; text-align: center; }
+  .acct label { font-size: 12px; color: #a7bdb4; display: block; }
+  .acct input {
+    width: 100%; height: 38px; margin-top: 4px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.14); outline: none;
+    background: rgba(0,0,0,.35); color: #e7f0ec; padding: 0 12px;
+    font-size: 14px; font-family: inherit;
+  }
+  .acct input:focus { border-color: rgba(52,211,153,.55); box-shadow: 0 0 0 2px rgba(52,211,153,.12); }
+  .acct .modes { display: flex; gap: 8px; }
+  .acct .modes button { flex: 1; height: 32px; font-family: inherit; font-size: 12.5px; }
+  .acct .modes button.sel { background: rgba(52,211,153,.22); color: #34d399; border-color: rgba(52,211,153,.5); }
+  .acct .go {
+    height: 40px; border-radius: 10px; font-family: inherit;
+    font-size: 13.5px; font-weight: 700;
+    border: 1px solid rgba(52,211,153,.5); background: rgba(52,211,153,.16); color: #34d399;
+  }
+  .acct .go:hover:not(:disabled) { background: rgba(52,211,153,.3); }
+  .acct .go:disabled { opacity: .5; cursor: default; }
+  .acct .msg { min-height: 16px; font-size: 12px; color: #f28b82; text-align: center; }
+  .acct .msg.ok { color: #34d399; }
+
   /* شريط تمرير رقيق وواضح */
   .plist::-webkit-scrollbar { width: 8px; }
   .plist::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 4px; }

@@ -33,6 +33,11 @@
 //         ببرق يمُح مع السجل — «مسح الكل» يعطّل الزرين فوراً ويقفّل سجل كروم الداخلي،
 //         وحذف مدخل واحد يزيله من مسار الرجوع والتقدم (بالاتجاهين) حتى لو كانت
 //         الجلسة نفسها، مع استبدال إعادة التوجيه السريعة لنفس الموقع بدل تكديسها.
+// 1.4.2 — حساب برق: زر تسجيل دخول اختياري تماماً — من لا يريد حساباً
+//         يعمل على برق بشكل طبيعي 100% بلا أي قفل ولا شاشة دخول.
+//         الزر يفتح لوحة «الحساب»: دخول أو إنشاء حساب محلي على الجهاز
+//         (الاسم نص عادي وكلمة المرور salt+SHA-256 في account.json)،
+//         والجلسة تعود عند كل فتح حتى تسجيل الخروج. التحقق كله في main.
 "use strict";
 
 const {
@@ -47,6 +52,7 @@ const {
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const crypto = require("crypto");
 const { blockedHosts } = require("./trackers");
 
 /* ------------------------- الوضع المحمول (1.2.8) ------------------------- */
@@ -469,6 +475,39 @@ function saveOmniEnabled(arr) {
   } catch {}
 }
 
+/* ------------ حساب برق — تسجيل دخول اختياري تماماً (1.4.2) ------------ */
+// زر الحساب يفتح لوحة «الحساب»: الدخول اختياري — من لا يريد حساباً
+// يعمل على برق بشكل طبيعي 100% بلا أي قفل ولا شاشة دخول.
+// الحساب محلي على هذا الجهاز: الاسم نص عادي وكلمة المرور مشفّرة
+// (salt + SHA-256) في account.json — الجلسة تبقى مفتوحة بعد إغلاق
+// برق حتى تسجيل الخروج، والتحقق كله في main.
+// ملف فاسد أو ناقص = يعامل ك«لا حساب» — لا حبس ولا تعطل أبداً.
+
+let accountUser = ""; // فارغ = زائر (الوضع الطبيعي الافتراضي)
+
+function accountRec() {
+  try {
+    const f = dataFile("account.json");
+    if (f && fs.existsSync(f)) {
+      const v = JSON.parse(fs.readFileSync(f, "utf8"));
+      if (v && typeof v.user === "string" && v.user.length >= 2 && v.user.length <= 40 &&
+          typeof v.salt === "string" && v.salt.length >= 16 &&
+          typeof v.hash === "string" && /^[0-9a-f]{64}$/.test(v.hash)) return v;
+    }
+  } catch {}
+  return null; // لا حساب (أو ملف فاسد — نتجاهله ونعمل بلا حساب)
+}
+
+function accountHash(salt, pass) {
+  return crypto.createHash("sha256").update(salt + String(pass)).digest("hex");
+}
+
+// عند فتح برق: الجلسة تعود تلقائياً إن كانت مفتوحة — وإلا يبقى برق على وضع الزائر
+function accountRestore() {
+  const rec = accountRec();
+  accountUser = rec && rec.signedIn ? rec.user : "";
+}
+
 function isBookmarked(url) {
   return bookmarks.some((b) => b.url === url);
 }
@@ -541,7 +580,7 @@ function pushPanelRefresh(name) {
 
 function setPanel(name) {
   if (!win || win.isDestroyed() || !panelView) return;
-  const n = name === "history" || name === "bookmarks" ? name : null;
+  const n = name === "history" || name === "bookmarks" || name === "account" ? name : null;
   if (n && panelOpenName === n) {
     closePanel(); // نفس الزر ثانية = إغلاق
     return;
@@ -646,6 +685,7 @@ function navState() {
     blockedCurrent,
     blockedTotal,
     isHome,
+    account: accountUser, // 1.4.2 — الحساب إن دخل؛ "" = زائر يعمل طبيعياً
     engine: currentEngine,
     engineName: eng ? eng.name : "",
     title,
@@ -885,6 +925,8 @@ if (!app.requestSingleInstanceLock()) {
       win = null;
     });
 
+    // 1.4.2 — استعادة جلسة الحساب إن كانت مفتوحة — برق يفتح طبيعياً دائماً
+    accountRestore();
     goHome();
     pushStats();
   });
@@ -926,8 +968,54 @@ ipcMain.on("barq:forward", () => goNav(1)); // 1.4.1
 ipcMain.on("barq:reload", () => {
   if (view) view.webContents.reload();
 });
-ipcMain.on("barq:home", () => goHome());
+ipcMain.on("barq:home", () => {
+  goHome();
+});
 ipcMain.handle("barq:state", () => navState());
+
+/* ------------ حساب برق: تسجيل دخول اختياري — IPC (1.4.2) ------------ */
+// كل التحقق في main — الواجهة لا ترى ولا تلمس الملف أبداً.
+// بلا حساب يعمل برق بشكل طبيعي 100%، والحساب كله محلي على هذا الجهاز.
+
+ipcMain.handle("barq:account-state", () => ({ user: accountUser }));
+
+ipcMain.handle("barq:account-register", (_e, p) => {
+  const user = String((p && p.user) || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  const pass = String((p && p.pass) || "");
+  const confirm = String((p && p.confirm) || "");
+  if (accountRec()) return { ok: false, msg: "حساب موجود سلفاً على هذا الجهاز — سجّل الدخول" };
+  if (user.length < 2 || user.length > 40) return { ok: false, msg: "الاسم حرفان حتى 40 حرفاً" };
+  if (pass.length < 4) return { ok: false, msg: "كلمة المرور قصيرة — 4 أحرف على الأقل" };
+  if (pass !== confirm) return { ok: false, msg: "التأكيد لا يطابق كلمة المرور" };
+  const salt = crypto.randomBytes(16).toString("hex");
+  writeJson("account.json", { user: user, salt: salt, hash: accountHash(salt, pass), signedIn: true });
+  accountUser = user;
+  pushStats(); // زر الحساب يضيء فوراً
+  return { ok: true, user: user };
+});
+
+ipcMain.handle("barq:account-login", (_e, p) => {
+  const user = String((p && p.user) || "").trim();
+  const pass = String((p && p.pass) || "");
+  const rec = accountRec();
+  if (!rec) return { ok: false, msg: "لا حساب على هذا الجهاز — أنشئ حساباً أولاً" };
+  if (rec.user.toLowerCase() !== user.toLowerCase())
+    return { ok: false, msg: "الاسم لا يطابق حساب هذا الجهاز" };
+  if (accountHash(rec.salt, pass) !== rec.hash)
+    return { ok: false, msg: "كلمة المرور غير صحيحة — حاول مجدداً" };
+  writeJson("account.json", Object.assign({}, rec, { signedIn: true }));
+  accountUser = rec.user;
+  pushStats();
+  return { ok: true, user: accountUser };
+});
+
+ipcMain.handle("barq:account-logout", () => {
+  const rec = accountRec();
+  if (rec) writeJson("account.json", Object.assign({}, rec, { signedIn: false }));
+  accountUser = "";
+  pushStats();
+  return { ok: true };
+});
 
 /* ------------------------------ محرك البحث -------------------------------- */
 
@@ -1035,4 +1123,6 @@ ipcMain.handle("barq:get-bookmarks", () => ({ list: bookmarks }));
 
 ipcMain.handle("barq:star", () => toggleBookmark());
 
-ipcMain.on("barq:remove-bookmark", (_e, url) => removeBookmark(url));
+ipcMain.on("barq:remove-bookmark", (_e, url) => {
+  removeBookmark(url);
+});

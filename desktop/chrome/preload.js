@@ -14,6 +14,15 @@ contextBridge.exposeInMainWorld("barq", {
   omniOpen: (q) => ipcRenderer.send("barq:omni-open", q),
   // 1.2.0 — سجل البحث والمفضلة
   panel: (name) => ipcRenderer.send("barq:panel", name),
+  // 1.4.2 — زر حساب برق: يفتح لوحة الحساب (الدخول اختياري — بلا حساب يعمل برق طبيعياً)
+  account: () => ipcRenderer.send("barq:panel", "account"),
+  // 1.4.2 — جسر الحساب للوحة: حالة/دخول/إنشاء/خروج — التحقق كله في main
+  getAccount: () => ipcRenderer.invoke("barq:account-state"),
+  accountLogin: (user, pass) =>
+    ipcRenderer.invoke("barq:account-login", { user: String(user || ""), pass: String(pass || "") }),
+  accountRegister: (user, pass, confirm) =>
+    ipcRenderer.invoke("barq:account-register", { user: String(user || ""), pass: String(pass || ""), confirm: String(confirm || "") }),
+  accountLogout: () => ipcRenderer.invoke("barq:account-logout"),
   // 1.2.4 — تبديل جهة اللوحة الجانبية
   panelSide: (s) => ipcRenderer.send("barq:panel-side", s),
   // 1.4.0 — تغيير عرض اللوحة بالسحب من حافتها

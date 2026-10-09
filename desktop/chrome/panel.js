@@ -5,6 +5,7 @@
 // 1.4.0 — السجل صار سجل تصفح كامل: صفحات وبحوث بعناوينها الحقيقية، والنقر يفتح الرابط،
 //         وزر «مسح الكل» يُعطّل تلقائياً عندما يكون السجل فارغاً،
 //         + مقبض سحب على حافة اللوحة لتغيير عرضها (main يتابع المؤشر ويحفظ العرض)
+// 1.4.2 — لوحة «الحساب»: تسجيل دخول اختياري (محلي) — بلا حساب يعمل برق طبيعياً 100%
 "use strict";
 
 const ENGINE_NAMES = {
@@ -164,9 +165,103 @@ function paintBookmarks(data) {
   });
 }
 
+/* ---------------- 1.4.2 — حساب برق (اختياري تماماً) ---------------- */
+// لوحة الحساب: دخول أو إنشاء حساب محلي، أو تسجيل خروج — وكل شيء يعمل طبيعياً بلا حساب
+
+function renderAccount() {
+  el.title.textContent = "👤 حساب برق";
+  el.clear.style.display = "none";
+  window.barq.getAccount().then(function (a) {
+    try { paintAccount(a && a.user); } catch (e) {
+      setStatus("تعذّر فتح الحساب — أعد فتح اللوحة", true);
+    }
+  }).catch(function () {
+    setStatus("تعذّر فتح الحساب — أعد فتح اللوحة", true);
+  });
+}
+
+function acctMsg(box, t, isOk) {
+  const m = box.querySelector(".msg");
+  if (m) { m.className = "msg" + (isOk ? " ok" : ""); m.textContent = t || ""; }
+}
+
+function paintAccount(user) {
+  el.list.innerHTML = "";
+  const box = document.createElement("div");
+  box.className = "acct";
+  if (user) {
+    // الجلسة مفتوحة: ترحيب + خروج — البيانات كلها محلية ولا تُرسل لأي مكان
+    box.innerHTML =
+      '<div class="hello">مرحباً، ' + esc(user) + ' 👋</div>' +
+      '<div class="note">الحساب محفوظ على هذا الجهاز فقط، وكلمة المرور مشفّرة ' +
+      '(salt + SHA-256) ولا تُرسل لأي مكان.<br>تسجيل الخروج لا يمسح سجل التصفح ولا المفضلة.</div>' +
+      '<button class="go" id="acct-out">🚪 تسجيل الخروج</button>';
+    box.querySelector("#acct-out").addEventListener("click", function () {
+      window.barq.accountLogout().then(function () { renderAccount(); }).catch(function () {});
+    });
+  } else {
+    let mode = "login"; // login | register
+    box.innerHTML =
+      '<div class="note">الدخول اختياري تماماً — بلا حساب يعمل برق بشكل طبيعي 100%.<br>' +
+      'الحساب محلي على هذا الجهاز فقط.</div>' +
+      '<div class="modes">' +
+      '<button id="m-in" class="sel">تسجيل الدخول</button>' +
+      '<button id="m-up">إنشاء حساب جديد</button></div>' +
+      '<label>الاسم<br><input id="a-user" autocomplete="off" /></label>' +
+      '<label>كلمة المرور<br><input id="a-pass" type="password" autocomplete="off" /></label>' +
+      '<label id="a-l2" style="display:none">تأكيد كلمة المرور<br><input id="a-confirm" type="password" autocomplete="off" /></label>' +
+      '<button class="go" id="a-go">🔓 تسجيل الدخول</button>' +
+      '<div class="msg"></div>';
+    const mIn = box.querySelector("#m-in");
+    const mUp = box.querySelector("#m-up");
+    const l2 = box.querySelector("#a-l2");
+    const go = box.querySelector("#a-go");
+    function setMode(m) {
+      mode = m;
+      mIn.className = m === "login" ? "sel" : "";
+      mUp.className = m === "register" ? "sel" : "";
+      l2.style.display = m === "register" ? "" : "none";
+      go.textContent = m === "register" ? "✨ إنشاء الحساب" : "🔓 تسجيل الدخول";
+      acctMsg(box, "");
+    }
+    mIn.addEventListener("click", function () { setMode("login"); });
+    mUp.addEventListener("click", function () { setMode("register"); });
+    function submit() {
+      const u = box.querySelector("#a-user").value;
+      const p = box.querySelector("#a-pass").value;
+      const c = box.querySelector("#a-confirm").value;
+      if (!u.trim()) { acctMsg(box, "اكتب الاسم"); return; }
+      if (!p) { acctMsg(box, "اكتب كلمة المرور"); return; }
+      go.disabled = true;
+      acctMsg(box, "جارٍ التحقق…", true);
+      const done = function (r) {
+        go.disabled = false;
+        if (r && r.ok) {
+          acctMsg(box, mode === "register"
+            ? "تم إنشاء الحساب — أهلاً " + (r.user || "")
+            : "أهلاً بعودتك " + (r.user || ""), true);
+          setTimeout(renderAccount, 700);
+        } else {
+          acctMsg(box, (r && r.msg) || "تعذّر تسجيل الدخول");
+        }
+      };
+      const fail = function () { go.disabled = false; acctMsg(box, "تعذّر الاتصال ببرق — أعد فتح اللوحة"); };
+      if (mode === "register") window.barq.accountRegister(u, p, c).then(done).catch(fail);
+      else window.barq.accountLogin(u, p).then(done).catch(fail);
+    }
+    go.addEventListener("click", submit);
+    const inputs = box.querySelectorAll("input");
+    for (let i = 0; i < inputs.length; i++) {
+      inputs[i].addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+    }
+  }
+  el.list.appendChild(box);
+}
+
 function render() {
   if (current === "history") renderHistory();
-  else renderBookmarks();
+  else if (current === "bookmarks") renderBookmarks();
+  else renderAccount();
 }
 
 /* -------------------------- أحداث main (المصدر) -------------------------- */
