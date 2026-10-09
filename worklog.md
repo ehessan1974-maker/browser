@@ -1470,3 +1470,18 @@ Stage Summary:
 - barq142.zip متاح الآن للتنزيل الفوري من لوحة المعاينة على /downloads/barq142.zip.
 - GitHub release stable يحتوي كل حزم 1.4.2 الثمانية الكاملة — المستخدم يستطيع التثبيت الكامل من هناك.
 - المتبقي: دفع كومِت 5de58eb (ملف public/downloads/barq142.zip) عند وصول توكن جديد.
+
+---
+Task ID: BARQ-PUSH-8
+Agent: orchestrator (Z.ai Code)
+Task: دفع barq142.zip إلى المستودع بـtoken8
+
+Work Log:
+- token8 تحقق 200 → دفع origin/main: ce52f57..dc9661b (5de58eb barq142.zip + كومِت worklog تلقائي برسالة UUID مكسورة).
+- تصحيح رسالة الكومِت المكسورة: git commit --amend → a5c2f00 (رسالة عربية كاملة) → push --force-with-lease=main:dc9661b (بعد fetch) → نجح.
+- تحقق نهائي: تنزيل raw.githubusercontent.com/ehessan1974-maker/browser/main/public/downloads/barq142.zip → 36,924 بايت، SHA256 dce87f68... مطابق 100%.
+
+Stage Summary:
+- barq142.zip الآن داخل المستودع على GitHub (main/public/downloads/) وبنفس البصمة المتسقة مع السكربت والrelease.
+- لا CI: الكومِتان لا يعدلان desktop/** — حزم 1.4.2 موجودة أصلاً على release stable.
+- درس مكرر: رسائل UUID المكسورة تظهر في كومِتات worklog التلقائية — تتطلب amend عربي ثم force-with-lease بعد fetch.
