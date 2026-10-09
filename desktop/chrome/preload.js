@@ -12,6 +12,18 @@ contextBridge.exposeInMainWorld("barq", {
   setEngine: (id) => ipcRenderer.send("barq:set-engine", id),
   // 1.3.0 — البحث الشامل: كل المحركات في نفس اللحظة
   omniOpen: (q) => ipcRenderer.send("barq:omni-open", q),
+  // 1.4.4 — قائمة المحركات المنسدلة: خانة اختيار لكل محرك (الحفظ في main)
+  omniEnabledGet: () => ipcRenderer.invoke("barq:omni-enabled"),
+  omniSetEnabled: (ids) => ipcRenderer.send("barq:omni-set-enabled", ids),
+  // 1.4.4 — زر «شامل»: صح على الكل ↔ رجوع للاختيار السابق
+  omniAll: () => ipcRenderer.send("barq:omni-all"),
+  onOmniEnabled: (cb) => ipcRenderer.on("barq:omni-enabled-changed", (_e, d) => cb(d)),
+  // 1.4.4 — درع المتعقبات: أسماء النطاقات المحجوبة فعلياً وأعدادها
+  trackers: () => ipcRenderer.invoke("barq:trackers"),
+  // 1.4.4 — القوائم المنبثقة من الشريط: الصفحة تنزاح أسفلها في main
+  uiPop: (h) => ipcRenderer.send("barq:ui-pop", h),
+  uiPopClose: () => ipcRenderer.send("barq:ui-pop-close"),
+  onUiPopClosed: (cb) => ipcRenderer.on("barq:ui-pop-closed", () => cb()),
   // 1.2.0 — سجل البحث والمفضلة
   panel: (name) => ipcRenderer.send("barq:panel", name),
   // 1.4.2 — زر حساب برق: يفتح لوحة الحساب (الدخول اختياري — بلا حساب يعمل برق طبيعياً)
