@@ -1587,3 +1587,21 @@ Work Log:
 Stage Summary:
 - واجهة التنزيل صارت تعرض 1.4.4 بملفات وبصمات حقيقية 100% وبتحديث مستقبلي بسطر واحد (BARQ_VERSION).
 - كومِت محلي معلق الدفع + سيطلق عند الدفع: Pages (الواجهة) + Build Android (APK versionName 1.4.4). لا يلمس desktop/** فلا بناء سطح مكتب.
+
+---
+Task ID: BARQ-WEB-DL-144-PUSH
+Agent: orchestrator (Z.ai Code)
+Task: دفع إصلاح واجهة التنزيل (97c252c) عبر token11 + مراقبة النشر والتحقق الحي
+
+Work Log:
+- token11 تحقق (push: True) — token10 كان 401 مؤكداً أن المستخدم ألغاه كالمطلوب.
+- دفع 84e67a9 → 97c252c (واجهة التنزيل 1.4.4 + build.gradle 1.4.4).
+- سيران انطلقا معاً: Deploy to GitHub Pages (انتظر الطابور ثم نجح) وBuild Android APK (نجح).
+- لا بناء سطح مكتب — صحيح، الكومِت لا يلمس desktop/**.
+- تحقق حي: /download على Pages يعرض Barq-Setup-1.4.4-x64 (5 مرات) والبصمة الحقيقية 42ce49a5؛ APK أعيد بناؤه ونشره (11454 بايت، updated 23:25Z، versionName 1.4.4، versionCode 2)؛ stable ما زال 99 أصلاً (استبدال clobber للAPK).
+- ملاحظة: شارة v1.4.4-beta لا تُلتقط ببحث نصي متسلسل في HTML لأن React يفصلها بتعليقات (v<!-- -->1.4.4<!-- -->-beta) — مؤكدة بصرياً محلياً (vBadge=2).
+
+Stage Summary:
+- واجهة التنزيل على Pages منشورة وتعرض 1.4.4 بملفات وبصمات حقيقية وأوامر تحقق صالحة.
+- APK أندرويد الآن versionName 1.4.4 متسقاً مع سطح المكتب.
+- token11 استُخدم في دفعين (97c252c + كومِت worklog) — ينبغي إلغاؤه.
