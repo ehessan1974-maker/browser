@@ -1508,3 +1508,24 @@ Stage Summary:
 - ملاحظة صادقة: مستخدمو 1.4.2 الحاليون لا يملكون updater — تحديثهم الأخير اليدوي إلى 1.4.3 ثم كل شيء تلقائي. المحمول والويندوز 7 يتحققان يدوياً (حد تقني معروف).
 - برق ويب حدوده الصريحة: مواقع تمنع iframe (Google/YouTube) تظهر شاشة «يمنع التضمين» مع زر فتح تبويب — البحث يفتح DDG في تبويب جديد.
 - الكومِت جاهز — الدفع بانتظار توكن جديد (token8 ألغاه المستخدم بعد الدفع السابق كما نُصح).
+
+---
+Task ID: BARQ-PUSH-9
+Agent: orchestrator (Z.ai Code)
+Task: دفع 1.4.3 الكامل بالتوكن الجديد (token9) + تحقق CI وPages وrelease + بناء حزمة الترقية الدقيقة barq143.zip
+
+Work Log:
+- token9 تحقق 200 بصلاحيات admin → دفع fc424e6..1971406 (1.4.3: الحساب السحابي Gist + electron-updater + برق ويب) — دفع سريع بلا قوة.
+- أول تشغيل لبناء سطح المكتب فشل بلا أي مهمة (YAML معطوب): كتل artifact_path: | في build-desktop.yml كانت أسطرها بنفس مسافة بادئة المفتاح — تحقق PyYAML أكد INVALID عند السطر 24.
+- إصلاح: مسافتان بادئتان لمحتوى الكتل الثلاث (win/mac/linux) → PyYAML VALID مع artifact_path كامل لكل نظام → كومِت 855431f بدفعة.
+- التشغيل الثاني: كل المهام success (win + linux + mac + build-win7 + release) — release stable صار 86 أصلًا.
+- جرد 1.4.3 على stable: Setup ia32/x64 + المثبت المزدوج Barq-Setup-1.4.3.exe (157MB) + Portable ia32 + win7 exe/zip + AppImage + dmg + latest.yml/latest-mac.yml/latest-linux.yml + blockmaps لكل مثبت — HEAD requests → 200 للكل.
+- latest.yml raw: version 1.4.3 + files بالـsha512 للمثبتات الثلاثة — سلسلة electron-updater مكتملة (مزوّد GitHub من build.publish؛ stable أحدث release بالتاريخ فيُلتقط دائماً؛ فحص عند الإقلاع +15ث وكل 4 ساعات، autoDownload + autoInstallOnAppQuit، صمت على الأخطاء).
+- Pages: نشر ناجح للكومِتين — /browser/ → 200 و /browser/web/ → 200 (38,221 بايت برق ويب بالمحتوى العربي الصحيح) وAPK barq-android.apk → 200.
+- بناء barq143.zip (11 ملف كود 1.4.3، 41,446 بايت، sha256 216e4d9b93e430b655746fcf8c37f6727b5deac8a8f69462a5aebfcd81e68611) + Barq-Upgrade-1.4.3.ps1 من قالب 1.4.2 (BOM EF BB BF + CRLF + بوابة SHA256 الجديدة + علامات 1.4.3: cloudVerifyToken/barq:cloud-login/cloudSync) — نسخ الاثنين إلى public/downloads/ وتحقيق round-trip للzip.
+- BARQ-DESKTOP.md: صف «ترقية دقيقة من 1.4.2 (40KB)» في جدول النسخ الأربع.
+
+Stage Summary:
+- المتطلبات الخمسة للجلسة السابقة كلها على GitHub ومتحقق منها فعلياً: (1) كل الملفات في المستودع (2) تحديث تلقائي مباشر عبر CI + latest.yml (3) الواجهة على Pages برابط ثابت (4) حساب سحابي Gist يتبعك من أي جهاز (5) النسخ الأربع: مثبت EXE/محمول/برق ويب HTML/APK أندرويد 4.0+.
+- مستخدمو 1.4.2 يحتاجون ترقية يدوية أخيرة واحدة إلى 1.4.3 (barq143.zip 40KB أو المثبت الكامل) ثم كل شيء تلقائي.
+- token9 استُعمل لدفعين + استعلامات API — يجب على المستخدم إلغاؤه الآن.

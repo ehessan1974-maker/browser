@@ -40,6 +40,7 @@
 | **ويندوز مثبّت EXE** | `releases/download/stable/Barq-Setup-1.4.3-ia32.exe` (32-بت) أو `-x64` | **تلقائياً** — ينزل ويُثبّت نفسه |
 | **ويندوز محمول EXE** | `releases/download/stable/Barq-Portable-1.4.3-ia32.zip` | حمّل النسخة الجديدة من نفس الرابط |
 | **ويندوز 7** | `releases/download/stable/Barq-Setup-win7-1.4.3-ia32.exe` | تحقق يدوي (ويندوز 7 لا يدعم التحديث الصامت) |
+| **ترقية دقيقة من 1.4.2 (40KB)** | `downloads/barq143.zip` + لصق سكربت `Barq-Upgrade-1.4.3.ps1` في PowerShell (بوابة SHA256) | خطوة يدوية أخيرة واحدة — بعدها كل التحديثات تلقائية للأبد |
 | **برق ويب (HTML)** | https://ehessan1974-maker.github.io/browser/web/ — يفتح على أي متصفح | يتحدث فوراً مع كل دفعة (Pages) |
 | **أندرويد APK (4.0+)** | `releases/download/stable/barq-android.apk` | حمّل APK الجديد من نفس الرابط |
 | **الواجهة (الموقع)** | https://ehessan1974-maker.github.io/browser/ | تتحدث تلقائياً مع كل دفعة |
