@@ -29,6 +29,10 @@
 //         يمنع التكرار فيتماشى مع زري رجوع وتقدم (الرجوع يحدّث الموقع لا يكرره)،
 //         + عرض اللوحة الجانبية قابل للتغيير بالسحب من حافتها (260–640) ويُحفظ،
 //         + زر «مسح الكل» يُعطّل تلقائياً عندما يكون السجل فارغاً.
+// 1.4.1 — مسح السجل يمسحه من زري رجوع وتقدم أيضاً: الزران يتبعان مسار تنقل خاص
+//         ببرق يمُح مع السجل — «مسح الكل» يعطّل الزرين فوراً ويقفّل سجل كروم الداخلي،
+//         وحذف مدخل واحد يزيله من مسار الرجوع والتقدم (بالاتجاهين) حتى لو كانت
+//         الجلسة نفسها، مع استبدال إعادة التوجيه السريعة لنفس الموقع بدل تكديسها.
 "use strict";
 
 const {
@@ -239,6 +243,87 @@ function updateHistoryTitle(url, title) {
     scheduleHistoryWrite();
     schedulePanelRefresh();
   }
+}
+
+/* ---------------- 1.4.1: مسار رجوع/تقدم يمسح مع السجل ---------------- */
+// الزران كانا يتبعان سجل كروم الداخلي: المستخدم يمسح السجل من اللوحة
+// فيبقى الزران يوصلان بالصفحات الممسوحة. الآن يتبعان مساراً خاصاً ببرق
+// يُمسح مع السجل: «مسح الكل» يعطّلهما فوراً، وحذف مدخل واحد يُزيله
+// من المسار أيضاً (رجوعاً وتقدماً) — والصفحة الحالية تبقى كما هي.
+
+const NAV_STACK_MAX = 60;
+let navStack = [];     // روابط فقط — الأحدث في النهاية، وصفحتا home/omni ضمنها
+let navPos = -1;       // موضع الصفحة الحالية في المسار
+let navBtnNav = false; // التنقل الجاري بدأ من زر رجوع/تقدم
+let lastNavAt = 0;     // لكشف إعادة التوجيه السريعة لنفس الموقع — تُستبدل لا تُكدّس
+
+function navCur() {
+  return navPos >= 0 && navPos < navStack.length ? navStack[navPos] : null;
+}
+
+function sameHost(a, b) {
+  try {
+    const h = (u) => new URL(u).hostname.toLowerCase().replace(/^www\./, "");
+    return h(a) === h(b);
+  } catch { return false; }
+}
+
+// did-navigate يحدّث المسار: دفع تنقل جديد / استبدال إعادة توجيه / تقليم الأمام
+function trackNav(url) {
+  if (!url || /^https:\/\/barq\.internal\//i.test(url)) return;
+  const now = Date.now();
+  const cur = navCur();
+  if (navBtnNav) {
+    navBtnNav = false;
+    if (cur === url) { lastNavAt = now; return; }        // وصلنا لهدف الزر
+    if (navPos >= 0) { navStack[navPos] = url; lastNavAt = now; return; } // أعاد التوجيه أثناء الرجوع
+  }
+  if (cur === url) { lastNavAt = now; return; }          // إعادة تحميل نفس الصفحة
+  // 900ms: إعادة التوجيه تصل لحظات بعد الالتزام — لا يمكن لإنسان أن يتنقل لنفس
+  // الموقع خلال هذا الضيق بينما الصفحة الأولى لم تُرسم بعد، فالنافذة آمنة
+  if (cur && now - lastNavAt < 900 && sameHost(cur, url)) {
+    navStack[navPos] = url;                              // إعادة توجيه سريعة — استبدال لا تكديس
+    lastNavAt = now;
+    return;
+  }
+  navStack = navStack.slice(0, navPos + 1);              // تنقل جديد يقلّم ما بعد الحالي
+  navStack.push(url);
+  if (navStack.length > NAV_STACK_MAX) navStack.shift();
+  navPos = navStack.length - 1;
+  lastNavAt = now;
+}
+
+// تنقّل داخل الصفحة (SPA/مرساة): يُدمج في الموضع الحالي — لا يكدّس المسار
+function trackInPageNav(url) {
+  if (!url || navPos < 0 || navPos >= navStack.length) return;
+  if (navStack[navPos] !== url) navStack[navPos] = url;
+}
+
+// زر رجوع/تقدم: يتبع مسار برق — بعد المسح يصل فقط لما لم يُمسح
+function goNav(delta) {
+  if (!view || view.webContents.isDestroyed()) return;
+  const idx = navPos + delta;
+  if (idx < 0 || idx >= navStack.length) return;
+  const url = navStack[idx];
+  if (!url) return;
+  navPos = idx;
+  navBtnNav = true;
+  view.webContents.loadURL(url).catch(() => {});
+}
+
+// إزالة كل مواضع رابط من المسار (تبقى الصفحة الحالية إن كانت هي الرابط)
+function pruneNavUrls(url) {
+  if (!url || navStack.indexOf(url) === -1) return;
+  const kept = [];
+  let newPos = -1;
+  for (let i = 0; i < navStack.length; i++) {
+    if (i === navPos) newPos = kept.length;              // الحالي يبقى في مكانه
+    if (navStack[i] === url && i !== navPos) continue;   // المحذوف يخرج من المسار
+    kept.push(navStack[i]);
+  }
+  navStack = kept;
+  navPos = newPos >= 0 ? newPos : Math.min(navPos, navStack.length - 1);
+  pushStats();                                           // الأزرار تُعاد حسابها فوراً
 }
 
 /* ------------------------- البحث الشامل (1.3.0) ------------------------- */
@@ -540,20 +625,13 @@ function scheduleStats() {
   }, 250);
 }
 
-// Electron ≥27 يوفّر navigationHistory؛ نسخة ويندوز 7 (Electron 22) توفر الدوال على webContents مباشرة
-function navHistory(wc) {
-  return wc.navigationHistory ?? wc;
-}
-
 function navState() {
   let url = "";
-  let canBack = false;
-  let canFwd = false;
+  // 1.4.1 — الأزرار تتبع مسار برق الخاص (يمسح مع السجل) لا سجل كروم الداخلي
+  const canBack = navPos > 0;
+  const canFwd = navPos >= 0 && navPos < navStack.length - 1;
   if (view && !view.webContents.isDestroyed()) {
-    const wc = view.webContents;
-    url = wc.getURL() || "";
-    canBack = navHistory(wc).canGoBack();
-    canFwd = navHistory(wc).canGoForward();
+    url = view.webContents.getURL() || "";
   }
   const isHome = url.startsWith("file://");
   const eng = SEARCH_ENGINES[currentEngine] || SEARCH_ENGINES[DEFAULT_ENGINE];
@@ -636,12 +714,18 @@ function attachViewEvents() {
 
   wc.on("did-navigate", (_e, url) => {
     blockedCurrent = 0;
+    trackNav(url); // 1.4.1: تحديث مسار رجوع/تقدم (يمسح مع السجل)
     logVisit(url); // 1.4.0: كل تنقل يدخل السجل — نقرة رابط، عنوان، رجوع، تقدم
     pushStats();
   });
   wc.on("did-navigate-in-page", (_e, url) => {
+    trackInPageNav(url); // تنقل داخل الصفحة يُدمج في الموضع الحالي للمسار
     logVisit(url); // تنقلات داخل الصفحة (SPA) أيضاً تدخل السجل
     pushStats();
+  });
+  // أمان: لو فشل تنقل بدأ من زر رجوع/تقدم — لا تعلّق العلامة على التنقل التالي
+  wc.on("did-fail-load", (_e, _c, _d, _u, isMainFrame) => {
+    if (isMainFrame) navBtnNav = false;
   });
   wc.on("did-finish-load", pushStats);
   // عنوان الصفحة يحدّث السجل والنجمة والحالة (النجمة تُسجل بعنوان حقيقي)
@@ -837,18 +921,8 @@ ipcMain.on("barq:navigate", (_e, raw) => {
   const url = normalizeInput(raw);
   if (url) navigate(url); // 1.4.0: السجل يتكفل به did-navigate — مصدر واحد للسجل
 });
-ipcMain.on("barq:back", () => {
-  if (view && !view.webContents.isDestroyed()) {
-    const h = navHistory(view.webContents);
-    if (h.canGoBack()) h.goBack();
-  }
-});
-ipcMain.on("barq:forward", () => {
-  if (view && !view.webContents.isDestroyed()) {
-    const h = navHistory(view.webContents);
-    if (h.canGoForward()) h.goForward();
-  }
-});
+ipcMain.on("barq:back", () => goNav(-1));   // 1.4.1: يتبع مسار برق — يمسح مع السجل
+ipcMain.on("barq:forward", () => goNav(1)); // 1.4.1
 ipcMain.on("barq:reload", () => {
   if (view) view.webContents.reload();
 });
@@ -925,16 +999,36 @@ ipcMain.handle("barq:get-history", () => ({
 }));
 
 ipcMain.on("barq:remove-search", (_e, t) => {
+  const victim = searchHistory.find((x) => x.t === t); // قبل الحذف — نحتاج رابطه
   const n = searchHistory.length;
   searchHistory = searchHistory.filter((x) => x.t !== t);
   if (searchHistory.length !== n) {
     writeJson("search-history.json", searchHistory);
+    if (victim && victim.url) pruneNavUrls(victim.url); // 1.4.1: امسحه من رجوع/تقدم أيضاً
   }
 });
 
 ipcMain.on("barq:clear-history", () => {
   searchHistory = [];
   writeJson("search-history.json", searchHistory);
+  // 1.4.1 — امسح السجل من زري رجوع وتقدم أيضاً: يبقى في المسار الصفحة الحالية
+  // فقط فيُعطَّل الزران فوراً، + إقفال سجل كروم الداخلي احتياطاً
+  navBtnNav = false;
+  try {
+    if (view && !view.webContents.isDestroyed()) {
+      const u = view.webContents.getURL() || "";
+      navStack = u ? [u] : [];
+      navPos = u ? 0 : -1;
+      if (typeof view.webContents.clearHistory === "function") view.webContents.clearHistory();
+    } else {
+      navStack = [];
+      navPos = -1;
+    }
+  } catch {
+    navStack = [];
+    navPos = -1;
+  }
+  pushStats();
 });
 
 ipcMain.handle("barq:get-bookmarks", () => ({ list: bookmarks }));
