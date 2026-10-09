@@ -22,6 +22,7 @@ import { PlatformLogo } from "@/components/download/platform-logos";
 import { useSimulatedDownload } from "@/components/download/use-simulated-download";
 import {
   androidInstallSteps,
+  BARQ_VERSION,
   checksums,
   platforms,
   type Platform,
@@ -180,7 +181,7 @@ export function DownloadView() {
                   dir="ltr"
                   className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-display text-xs text-muted-foreground"
                 >
-                  v1.0.0-beta
+                  v{BARQ_VERSION}-beta
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
                   <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
@@ -615,7 +616,7 @@ export function DownloadView() {
               الصفحة الرئيسية
             </a>
             <span dir="ltr" className="font-display">
-              v1.0.0-beta
+              v{BARQ_VERSION}-beta
             </span>
           </div>
         </div>

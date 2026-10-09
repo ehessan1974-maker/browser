@@ -60,7 +60,7 @@ export default function Footer() {
               dir="ltr"
               className="mt-4 inline-flex rounded-full border border-white/10 px-3 py-1 text-[10px] text-muted-foreground"
             >
-              v1.0.0 — stable
+              v1.4.4 — stable
             </span>
           </div>
 

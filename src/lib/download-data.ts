@@ -18,6 +18,9 @@ export type Platform = {
   featured?: boolean;
 };
 
+/** الإصدار الحالي المنشور على release المستقر — يتحدث مع كل إصدار جديد */
+export const BARQ_VERSION = "1.4.4";
+
 const STABLE =
   "https://github.com/ehessan1974-maker/browser/releases/download/stable";
 
@@ -39,29 +42,29 @@ export const platforms: Platform[] = [
     osLatin: "Windows",
     os: "ويندوز",
     logo: "windows",
-    file: "Barq-Setup-1.0.0-x64.exe",
+    file: `Barq-Setup-${BARQ_VERSION}-x64.exe`,
     size: "‎‎~78MB",
-    req: "Windows 10/11 — 64 أو 32 بت",
+    req: "Windows 10/11 — 64 بت",
     arch: "x64 · مثبّت",
-    url: `${STABLE}/Barq-Setup-1.0.0-x64.exe`,
+    url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-x64.exe`,
     alts: [
       {
-        label: "الأنسب لجهازك — ZIP محمول بدون تثبيت (ويندوز 7 أو 10)",
-        file: "Barq-Setup-win7-1.0.0-ia32.zip",
-        size: "‎~58MB",
-        url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.zip`,
+        label: "نسخة 32-bit لويندوز 10/11 — الأنسب للأجهزة القديمة",
+        file: `Barq-Setup-${BARQ_VERSION}-ia32.exe`,
+        size: "‎~73MB",
+        url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
       },
       {
-        label: "نسخة خفيفة 32-bit — لويندوز 7 وويندوز 10",
-        file: "Barq-Setup-win7-1.0.0-ia32.exe",
+        label: "نسخة محمولة بدون تثبيت — ويندوز 7 أو 10 (32 بت)",
+        file: `Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,
+        size: "‎~85MB",
+        url: `${STABLE}/Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,
+      },
+      {
+        label: "مثبّت ويندوز 7 — 32 بت",
+        file: `Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
         size: "‎~62MB",
-        url: `${STABLE}/Barq-Setup-win7-1.0.0-ia32.exe`,
-      },
-      {
-        label: "نسخة 32-bit حديثة — أداء أسرع على ويندوز 10/11",
-        file: "Barq-Setup-1.0.0-ia32.exe",
-        size: "‎~75MB",
-        url: `${STABLE}/Barq-Setup-1.0.0-ia32.exe`,
+        url: `${STABLE}/Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
       },
     ],
   },
@@ -70,22 +73,22 @@ export const platforms: Platform[] = [
     osLatin: "macOS",
     os: "ماك",
     logo: "apple",
-    file: "Barq-1.0.0.dmg",
-    size: "‎‎~90MB",
+    file: `Barq-${BARQ_VERSION}.dmg`,
+    size: "‎‎~94MB",
     req: "macOS 12 أو أحدث",
     arch: "Apple Silicon · صورة تثبيت",
-    url: `${STABLE}/Barq-1.0.0.dmg`,
+    url: `${STABLE}/Barq-${BARQ_VERSION}.dmg`,
   },
   {
     key: "linux",
     osLatin: "Linux",
     os: "لينكس",
     logo: "terminal",
-    file: "Barq-1.0.0.AppImage",
-    size: "‎‎~100MB",
+    file: `Barq-${BARQ_VERSION}.AppImage`,
+    size: "‎‎~104MB",
     req: "Ubuntu 20.04+ أو ما يعادلها",
     arch: "x64 · AppImage",
-    url: `${STABLE}/Barq-1.0.0.AppImage`,
+    url: `${STABLE}/Barq-${BARQ_VERSION}.AppImage`,
   },
 ];
 
@@ -97,37 +100,55 @@ export const androidInstallSteps: readonly string[] = [
   "اضغط تثبيت، ثم افتح برق وابدأ التصفح بسرعة برق",
 ];
 
+/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.4 */
 export const checksums: { os: string; hash: string }[] = [
   {
-    os: "Android APK",
-    hash: "c3d91b7e5a2f4860b9e1d7c4a8f3b6e2d5c8a1f4b7e0d3c6a9f2b5e8d1c4a7f3",
+    os: "Android — barq-android.apk",
+    hash: "1c2aee3bd7565dc4e267a8d53ae05d0c7e5ada48c2a01532df7a0261c145aba1",
   },
   {
-    os: "Windows",
-    hash: "9f2c7a41d8e0b3f6a1c5e7d92b4f8037c6a19e5d2f8b4071a3c6e9d5b2f80417",
+    os: `Windows x64 — Barq-Setup-${BARQ_VERSION}-x64.exe`,
+    hash: "42ce49a5efcd794e4e33d55ca92e9d2f8e613789c3250bd0ba684a24be0a7252",
   },
   {
-    os: "macOS",
-    hash: "4e8a1d3c7b6f2e9a0d5c8b1f4a7e3d6c9b2f5a8e1d4c7b0f3a6e9d2c5b8f1a4e",
+    os: `Windows 32-bit — Barq-Setup-${BARQ_VERSION}-ia32.exe`,
+    hash: "13164c59eda68aba3a697a37abc9451a3726c32dc764612c6720dc9110e42534",
   },
   {
-    os: "Linux",
-    hash: "7b3f9e2a6d1c8b4f0e7a3d6c9b2f5a8e1d4c7b0f3a6e9d2c5b8f1a4e7d3b9f26",
+    os: `Windows 7 — Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
+    hash: "8efd04686a3e05bef1cf7a3a6f6a571209b5d993c303789a1cc6589c965f69c2",
+  },
+  {
+    os: `macOS — Barq-${BARQ_VERSION}.dmg`,
+    hash: "ac2e5b486343c7ef3c79f530b4f23c5cd627ca5836dba36fe95773e939aa447f",
+  },
+  {
+    os: `Linux — Barq-${BARQ_VERSION}.AppImage`,
+    hash: "34be269f65f386fc73e745753efc0f82beb1e018f5501537c83bebfb2ec24f60",
   },
 ];
 
+/* أوامر حقيقية للتحقق من البصمة والتشغيل — تُعرض في نافذة الطرفية بالصفحة */
 export const packageManagers: {
   cmd: string;
   note: string;
   highlight?: boolean;
 }[] = [
-  { cmd: "winget install Barq.Barq", note: "Windows" },
-  { cmd: "brew install --cask barq", note: "macOS" },
-  { cmd: "sudo apt install barq", note: "Debian / Ubuntu" },
-  { cmd: "flatpak install flathub dev.barq.Barq", note: "Flatpak" },
   {
-    cmd: "curl -fsSL https://get.barq.dev | sh",
-    note: "سكربت التثبيت الرسمي",
+    cmd: `certutil -hashfile Barq-Setup-${BARQ_VERSION}-ia32.exe SHA256`,
+    note: "ويندوز — تحقّق من البصمة",
     highlight: true,
+  },
+  {
+    cmd: `shasum -a 256 Barq-${BARQ_VERSION}.dmg`,
+    note: "macOS — تحقّق من البصمة",
+  },
+  {
+    cmd: `sha256sum Barq-${BARQ_VERSION}.AppImage`,
+    note: "لينكس — تحقّق من البصمة",
+  },
+  {
+    cmd: `chmod +x Barq-${BARQ_VERSION}.AppImage && ./Barq-${BARQ_VERSION}.AppImage`,
+    note: "لينكس — تشغيل مباشر",
   },
 ];

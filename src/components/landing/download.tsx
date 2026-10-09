@@ -25,6 +25,7 @@ import { CopyButton } from "@/components/download/copy-button";
 import { PlatformLogo } from "@/components/download/platform-logos";
 import { useSimulatedDownload } from "@/components/download/use-simulated-download";
 import {
+  BARQ_VERSION,
   checksums,
   packageManagers,
   platforms,
@@ -190,7 +191,7 @@ export default function Download() {
               dir="ltr"
               className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-display text-xs text-muted-foreground"
             >
-              v1.0.0-beta
+              v{BARQ_VERSION}-beta
             </span>
             <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-muted-foreground">
               مجاني · مفتوح المصدر
@@ -391,7 +392,7 @@ export default function Download() {
                 <span className="h-3 w-3 rounded-full bg-amber-400/80" />
                 <span className="h-3 w-3 rounded-full bg-emerald-400/80" />
                 <span className="ml-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  install — package managers
+                  verify — checksum &amp; run
                 </span>
               </div>
               <div className="divide-y divide-white/5">
@@ -428,21 +429,21 @@ export default function Download() {
                   dir="ltr"
                   className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 font-display text-sm font-bold text-emerald-300"
                 >
-                  v1.0.0-beta
+                  v{BARQ_VERSION}-beta
                 </span>
                 <span
                   dir="ltr"
                   className="font-display text-xs text-muted-foreground"
                 >
-                  2025-11-27
+                  2026-10-09
                 </span>
               </div>
               <ul className="mt-4 space-y-3">
                 {[
-                  "نسخة أندرويد أولى — تعمل من أندرويد 4.0 فما فوق",
-                  "محرك تصيير جديد بمتوسط تحميل 85ms للصفحة الواحدة",
-                  "قاعدة حظر محلية تضم 3,512 متعقّبًا — تعمل دون اتصال",
-                  "استهلاك ذاكرة ثابت ~30MB مهما فتحت من تبويبات",
+                  "خانات اختيار لمحركات البحث في القائمة — اختيارك محفوظ للأبد",
+                  "درع الحظر يعرض أسماء المتعقّبات المحجوبة فعليًا وأعدادها",
+                  "زر بحث شامل: كل المحركات ↔ اختيارك السابق بضغطة واحدة",
+                  "تحديث تلقائي كامل + حساب سحابي يتبع سجلّك بين الأجهزة",
                 ].map((line, i) => (
                   <li
                     key={i}
