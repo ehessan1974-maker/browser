@@ -1433,3 +1433,22 @@ Work Log:
 Stage Summary:
 - 1.4.2 الصيغة النهائية: حساب محلي اختياري 100% — الحرية الكاملة للمستخدم كما أراد صاحبه بالضبط.
 - token7 المستعمل في هذه الدفعة يجب أن يُلغى فور انتهائها.
+
+---
+Task ID: BARQ-PUSH-7
+Agent: Z.ai Code (main)
+Task: دفع 1.4.2 (الحساب الاختياري) بtoken7 والتحقق الكامل من CI وrelease
+
+Work Log:
+- الدفع: origin/main من e247dfb إلى d2ad513 (كومِتان: 1.4.2 + worklog 1.4.1) — تنظيف remote URL فوراً.
+- تحقق ما بعد الدفع: barq142.zip على raw — البصمة مطابقة حرفياً (dce87f68…f7683).
+- CI انطلق (run 37974660094): فشل في المهمة الوندوزية الأولى بسبب **GitHub 500 عابر** عند تنزيل winCodeSign-2.6.0 (ليس كودنا — win7/ماك/لينكس نجحت) → rerun-failed-jobs → success.
+- release stable استلم 8 حزم 1.4.2 (18:44): Setup ia32/x64/full + win7 exe/zip + المحمولة + AppImage/dmg.
+- تحقق النزول الأخير: تحميل Barq-Portable-1.4.2-ia32.zip (84MB) + فك الـasar بأداة @electron/asar الرسمية — version=1.4.2 + lock.html محذوفة من الحزمة + علامات الحساب كلها (accountRec/register/restore/renderAccount/accountbtn/بلا barqLock وبلا locked) + علامات 1.4.1/1.4.0/1.3.1 باقية متسلسلة + portable.txt.
+- تنظيف ملفات التحقق المؤقتة.
+
+Stage Summary:
+- 1.4.2 على GitHub كاملاً: كود + ترقية 36KB + سكربت + 8 حزم مبنية تلقائياً على stable.
+- الصيغة النهائية بالمطلوب حرفياً: بلا حساب يعمل برق طبيعياً 100% ومن أراد دخل بحسابه محلياً مشفّراً.
+- درس محفوظ: أخطاء 500 العابرة من GitHub أثناء بناء الويندوز تُعالج بrerun-failed-jobs لا بإعادة كتابة كود.
+- token7 استُعمل للدفع والتحقق — يستحق الإلغاء الآن.
