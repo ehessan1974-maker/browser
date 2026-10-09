@@ -2,6 +2,9 @@
 // اللوحة صارت BrowserView مستقلة ترسم فوق صفحة الويب دائماً (آخر من يُرفق = أعلى طبقة)
 // لذلك يستحيل أن تختفي خلف الصفحة مهما كانت حالة المزامنة أو كرت الشاشة.
 // 1.3.0 — أسماء المحركات بالعربي في سجل البحث (من ضمنها المحركات الجديدة)
+// 1.4.0 — السجل صار سجل تصفح كامل: صفحات وبحوث بعناوينها الحقيقية، والنقر يفتح الرابط،
+//         وزر «مسح الكل» يُعطّل تلقائياً عندما يكون السجل فارغاً،
+//         + مقبض سحب على حافة اللوحة لتغيير عرضها (main يتابع المؤشر ويحفظ العرض)
 "use strict";
 
 const ENGINE_NAMES = {
@@ -21,6 +24,7 @@ const el = {
   clear: document.getElementById("clear-history"),
   side: document.getElementById("side-btn"),
   close: document.getElementById("close-btn"),
+  handle: document.getElementById("resize-handle"),
 };
 
 let current = "history"; // أي قائمة معروضة: history | bookmarks
@@ -32,6 +36,10 @@ function esc(s) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function hostOf(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return u || ""; }
 }
 
 function fmtTime(t) {
@@ -73,19 +81,26 @@ function renderHistory() {
 function paintHistory(data) {
   el.list.innerHTML = "";
   const list = (data && data.list) || [];
+  // 1.4.0 — زر «مسح الكل» يعمل فقط وهناك ما يُمسح
+  el.clear.disabled = !list.length;
   if (!list.length) {
-    setStatus("لا يوجد بحث بعد — كل ما تبحث عنه سيظهر هنا تلقائياً");
+    setStatus("السجل فارغ — كل صفحة تفتحها وكل بحث تجريه سيظهر هنا تلقائياً");
     return;
   }
   list.forEach(function (x) {
+    const isSearch = !!x.q; // مدخلات الصيغة القديمة (بحث فقط) تُعرض كما كانت
+    const primary = isSearch ? x.q : (x.title || hostOf(x.url) || x.url);
+    let kind = isSearch
+      ? "بحث" + (ENGINE_NAMES[x.engine] || x.engine ? " • " + (ENGINE_NAMES[x.engine] || x.engine) : "")
+      : hostOf(x.url);
     const row = document.createElement("div");
     row.className = "row";
-    row.title = "ابحث من جديد";
+    row.title = isSearch ? "ابحث من جديد" : "افتح الصفحة";
     row.innerHTML =
-      '<div class="main"><div class="t1">' + esc(x.q) + "</div>" +
-      '<div class="t2">' + esc(ENGINE_NAMES[x.engine] || x.engine || "") + " • " + fmtTime(x.t) + "</div></div>";
+      '<div class="main"><div class="t1">' + esc(primary) + "</div>" +
+      '<div class="t2">' + esc(kind) + " • " + fmtTime(x.t) + "</div></div>";
     row.addEventListener("click", function () {
-      window.barq.navigate(x.q);
+      window.barq.navigate(isSearch ? x.q : x.url);
     });
     const del = document.createElement("button");
     del.className = "x";
@@ -188,6 +203,17 @@ el.close.addEventListener("click", function () {
 el.clear.addEventListener("click", function () {
   window.barq.clearHistory();
   renderHistory();
+});
+
+/* ------------------ 1.4.0 — تغيير عرض اللوحة بالسحب ------------------ */
+
+el.handle.addEventListener("mousedown", function () {
+  el.handle.classList.add("dragging");
+  try { window.barq.panelResizeStart(); } catch (e) {}
+});
+document.addEventListener("mouseup", function () {
+  el.handle.classList.remove("dragging");
+  try { window.barq.panelResizeEnd(); } catch (e) {}
 });
 
 applySide();

@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld("barq", {
   panel: (name) => ipcRenderer.send("barq:panel", name),
   // 1.2.4 — تبديل جهة اللوحة الجانبية
   panelSide: (s) => ipcRenderer.send("barq:panel-side", s),
+  // 1.4.0 — تغيير عرض اللوحة بالسحب من حافتها
+  panelResizeStart: () => ipcRenderer.send("barq:panel-resize-start"),
+  panelResizeEnd: () => ipcRenderer.send("barq:panel-resize-end"),
   // 1.2.6 — اللوحة طبقة مستقلة: main يخبر كل نافذة بدورها
   onPanelShow: (cb) => ipcRenderer.on("barq:panel-show", (_e, d) => cb(d)),
   onPanelSideChanged: (cb) => ipcRenderer.on("barq:panel-side-changed", (_e, d) => cb(d)),

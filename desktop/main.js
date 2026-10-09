@@ -24,6 +24,11 @@
 // 1.3.1 — خانة تفعيل أمام كل محرك في صفحة البحث الشامل: المستخدم يفعّل/يلغي
 //         أي محرك ويبقى اختياره محفوظاً (omni-engines.json) ويُطبَّق فوراً
 //         حتى أثناء البحث الجاري — إلغاء يخفي القسم، وتفعيل يجلب النتائج لحضاً.
+// 1.4.0 — السجل صار سجل تصفح كامل: أي نقرة على أي رابط أو موقع تدخل السجل
+//         (وليس البحث فقط) بعنوان الصفحة الحقيقي، ومنطق «الأحدث للأمام»
+//         يمنع التكرار فيتماشى مع زري رجوع وتقدم (الرجوع يحدّث الموقع لا يكرره)،
+//         + عرض اللوحة الجانبية قابل للتغيير بالسحب من حافتها (260–640) ويُحفظ،
+//         + زر «مسح الكل» يُعطّل تلقائياً عندما يكون السجل فارغاً.
 "use strict";
 
 const {
@@ -33,6 +38,7 @@ const {
   ipcMain,
   session,
   shell,
+  screen,
 } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -101,12 +107,15 @@ function saveEngine(id) {
 
 const SEARCH_HISTORY_MAX = 300;
 const BOOKMARKS_MAX = 500;
-const PANEL_W = 360; // عرض اللوحة المستقلة
+const PANEL_W = 360;    // العرض الافتراضي للوحة
+const PANEL_MIN = 260;  // أقل عرض بالسحب (1.4.0)
+const PANEL_MAX = 640;  // أقصى عرض بالسحب (1.4.0)
 
-let searchHistory = []; // { q, engine, t }
+let searchHistory = []; // { url, title, q, engine, t } — سجل تصفح كامل (1.4.0)
 let bookmarks = [];     // { url, title, t }
 let panelOpenName = null; // null | "history" | "bookmarks"
 let panelSide = "left";   // جهة اللوحة — main هو مصدر الحقيقة الوحيد ويُحفظ على القرص
+let panelW = PANEL_W;     // عرض اللوحة الذي اختاره المستخدم بالسحب (1.4.0)
 
 function dataFile(name) {
   try {
@@ -121,7 +130,7 @@ function readJson(name, fallback) {
     const f = dataFile(name);
     if (f && fs.existsSync(f)) {
       const v = JSON.parse(fs.readFileSync(f, "utf8"));
-      if (Array.isArray(v)) return v;
+      if (Array.isArray(v) || (v && typeof v === "object")) return v; // 1.4.0: الكائنات أيضاً — إصلاح: إعدادات اللوحة كانت لا تُقرأ
     }
   } catch {}
   return fallback;
@@ -142,35 +151,94 @@ function engineIdFromUrl(url) {
   return null;
 }
 
-function addSearchEntry(q, engineId) {
-  q = (q || "").trim().slice(0, 300);
-  if (!q) return;
+/* --- 1.4.0: سجل تصفح كامل — كل نقرة/موقع يدخل السجل لا البحث فقط ---
+   منطق «الأحدث للأمام»: نفس الرابط يُنقل للأعلى ويُحدَّث وقته ولا يتكرر أبداً —
+   لهذا يتماشى السجل مع زري رجوع وتقدم: الرجوع لموقع مُسجَّل يحدّثه ولا يضيف نسخة */
+
+let histWriteTimer = null;
+let histPanelTimer = null;
+
+function scheduleHistoryWrite() {
+  if (histWriteTimer) return;
+  histWriteTimer = setTimeout(() => {
+    histWriteTimer = null;
+    writeJson("search-history.json", searchHistory);
+  }, 400);
+}
+
+function schedulePanelRefresh() {
+  if (histPanelTimer) return;
+  histPanelTimer = setTimeout(() => {
+    histPanelTimer = null;
+    pushPanelRefresh("history"); // لو السجل مفتوح يتحدث فوراً (بدون قصف)
+  }, 500);
+}
+
+function addHistoryEntry(rec) {
+  const url = String(rec.url || "");
+  if (!/^https?:\/\//i.test(url)) return;
   const t = Date.now();
-  const last = searchHistory[0];
-  if (last && last.q === q && t - last.t < 15000) {
-    last.t = t; // نفس البحث الحديث يُحدّث وقته فقط — بلا تكرار
+  const idx = searchHistory.findIndex((x) => x.url === url);
+  if (idx >= 0) {
+    const e = searchHistory[idx];
+    e.t = t;
+    if (rec.title) e.title = rec.title;
+    if (rec.q) e.q = rec.q;
+    if (rec.engine) e.engine = rec.engine;
+    searchHistory.splice(idx, 1);
+    searchHistory.unshift(e);
   } else {
-    searchHistory.unshift({ q, engine: engineId || currentEngine, t });
+    searchHistory.unshift({
+      url,
+      title: String(rec.title || "").slice(0, 200),
+      q: String(rec.q || "").slice(0, 300),
+      engine: rec.engine || "",
+      t,
+    });
     if (searchHistory.length > SEARCH_HISTORY_MAX) {
       searchHistory.length = SEARCH_HISTORY_MAX;
     }
   }
-  writeJson("search-history.json", searchHistory);
-  pushPanelRefresh("history"); // 1.2.6: لو السجل مفتوح يتحدث فوراً
+  scheduleHistoryWrite();
+  schedulePanelRefresh();
 }
 
-function logSearchIfAny(raw, url) {
-  const engId = engineIdFromUrl(url);
-  if (!engId) return;
-  const eng = SEARCH_ENGINES[engId];
-  let q = "";
+// استخراج كلمة البحث من رابط محرك — بمفاتيح كل محرك لا بالطول فقط
+function queryFromUrl(url, engId) {
+  const KEYS = {
+    google: "q", bing: "q", duckduckgo: "q", x: "q",
+    yandex: "text", wikipedia: "search", youtube: "search_query", maps: "query",
+  };
   try {
-    q = decodeURIComponent(url.slice(eng.url.length));
+    return new URL(url).searchParams.get(KEYS[engId] || "") || "";
   } catch {
-    q = "";
+    return "";
   }
-  if (!q && typeof raw === "string") q = raw.trim();
-  addSearchEntry(q, engId);
+}
+
+// كل تنقّل رئيسي يستدعيه did-navigate / did-navigate-in-page
+function logVisit(url) {
+  if (!url || url.startsWith("file://") || /^https:\/\/barq\.internal\//i.test(url)) return;
+  if (!/^https?:\/\//i.test(url)) return;
+  const engId = engineIdFromUrl(url);
+  addHistoryEntry({
+    url,
+    q: engId ? queryFromUrl(url, engId) : "",
+    engine: engId || "",
+    title: "",
+  });
+}
+
+// العنوان الحقيقي يصل متأخراً (page-title-updated) — نحدّث مدخله لا نكرره
+function updateHistoryTitle(url, title) {
+  if (!url || !title) return;
+  const e = searchHistory.find((x) => x.url === url);
+  const t = String(title).slice(0, 200);
+  if (e && e.title !== t) {
+    e.title = t;
+    scheduleHistoryWrite();
+    schedulePanelRefresh();
+  }
 }
 
 /* ------------------------- البحث الشامل (1.3.0) ------------------------- */
@@ -357,7 +425,7 @@ function removeBookmark(url) {
 // 1.2.7 — عرض اللوحة مصدر واحد تستخدمه حدود اللوحة وإزاحة الصفحة معاً حتى لا يتعارضا أبداً
 function panelWidth() {
   const size = win && !win.isDestroyed() ? win.getContentSize() : [PANEL_W, 0];
-  return Math.min(PANEL_W, Math.max(0, size[0]));
+  return Math.min(panelW, PANEL_MAX, Math.max(0, size[0]));
 }
 
 function panelBounds() {
@@ -550,7 +618,7 @@ function handleInternal(raw) {
         SEARCH_ENGINES[id] ||
         SEARCH_ENGINES[currentEngine] ||
         SEARCH_ENGINES[DEFAULT_ENGINE];
-      addSearchEntry(q, SEARCH_ENGINES[id] ? id : null);
+      // 1.4.0: السجل يتكفل به did-navigate بعد النقل — لا تسجيل يدوي هنا
       navigate(eng.url + encodeURIComponent(q));
     } else if (u.pathname === "/omni") {
       // صفحة البحث الشامل — من زر «الكل» بالرئيسية أو من داخل الصفحة نفسها
@@ -566,14 +634,21 @@ function handleInternal(raw) {
 function attachViewEvents() {
   const wc = view.webContents;
 
-  wc.on("did-navigate", () => {
+  wc.on("did-navigate", (_e, url) => {
     blockedCurrent = 0;
+    logVisit(url); // 1.4.0: كل تنقل يدخل السجل — نقرة رابط، عنوان، رجوع، تقدم
     pushStats();
   });
-  wc.on("did-navigate-in-page", pushStats);
+  wc.on("did-navigate-in-page", (_e, url) => {
+    logVisit(url); // تنقلات داخل الصفحة (SPA) أيضاً تدخل السجل
+    pushStats();
+  });
   wc.on("did-finish-load", pushStats);
-  // عنوان الصفحة يحدّث النجمة والحالة (النجمة تُسجل بعنوان حقيقي)
-  wc.on("page-title-updated", pushStats);
+  // عنوان الصفحة يحدّث السجل والنجمة والحالة (النجمة تُسجل بعنوان حقيقي)
+  wc.on("page-title-updated", (_e, title) => {
+    updateHistoryTitle(wc.getURL(), title);
+    pushStats();
+  });
 
   // النوافذ المنبثقة تُفتح داخل نفس العرض — لا نوافذ عشوائية
   wc.setWindowOpenHandler(({ url }) => {
@@ -643,10 +718,24 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     // محرك البحث + سجل البحث + المفضلة المحفوظة من الجلسة السابقة
     currentEngine = loadEngine();
-    searchHistory = readJson("search-history.json", []);
+    // 1.4.0 — ترحيل صيغة السجل القديمة ({q,engine,t}) إلى صيغة التصفح الكاملة
+    searchHistory = readJson("search-history.json", [])
+      .map((x) => ({
+        url: x.url || "",
+        title: x.title || "",
+        q: x.q || "",
+        engine: x.engine || "",
+        t: x.t || 0,
+      }))
+      .filter((x) => x.url || x.q);
     bookmarks = readJson("bookmarks.json", []);
     omniEnabled = loadOmniEnabled(); // 1.3.1 — محركات البحث الشامل المفعّلة
-    panelSide = readJson("panel-side.json", {}).side === "right" ? "right" : "left"; // 1.2.6
+    // 1.4.0 — تفضيلات اللوحة: الجهة + العرض المختار بالسحب
+    const panelPrefs = readJson("panel-side.json", {});
+    panelSide = panelPrefs.side === "right" ? "right" : "left";
+    if (Number.isFinite(panelPrefs.width)) {
+      panelW = Math.min(PANEL_MAX, Math.max(PANEL_MIN, panelPrefs.width));
+    }
 
     // حظر المتعقبات قبل أي اتصال
     const ses = session.defaultSession;
@@ -746,10 +835,7 @@ ipcMain.on("barq:omni-set-enabled", (_e, arr) => {
 
 ipcMain.on("barq:navigate", (_e, raw) => {
   const url = normalizeInput(raw);
-  if (url) {
-    logSearchIfAny(typeof raw === "string" ? raw : "", url);
-    navigate(url);
-  }
+  if (url) navigate(url); // 1.4.0: السجل يتكفل به did-navigate — مصدر واحد للسجل
 });
 ipcMain.on("barq:back", () => {
   if (view && !view.webContents.isDestroyed()) {
@@ -791,10 +877,43 @@ ipcMain.handle("barq:engines", () => ({
 
 ipcMain.on("barq:panel", (_e, name) => setPanel(name));
 
+/* عرض اللوحة بالسحب (1.4.0): main يتابع مؤشر النظام نفسه كل 16ms —
+   السحب لا يتوقف لو خرج المؤشر من اللوحة، وينتهي بأي إفلات فأرة (اللوحة أو الصفحة) */
+let resizeTimer = null;
+function stopPanelResize() {
+  if (resizeTimer) {
+    clearInterval(resizeTimer);
+    resizeTimer = null;
+  }
+  writeJson("panel-side.json", { side: panelSide, width: panelW });
+}
+ipcMain.on("barq:panel-resize-start", () => {
+  if (!win || win.isDestroyed()) return;
+  stopPanelResize(); // إعادة بدء نظيفة لو بقي مؤقّت سابق
+  resizeTimer = setInterval(() => {
+    if (!win || win.isDestroyed()) {
+      stopPanelResize();
+      return;
+    }
+    try {
+      const c = screen.getCursorScreenPoint();
+      const b = win.getContentBounds();
+      const relX = c.x - b.x;
+      let w = panelSide === "left" ? relX : b.width - relX;
+      w = Math.min(PANEL_MAX, Math.max(PANEL_MIN, w));
+      if (w !== panelW) {
+        panelW = w;
+        layout(); // الحافة تلاحق المؤشر — المؤشر يبقى على المقبض
+      }
+    } catch {}
+  }, 16);
+});
+ipcMain.on("barq:panel-resize-end", () => stopPanelResize());
+
 // 1.2.6 — جهة اللوحة: main هو مصدر الحقيقة الوحيد — يحفظها ويخبر اللوحة ويحرّك حدودها
 ipcMain.on("barq:panel-side", (_e, side) => {
   panelSide = side === "right" ? "right" : "left";
-  writeJson("panel-side.json", { side: panelSide });
+  writeJson("panel-side.json", { side: panelSide, width: panelW });
   if (panelView && !panelView.webContents.isDestroyed()) {
     panelView.webContents.send("barq:panel-side-changed", { side: panelSide });
   }

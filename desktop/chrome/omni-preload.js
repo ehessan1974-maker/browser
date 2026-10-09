@@ -12,3 +12,8 @@ contextBridge.exposeInMainWorld("omni", {
   enabled:    () => ipcRenderer.invoke("barq:omni-enabled"),
   setEnabled: (ids) => ipcRenderer.send("barq:omni-set-enabled", ids),
 });
+
+// 1.4.0 — أمان السحب: إفلات الفأرة فوق الصفحة (خارج اللوحة) يُنهي تغيير العرض أيضاً
+window.addEventListener("mouseup", function () {
+  try { ipcRenderer.send("barq:panel-resize-end"); } catch (e) {}
+});
