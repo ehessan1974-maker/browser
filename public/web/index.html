@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<!-- برق ويب — نسخة HTML من متصفح برق تعمل على أي متصفح حديث.
+     متصفح برق (إلكترون) · برق ويب (هذه الصفحة) · برق أندرويد (APK) — حساب واحد يتبعك في كل مكان.
+     الحساب السحابي: دخول بحساب GitHub (رمز وصول PAT صلاحية gist فقط) —
+     السجل والمفضلة تُخزَّن في Gist خاص بك على GitHub، فتتبعك من أي جهاز في العالم مثل كروم.
+     حد صريح: بعض المواقع تمنع العرض داخل إطار (X-Frame-Options) — عندها يظهر زر "فتح في تبويب". -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>برق ويب — متصفح خفيف يعمل على أي جهاز</title>
+<meta name="description" content="برق ويب: واجهة متصفح برق على أي متصفح — سجل ومفضلة محفوظة في حسابك، تتبعك من أي مكان في العالم."/>
+<style>
+  :root{
+    --bg:#0c1210; --bg2:#111a16; --bg3:#16221d;
+    --line:rgba(255,255,255,.09); --line2:rgba(52,211,153,.25);
+    --tx:#e8f2ec; --tx2:#9db3a8; --acc:#34d399; --acc2:#065f46;
+    --amber:#fbbf24; --rose:#fb7185;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--tx);
+    font-family:"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  button{font-family:inherit; cursor:pointer; border:0; background:none; color:inherit}
+  input{font-family:inherit; outline:none}
+  .hidden{display:none !important}
+
+  /* ====== شريط التبويبات ====== */
+  #tabsbar{
+    display:flex; align-items:flex-end; gap:6px; padding:8px 10px 0;
+    background:var(--bg2); border-bottom:1px solid var(--line); min-height:42px;
+    overflow-x:auto; scrollbar-width:none;
+  }
+  #tabsbar::-webkit-scrollbar{display:none}
+  .tab{
+    display:flex; align-items:center; gap:8px; max-width:210px; min-width:120px;
+    padding:7px 12px; border-radius:12px 12px 0 0; background:transparent;
+    color:var(--tx2); font-size:12.5px; white-space:nowrap; flex-shrink:0;
+  }
+  .tab.active{background:var(--bg3); color:var(--tx); border:1px solid var(--line); border-bottom:0}
+  .tab .tt{flex:1; overflow:hidden; text-overflow:ellipsis; max-width:150px}
+  .tab .tx{opacity:.55; font-size:14px; line-height:1; padding:2px}
+  .tab .tx:hover{opacity:1; color:var(--rose)}
+  #newtab{
+    flex-shrink:0; width:30px; height:30px; margin-bottom:4px; border-radius:9px;
+    color:var(--tx2); font-size:18px; border:1px solid var(--line);
+  }
+  #newtab:hover{color:var(--acc); border-color:var(--line2)}
+
+  /* ====== شريط الأدوات ====== */
+  #toolbar{
+    display:flex; align-items:center; gap:6px; padding:8px 10px;
+    background:var(--bg2); border-bottom:1px solid var(--line);
+  }
+  .tbtn{
+    width:34px; height:34px; border-radius:9px; display:flex; align-items:center;
+    justify-content:center; font-size:15px; color:var(--tx2); flex-shrink:0;
+    border:1px solid transparent;
+  }
+  .tbtn:hover{background:var(--bg3); color:var(--tx)}
+  .tbtn:disabled{opacity:.3; cursor:default}
+  .tbtn.on{color:var(--amber)}
+  #omniwrap{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--bg); border:1px solid var(--line); border-radius:20px;
+    padding:0 14px; height:36px; min-width:0;
+  }
+  #omniwrap:focus-within{border-color:var(--line2)}
+  #omni{
+    flex:1; background:none; border:0; color:var(--tx); font-size:13.5px; min-width:0;
+    direction:ltr; text-align:left;
+  }
+  #omni::placeholder{direction:rtl; text-align:right; color:var(--tx2)}
+  #shield{
+    font-size:11px; color:var(--acc); background:rgba(52,211,153,.1);
+    border:1px solid var(--line2); border-radius:99px; padding:2px 9px; white-space:nowrap;
+  }
+  #menuBtn{font-size:17px}
+
+  /* ====== منطقة العرض ====== */
+  #stage{flex:1; position:relative; background:#0a0f0d}
+  #frame{position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff}
+  #blockedBar{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:16px; text-align:center; padding:24px;
+    background:var(--bg);
+  }
+  #blockedBar .big{font-size:42px}
+  #blockedBar h2{font-size:18px}
+  #blockedBar p{color:var(--tx2); font-size:13px; max-width:520px; line-height:1.9}
+  .btn{
+    background:var(--acc); color:#052e21; font-weight:800; border-radius:12px;
+    padding:10px 22px; font-size:14px;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent; color:var(--tx); border:1px solid var(--line)}
+
+  /* ====== صفحة البداية ====== */
+  #start{
+    position:absolute; inset:0; overflow-y:auto; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; padding:7vh 20px 40px;
+  }
+  #start .logo{
+    display:flex; align-items:center; gap:12px; font-size:38px; font-weight:900;
+    letter-spacing:.5px; margin-bottom:8px;
+  }
+  #start .logo .bolt{
+    width:52px; height:52px; border-radius:15px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 8px 30px rgba(52,211,153,.35);
+  }
+  #start .tag{color:var(--tx2); font-size:14px; margin-bottom:34px; text-align:center}
+  #searchbox{
+    width:100%; max-width:620px; display:flex; gap:8px; margin-bottom:30px;
+  }
+  #q{
+    flex:1; height:52px; border-radius:15px; border:1px solid var(--line);
+    background:var(--bg2); color:var(--tx); font-size:15px; padding:0 20px;
+  }
+  #q:focus{border-color:var(--line2)}
+  #go{
+    width:52px; height:52px; border-radius:15px; background:var(--acc);
+    color:#052e21; font-size:20px; font-weight:900;
+  }
+  .shorts{
+    width:100%; max-width:620px; display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+    gap:10px; margin-bottom:30px;
+  }
+  .short{
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 6px;
+    border:1px solid var(--line); border-radius:14px; background:var(--bg2);
+    color:var(--tx); font-size:11.5px; text-align:center;
+  }
+  .short:hover{border-color:var(--line2); transform:translateY(-2px)}
+  .short .ico{
+    width:36px; height:36px; border-radius:11px; background:rgba(52,211,153,.12);
+    display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:900; color:var(--acc);
+  }
+  .cloudcard{
+    width:100%; max-width:620px; border:1px solid var(--line2); border-radius:16px;
+    background:linear-gradient(135deg,rgba(52,211,153,.08),rgba(52,211,153,.02));
+    padding:18px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .cloudcard .txt{flex:1; min-width:200px}
+  .cloudcard b{font-size:14.5px}
+  .cloudcard p{color:var(--tx2); font-size:12px; margin-top:4px; line-height:1.7}
+  .footline{color:var(--tx2); font-size:11.5px; margin-top:26px; text-align:center; line-height:1.9}
+
+  /* ====== اللوحة الجانبية ====== */
+  #side{
+    position:fixed; top:0; bottom:0; left:0; width:340px; max-width:92vw; z-index:50;
+    background:var(--bg2); border-right:1px solid var(--line);
+    transform:translateX(-105%); transition:transform .22s ease; display:flex; flex-direction:column;
+    box-shadow:8px 0 40px rgba(0,0,0,.5);
+  }
+  #side.open{transform:translateX(0)}
+  #sideHead{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; border-bottom:1px solid var(--line);
+  }
+  #sideHead b{font-size:15px}
+  #sideClose{font-size:20px; color:var(--tx2)}
+  #sideClose:hover{color:var(--tx)}
+  .stabs{display:flex; border-bottom:1px solid var(--line)}
+  .stab{
+    flex:1; padding:11px 0; text-align:center; font-size:12.5px; color:var(--tx2);
+    border-bottom:2px solid transparent;
+  }
+  .stab.active{color:var(--acc); border-bottom-color:var(--acc); font-weight:700}
+  .spane{flex:1; overflow-y:auto; padding:14px; display:none}
+  .spane.active{display:block}
+  .item{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
+    border:1px solid var(--line); margin-bottom:8px; font-size:12.5px; cursor:pointer;
+  }
+  .item:hover{border-color:var(--line2); background:var(--bg3)}
+  .item .txt{flex:1; min-width:0}
+  .item .t1{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--tx)}
+  .item .t2{color:var(--tx2); font-size:10.5px; direction:ltr; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .item .del{color:var(--tx2); font-size:15px; padding:2px 6px}
+  .item .del:hover{color:var(--rose)}
+  .empty{color:var(--tx2); text-align:center; font-size:12px; padding:30px 0; line-height:1.9}
+  .sidebtn{
+    width:100%; padding:11px; border-radius:12px; border:1px solid var(--line);
+    background:var(--bg3); color:var(--tx); font-size:13px; margin-bottom:8px; font-weight:700;
+  }
+  .sidebtn:hover{border-color:var(--line2)}
+  .sidebtn.acc{background:var(--acc); color:#052e21; border:0}
+  .sidebtn.danger{color:var(--rose)}
+  .hint{color:var(--tx2); font-size:11.5px; line-height:1.9; margin-bottom:10px}
+  .field{
+    width:100%; height:40px; border-radius:11px; border:1px solid var(--line);
+    background:var(--bg); color:var(--tx); padding:0 12px; font-size:12.5px; margin-bottom:8px;
+  }
+  .field:focus{border-color:var(--line2)}
+  .ok-badge{
+    display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px;
+    background:rgba(52,211,153,.1); border:1px solid var(--line2); margin-bottom:12px;
+  }
+  .ok-badge .av{
+    width:38px; height:38px; border-radius:50%; background:var(--acc); color:#052e21;
+    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px;
+  }
+  .ok-badge .n{font-weight:800; font-size:13.5px}
+  .ok-badge .s{color:var(--tx2); font-size:11px}
+
+  /* ====== تنبيهات ====== */
+  #toasts{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:99; display:flex; flex-direction:column; gap:8px; align-items:center}
+  .toast{
+    background:var(--bg3); border:1px solid var(--line2); color:var(--tx);
+    padding:10px 20px; border-radius:12px; font-size:12.5px; box-shadow:0 8px 30px rgba(0,0,0,.5);
+    animation:pop .25s ease;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(10px)} to{opacity:1}}
+
+  #overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; opacity:0; pointer-events:none; transition:.2s}
+  #overlay.show{opacity:1; pointer-events:auto}
+
+  @media (max-width:640px){
+    #shield{display:none}
+    #start{padding:5vh 14px 30px}
+    #start .logo{font-size:30px}
+    #start .logo .bolt{width:44px; height:44px}
+  }
+</style>
+</head>
+<body>
+
+<!-- شريط التبويبات -->
+<div id="tabsbar">
+  <button id="newtab" title="تبويب جديد">+</button>
+</div>
+
+<!-- شريط الأدوات -->
+<div id="toolbar">
+  <button class="tbtn" id="backBtn" title="رجوع">&#8594;</button>
+  <button class="tbtn" id="fwdBtn" title="تقدم">&#8592;</button>
+  <button class="tbtn" id="reloadBtn" title="تحديث">&#8635;</button>
+  <button class="tbtn" id="homeBtn" title="الرئيسية">&#8962;</button>
+  <div id="omniwrap">
+    <span id="lock" title="اتصال" style="font-size:12px;color:var(--tx2)">&#128274;</span>
+    <input id="omni" placeholder="ابحث أو اكتب عنوان موقع…" autocomplete="off" spellcheck="false"/>
+    <span id="shield">حماية برق</span>
+  </div>
+  <button class="tbtn" id="starBtn" title="أضف للمفضلة">&#9734;</button>
+  <button class="tbtn" id="menuBtn" title="القائمة">&#9776;</button>
+</div>
+
+<!-- منطقة العرض -->
+<div id="stage">
+  <iframe id="frame" class="hidden" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+
+  <div id="blockedBar" class="hidden">
+    <div class="big">&#128274;</div>
+    <h2>هذا الموقع يمنع العرض داخل برق ويب</h2>
+    <p>بعض المواقع (مثل Google وYouTube) ترسل توجيهاً أمنياً يمنع فتحها داخل أي متصفح آخر. هذا قيد من الموقع نفسه لا من برق. افتحه في تبويب مستقل بضغطة واحدة.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" id="openRealBtn">فتح في تبويب جديد</button>
+      <button class="btn ghost" id="tryAnywayBtn">حاول مجدداً</button>
+    </div>
+  </div>
+
+  <!-- صفحة البداية -->
+  <div id="start">
+    <div class="logo">
+      <span class="bolt">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#052e21"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+      </span>
+      برق
+    </div>
+    <div class="tag">متصفح خفيف يعمل على أي جهاز — سجلّك ومفضلتك في حسابك تتبعك من أي مكان في العالم</div>
+    <div id="searchbox">
+      <input id="q" placeholder="ابحث في الويب… (دك دك جو)" autocomplete="off"/>
+      <button id="go" title="بحث">&#128269;</button>
+    </div>
+    <div class="shorts" id="shorts"></div>
+    <div class="cloudcard" id="cloudCard">
+      <div class="txt">
+        <b id="cloudTitle">&#9729; حساب برق السحابي</b>
+        <p id="cloudDesc">ادخل بحساب GitHub (رمز وصول بصلاحية gist فقط) — سجلّك ومفضلتك تُحفظ في Gist خاص بك وتتبعك من أي جهاز.</p>
+      </div>
+      <button class="btn" id="cloudBtn">تسجيل الدخول</button>
+    </div>
+    <div class="footline">
+      برق ويب حرة 100% — مفتوحة المصدر (MIT) ·
+      <a href="https://github.com/ehessan1974-maker/browser" style="color:var(--acc);text-decoration:none" target="_blank" rel="noopener">المصدر على GitHub</a>
+      · نسخ سطح المكتب والأندرويد في
+      <a href="https://github.com/ehessan1974-maker/browser/releases/tag/stable" style="color:var(--acc);text-decoration:none" target="_blank" rel="noopener">صفحة التنزيلات</a>
+    </div>
+  </div>
+</div>
+
+<!-- اللوحة الجانبية -->
+<div id="overlay"></div>
+<div id="side">
+  <div id="sideHead"><b>برق</b><button id="sideClose">&#10005;</button></div>
+  <div class="stabs">
+    <button class="stab active" data-s="history">السجل</button>
+    <button class="stab" data-s="marks">المفضلة</button>
+    <button class="stab" data-s="account">الحساب</button>
+    <button class="stab" data-s="dl">التنزيل</button>
+  </div>
+
+  <div class="spane active" id="sp-history">
+    <button class="sidebtn danger" id="clearHistBtn">مسح كل السجل</button>
+    <div id="histList"></div>
+  </div>
+
+  <div class="spane" id="sp-marks">
+    <div id="marksList"></div>
+  </div>
+
+  <div class="spane" id="sp-account">
+    <div id="accountBox"></div>
+  </div>
+
+  <div class="spane" id="sp-dl">
+    <p class="hint">حمّل برق لسطح المكتب والأندرويد — روابط ثابتة مباشرة من GitHub:</p>
+    <a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Setup-1.4.3-ia32.exe">ويندوز 32-bit — مثبّت</a>
+    <a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Portable-1.4.3-ia32.zip">ويندوز — محمول ZIP</a>
+    <a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Setup-win7-1.4.3-ia32.exe">ويندوز 7 — مثبّت</a>
+    <a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/barq-android.apk">أندرويد — APK</a>
+    <a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/ehessan1974-maker/browser/releases/tag/stable">كل النسخ على GitHub</a>
+    <p class="hint" style="margin-top:6px">بعد تثبيت برق 1.4.3 فصاعداً: التحديثات تنزل وتُثبَّت تلقائياً — لا حاجة لتنزيل أي شيء يدوياً.</p>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ================= أدوات عامة ================= */
+var $ = function (id) { return document.getElementById(id); };
+function toast(msg, ms) {
+  var t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  $("toasts").appendChild(t);
+  setTimeout(function () { t.remove(); }, ms || 2600);
+}
+function hostOf(u) { try { return new URL(u).host.replace(/^www\./, ""); } catch (e) { return u; } }
+function nowSec() { return Math.floor(Date.now() / 1000); }
+
+/* ================= التخزين المحلي ================= */
+var LS = {
+  hist: [], marks: [],
+  load: function () {
+    try {
+      this.hist = JSON.parse(localStorage.getItem("barq.hist") || "[]");
+      this.marks = JSON.parse(localStorage.getItem("barq.marks") || "[]");
+    } catch (e) { this.hist = []; this.marks = []; }
+    if (!Array.isArray(this.hist)) this.hist = [];
+    if (!Array.isArray(this.marks)) this.marks = [];
+  },
+  saveHist: function () { localStorage.setItem("barq.hist", JSON.stringify(this.hist.slice(0, 300))); },
+  saveMarks: function () { localStorage.setItem("barq.marks", JSON.stringify(this.marks.slice(0, 200))); }
+};
+LS.load();
+
+/* ================= التبويبات ================= */
+var tabs = [];            // {id, url, title}
+var activeTab = 0;
+var tabSeq = 1;
+var loading = false;
+var loadStamp = 0;
+
+function tabTitle(t) { return t.title || (t.url ? hostOf(t.url) : "تبويب جديد"); }
+
+function renderTabs() {
+  var bar = $("tabsbar");
+  bar.querySelectorAll(".tab").forEach(function (el) { el.remove(); });
+  tabs.forEach(function (t, i) {
+    var el = document.createElement("div");
+    el.className = "tab" + (i === activeTab ? " active" : "");
+    var tt = document.createElement("span");
+    tt.className = "tt"; tt.textContent = tabTitle(t); tt.title = tt.textContent;
+    var tx = document.createElement("button");
+    tx.className = "tx"; tx.textContent = "×"; tx.title = "إغلاق التبويب";
+    tx.onclick = function (e) { e.stopPropagation(); closeTab(i); };
+    el.appendChild(tt); el.appendChild(tx);
+    el.onclick = function () { if (activeTab !== i) switchTab(i); };
+    bar.insertBefore(el, $("newtab"));
+  });
+}
+function newTab(url, focus) {
+  tabs.push({ id: tabSeq++, url: url || "", title: "" });
+  switchTab(tabs.length - 1, focus);
+}
+function closeTab(i) {
+  if (i < 0 || i >= tabs.length) return;
+  tabs.splice(i, 1);
+  if (!tabs.length) { newTab("", true); return; }
+  activeTab = Math.min(activeTab, tabs.length - 1);
+  switchTab(activeTab, false);
+}
+function switchTab(i, focus) {
+  activeTab = i;
+  renderTabs();
+  var t = tabs[i];
+  if (!t) return;
+  histStack = []; fwdStack = [];
+  if (t.url) {
+    navigate(t.url, true, true);
+  } else {
+    showStart(true);
+  }
+  if (focus) $("omni").focus();
+}
+
+/* ================= التنقل ================= */
+var histStack = [];  // روابط زر الرجوع داخل التبويب النشط
+var fwdStack = [];
+
+function showStart(on) {
+  $("start").classList.toggle("hidden", !on);
+  if (on) {
+    $("frame").classList.add("hidden");
+    $("blockedBar").classList.add("hidden");
+    $("omni").value = "";
+    $("starBtn").classList.remove("on");
+    $("starBtn").innerHTML = "&#9734;";
+    updateNavBtns();
+  }
+}
+function isStartShown() { return !$("start").classList.contains("hidden"); }
+
+function navigate(url, silent, internal) {
+  url = String(url || "").trim();
+  if (!url) return;
+  loading = true; loadStamp = Date.now();
+  if (!internal) {
+    var cur = tabs[activeTab];
+    if (cur && cur.url) histStack.push(cur.url);
+    fwdStack = [];
+  }
+  var t = tabs[activeTab];
+  if (t) { t.url = url; t.title = ""; }
+  $("frame").classList.remove("hidden");
+  $("blockedBar").classList.add("hidden");
+  showStart(false);
+  $("omni").value = url;
+  $("frame").src = url;
+  updateNavBtns();
+  updateStar();
+  addHist(url, "");
+  renderTabs();
+}
+function navigateHome() {
+  var t = tabs[activeTab];
+  if (t) { t.url = ""; t.title = ""; }
+  histStack = []; fwdStack = [];
+  showStart(true);
+  renderTabs();
+}
+function goBack() {
+  if (!histStack.length) { navigateHome(); return; }
+  var prev = histStack.pop();
+  var cur = tabs[activeTab];
+  if (cur && cur.url) fwdStack.push(cur.url);
+  navigate(prev, true, true);
+}
+function goForward() {
+  if (!fwdStack.length) return;
+  var next = fwdStack.pop();
+  navigate(next, true, true);
+}
+function updateNavBtns() {
+  $("backBtn").disabled = !histStack.length && isStartShown();
+  $("fwdBtn").disabled = !fwdStack.length;
+}
+function updateStar() {
+  var cur = tabs[activeTab];
+  var has = cur && cur.url && LS.marks.some(function (m) { return m.url === cur.url; });
+  $("starBtn").classList.toggle("on", !!has);
+  $("starBtn").innerHTML = has ? "&#9733;" : "&#9734;";
+}
+
+/* بحث/عنوان من الحقل */
+function parseOmni(v) {
+  v = String(v || "").trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return { type: "url", url: v };
+  if (/^[\w-]+(\.[\w-]+)+(\/|$|:\d)/.test(v)) return { type: "url", url: "https://" + v };
+  return { type: "search", q: v };
+}
+$("omni").addEventListener("keydown", function (e) {
+  if (e.key !== "Enter") return;
+  var p = parseOmni(this.value);
+  if (!p) return;
+  if (p.type === "url") navigate(p.url);
+  else doSearch(p.q);
+});
+$("q").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") doSearch(this.value);
+});
+$("go").onclick = function () { doSearch($("q").value); };
+function doSearch(q) {
+  q = String(q || "").trim();
+  if (!q) return;
+  /* بحث دك دك جو — يفتح في تبويب مستقل (محرك البحث يمنع التضمين داخل الإطارات) */
+  window.open("https://duckduckgo.com/?q=" + encodeURIComponent(q) + "&kl=ar-eg", "_blank");
+  toast("نتائج البحث فُتحت في تبويب جديد");
+}
+
+$("backBtn").onclick = goBack;
+$("fwdBtn").onclick = goForward;
+$("reloadBtn").onclick = function () {
+  if (isStartShown()) return;
+  loading = true; loadStamp = Date.now();
+  $("frame").src = $("frame").src; // إعادة تحميل
+};
+$("homeBtn").onclick = navigateHome;
+$("newtab").onclick = function () { newTab("", true); };
+$("openRealBtn").onclick = function () {
+  var cur = tabs[activeTab];
+  if (cur && cur.url) window.open(cur.url, "_blank");
+};
+$("tryAnywayBtn").onclick = function () {
+  var cur = tabs[activeTab];
+  if (cur && cur.url) {
+    loading = true; loadStamp = Date.now();
+    $("frame").src = cur.url;
+    $("blockedBar").classList.add("hidden");
+  }
+};
+
+/* مراقب فشل الإطار: المواقع التي تمنع التضمين لا تطلق حد load */
+$("frame").addEventListener("load", function () {
+  loading = false;
+  $("blockedBar").classList.add("hidden");
+});
+setInterval(function () {
+  if (!loading) return;
+  if (Date.now() - loadStamp > 7000) {
+    loading = false;
+    $("frame").classList.add("hidden");
+    $("blockedBar").classList.remove("hidden");
+  }
+}, 500);
+
+/* ================= اختصارات الصفحة الرئيسية ================= */
+var SHORTS = [
+  { n: "ويكيبيديا", u: "https://ar.wikipedia.org", c: "و" },
+  { n: "DuckDuckGo", u: "https://duckduckgo.com", c: "د" },
+  { n: "BBC عربي", u: "https://www.bbc.com/arabic", c: "B" },
+  { n: "Al Jazeera", u: "https://www.aljazeera.net", c: "J" },
+  { n: "GitHub", u: "https://github.com", c: "G" },
+  { n: "W3Schools", u: "https://www.w3schools.com", c: "W" },
+  { n: "MDN", u: "https://developer.mozilla.org", c: "M" },
+  { n: "Stack Overflow", u: "https://stackoverflow.com", c: "S" }
+];
+(function () {
+  var box = $("shorts");
+  SHORTS.forEach(function (s) {
+    var el = document.createElement("button");
+    el.className = "short";
+    el.innerHTML = '<span class="ico">' + s.c + "</span><span>" + s.n + "</span>";
+    el.onclick = function () { navigate(s.u); };
+    box.appendChild(el);
+  });
+})();
+
+/* ================= السجل والمفضلة ================= */
+function addHist(url, title) {
+  if (!url) return;
+  LS.hist = LS.hist.filter(function (h) { return h.url !== url; });
+  LS.hist.unshift({ url: url, title: title || hostOf(url), t: nowSec() });
+  LS.saveHist();
+  if (sideTab === "history" && $("side").classList.contains("open")) renderHist();
+}
+$("starBtn").onclick = function () {
+  var cur = tabs[activeTab];
+  if (!cur || !cur.url) { toast("افتح موقعاً أولاً"); return; }
+  var i = LS.marks.findIndex(function (m) { return m.url === cur.url; });
+  if (i >= 0) { LS.marks.splice(i, 1); toast("أُزيلت من المفضلة"); }
+  else { LS.marks.unshift({ url: cur.url, title: cur.title || hostOf(cur.url), t: nowSec() }); toast("أُضيفت للمفضلة ★"); }
+  LS.saveMarks(); updateStar();
+  if (sideTab === "marks" && $("side").classList.contains("open")) renderMarks();
+};
+
+var sideTab = "history";
+document.querySelectorAll(".stab").forEach(function (el) {
+  el.onclick = function () {
+    document.querySelectorAll(".stab").forEach(function (x) { x.classList.remove("active"); });
+    document.querySelectorAll(".spane").forEach(function (x) { x.classList.remove("active"); });
+    el.classList.add("active");
+    sideTab = el.dataset.s;
+    $("sp-" + sideTab).classList.add("active");
+    renderPanel();
+  };
+});
+function focusSidePane(name) {
+  document.querySelectorAll(".stab").forEach(function (x) { x.classList.toggle("active", x.dataset.s === name); });
+  document.querySelectorAll(".spane").forEach(function (x) { x.classList.remove("active"); });
+  $("sp-" + name).classList.add("active");
+  sideTab = name;
+}
+function renderPanel() {
+  if (sideTab === "history") renderHist();
+  if (sideTab === "marks") renderMarks();
+  if (sideTab === "account") renderAccount();
+}
+function openSide() { $("side").classList.add("open"); $("overlay").classList.add("show"); renderPanel(); }
+function closeSide() { $("side").classList.remove("open"); $("overlay").classList.remove("show"); }
+$("menuBtn").onclick = openSide;
+$("sideClose").onclick = closeSide;
+$("overlay").onclick = closeSide;
+
+function rowEl(title, sub, url, onDelete) {
+  var el = document.createElement("div");
+  el.className = "item";
+  el.innerHTML = '<div class="txt"><div class="t1"></div><div class="t2"></div></div>';
+  el.querySelector(".t1").textContent = title;
+  el.querySelector(".t2").textContent = sub;
+  el.onclick = function () { closeSide(); navigate(url); };
+  if (onDelete) {
+    var d = document.createElement("button");
+    d.className = "del"; d.innerHTML = "&#128465;"; d.title = "حذف";
+    d.onclick = function (e) { e.stopPropagation(); onDelete(); };
+    el.appendChild(d);
+  }
+  return el;
+}
+function renderHist() {
+  var box = $("histList"); box.innerHTML = "";
+  if (!LS.hist.length) { box.innerHTML = '<div class="empty">السجل فارغ<br/>تصفّح وسيظهر كل ما تزوره هنا</div>'; return; }
+  LS.hist.forEach(function (h, i) {
+    box.appendChild(rowEl(h.title || hostOf(h.url), new Date(h.t * 1000).toLocaleString("ar"), h.url, function () {
+      LS.hist.splice(i, 1); LS.saveHist(); renderHist();
+    }));
+  });
+}
+$("clearHistBtn").onclick = function () {
+  LS.hist = []; LS.saveHist(); renderHist(); toast("مُسح السجل بالكامل");
+};
+function renderMarks() {
+  var box = $("marksList"); box.innerHTML = "";
+  if (!LS.marks.length) { box.innerHTML = '<div class="empty">لا مفضلة بعد<br/>اضغط النجمة ★ في شريط الأدوات</div>'; return; }
+  LS.marks.forEach(function (m, i) {
+    box.appendChild(rowEl(m.title || hostOf(m.url), m.url, m.url, function () {
+      LS.marks.splice(i, 1); LS.saveMarks(); renderMarks(); updateStar();
+    }));
+  });
+}
+
+/* ================= حساب برق السحابي (GitHub Gist) ================= */
+/* الدخول برمز وصول شخصي (PAT) بصلاحية gist — البيانات في Gist خاص باسم barq-sync.
+   السجل والمفضلة تُدمج من كل الأجهزة حسب الأحدث — تماماً كسلوك كروم: حساب واحد في أي مكان. */
+var CLOUD_GIST_DESC = "barq-sync (برق)";
+var cloud = { login: "", name: "", token: "", gistId: "", lastSync: 0 };
+
+(function cloudLoad() {
+  try { cloud = JSON.parse(localStorage.getItem("barq.cloud") || "{}") || {}; } catch (e) { cloud = {}; }
+  if (!cloud || typeof cloud !== "object") cloud = {};
+})();
+function cloudSave() { localStorage.setItem("barq.cloud", JSON.stringify(cloud)); }
+function cloudSigned() { return !!(cloud.login && cloud.token); }
+
+function ghFetch(path, opts, cb) {
+  opts = opts || {};
+  var headers = {
+    "Accept": "application/vnd.github+json",
+    "Content-Type": "application/json"
+  };
+  if (opts.token) headers["Authorization"] = "Bearer " + opts.token;
+  else if (cloud.token) headers["Authorization"] = "Bearer " + cloud.token;
+  fetch("https://api.github.com" + path, {
+    method: opts.method || "GET",
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(function (r) {
+    if (r.status === 401) return cb(new Error("bad-credentials"));
+    if (!r.ok) return cb(new Error("http-" + r.status));
+    return r.json().then(function (j) { cb(null, j); }).catch(function () { cb(null, {}); });
+  }).catch(cb);
+}
+
+function renderAccount() {
+  var box = $("accountBox");
+  if (!cloudSigned()) {
+    box.innerHTML =
+      '<p class="hint">افتح <b>رمز وصول شخصي</b> من GitHub بصلاحية <b>gist</b> فقط:' +
+      '<br/>Settings ← Developer settings ← Personal access tokens ← Tokens (classic) ← Generate new token ← علّم <b>gist</b> فقط.' +
+      '<br/>الرمز يبقى على جهازك — يُستخدم للوصول إلى مخزن المزامنة فقط.</p>' +
+      '<input class="field" id="patIn" type="password" placeholder="ghp_…" autocomplete="off" dir="ltr"/>' +
+      '<button class="sidebtn acc" id="loginBtn">دخول برق السحابي</button>' +
+      '<a class="sidebtn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?scopes=gist&description=barq-sync">إنشاء رمز جديد على GitHub</a>';
+    var lb = $("loginBtn");
+    lb.onclick = function () {
+      var tok = $("patIn").value.trim();
+      if (!tok) { toast("الصق رمز الوصول أولاً"); return; }
+      lb.disabled = true; lb.textContent = "جارٍ التحقق…";
+      ghFetch("/user", { token: tok }, function (e, u) {
+        lb.disabled = false; lb.textContent = "دخول برق السحابي";
+        if (e || !u) { toast(e && e.message === "bad-credentials" ? "الرمز غير صالح — تحقق منه" : "تعذر الاتصال بـGitHub"); return; }
+        cloud.login = u.login;
+        cloud.name = u.name || u.login;
+        cloud.token = tok;
+        cloud.gistId = "";
+        cloudSave();
+        toast("مرحباً " + (u.name || u.login) + " — حسابك يتبعك الآن من أي جهاز");
+        renderAccount();
+        syncNow(true);
+      });
+    };
+    return;
+  }
+  box.innerHTML =
+    '<div class="ok-badge">' +
+      '<div class="av">' + (cloud.login || "?").charAt(0).toUpperCase() + "</div>" +
+      '<div><div class="n"></div><div class="s">GitHub · حساب برق السحابي</div></div>' +
+    "</div>" +
+    '<button class="sidebtn acc" id="syncBtn">&#8635; مزامنة الآن (سجل + مفضلة)</button>' +
+    '<p class="hint" id="syncInfo"></p>' +
+    '<p class="hint">بياناتك تُخزَّن في <b>Gist خاص</b> باسم barq-sync على حسابك في GitHub — لا يراها أحد غيرك. أي جهاز يدخل بنفس الحساب يجد نفس السجل والمفضلة.</p>' +
+    '<button class="sidebtn danger" id="logoutBtn">خروج من الحساب السحابي</button>';
+  box.querySelector(".ok-badge .n").textContent = cloud.name || cloud.login;
+  var info = box.querySelector("#syncInfo");
+  info.textContent = cloud.lastSync ? "آخر مزامنة: " + new Date(cloud.lastSync * 1000).toLocaleString("ar") : "لم تُزامَن بعد";
+  $("syncBtn").onclick = function () { syncNow(false); };
+  $("logoutBtn").onclick = function () {
+    cloud = {}; cloudSave(); renderAccount(); renderCloudCard(); toast("خرجت — بياناتك المحلية باقية");
+  };
+}
+function renderCloudCard() {
+  if (cloudSigned()) {
+    $("cloudTitle").innerHTML = "&#9729; " + (cloud.name || cloud.login);
+    $("cloudDesc").textContent = "حسابك متصل — السجل والمفضلة تتبعك من أي جهاز في العالم.";
+    $("cloudBtn").textContent = "مزامنة الآن";
+    $("cloudBtn").onclick = function () {
+      openSide(); focusSidePane("account");
+      if (cloudSigned()) syncNow(false);
+    };
+  } else {
+    $("cloudTitle").innerHTML = "&#9729; حساب برق السحابي";
+    $("cloudDesc").textContent = "ادخل بحساب GitHub (رمز وصول بصلاحية gist فقط) — سجلّك ومفضلتك تُحفظ في Gist خاص بك وتتبعك من أي جهاز.";
+    $("cloudBtn").textContent = "تسجيل الدخول";
+    $("cloudBtn").onclick = function () { openSide(); focusSidePane("account"); };
+  }
+}
+$("cloudBtn").onclick = function () { openSide(); focusSidePane("account"); };
+
+/* المزامنة: سحب من السحابة + دمج بالأحدث + رفع الناتج — خطوة واحدة ذكية */
+function syncPayload() {
+  return {
+    v: 1, updated: nowSec(), device: String(navigator.userAgent).slice(0, 60),
+    history: LS.hist.slice(0, 300),
+    bookmarks: LS.marks.slice(0, 200)
+  };
+}
+function mergeRemote(remote) {
+  if (!remote || typeof remote !== "object") return false;
+  var rh = Array.isArray(remote.history) ? remote.history : [];
+  var rm = Array.isArray(remote.bookmarks) ? remote.bookmarks : [];
+  if (!rh.length && !rm.length) return false;
+  var seen = {}, merged = [];
+  LS.hist.concat(rh).forEach(function (h) {
+    if (!h || !h.url || seen[h.url]) return;
+    seen[h.url] = 1; merged.push(h);
+  });
+  merged.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+  LS.hist = merged.slice(0, 300);
+  var sm = {}, mm = [];
+  LS.marks.concat(rm).forEach(function (m) {
+    if (!m || !m.url || sm[m.url]) return;
+    sm[m.url] = 1; mm.push(m);
+  });
+  mm.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+  LS.marks = mm.slice(0, 200);
+  LS.saveHist(); LS.saveMarks();
+  return true;
+}
+function syncResetBtn() {
+  var btn = $("syncBtn");
+  if (btn) { btn.disabled = false; btn.innerHTML = "&#8635; مزامنة الآن (سجل + مفضلة)"; }
+}
+function syncNow(first) {
+  if (!cloudSigned()) { toast("ادخل إلى حسابك أولاً"); return; }
+  var btn = $("syncBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "جارٍ المزامنة…"; }
+  var done = function (msg) {
+    cloud.lastSync = nowSec(); cloudSave();
+    syncResetBtn();
+    if ($("sp-account").classList.contains("active")) renderAccount();
+    renderCloudCard(); renderHist(); renderMarks(); updateStar();
+    toast(msg || "تمت المزامنة ✓");
+  };
+  var push = function (gistId) {
+    ghFetch("/gists/" + gistId, {
+      method: "PATCH",
+      body: { files: { "barq-sync.json": { content: JSON.stringify(syncPayload()) } } }
+    }, function (e) {
+      if (e) { syncResetBtn(); toast("تعذر الرفع — تحقق من الاتصال"); return; }
+      done(first ? "رُبط الحساب وزُرِكت بياناتك ✓" : "تمت المزامنة ✓");
+    });
+  };
+  var ensure = function () {
+    if (cloud.gistId) return push(cloud.gistId);
+    ghFetch("/gists?per_page=100", {}, function (e, list) {
+      if (e) { syncResetBtn(); toast("تعذر الوصول إلى GitHub — تحقق من الاتصال"); return; }
+      var found = null;
+      (list || []).forEach(function (g) {
+        if (g && g.description && g.description.indexOf(CLOUD_GIST_DESC) === 0 && g.files && g.files["barq-sync.json"]) found = g;
+      });
+      if (found) {
+        /* اسحب ما لدى الأجهزة الأخرى أولاً ثم ارفع الدمج */
+        ghFetch("/gists/" + found.id, {}, function (e2, g2) {
+          if (!e2 && g2 && g2.files && g2.files["barq-sync.json"] && g2.files["barq-sync.json"].content) {
+            try { mergeRemote(JSON.parse(g2.files["barq-sync.json"].content)); } catch (er) {}
+          }
+          cloud.gistId = found.id; cloudSave();
+          push(found.id);
+        });
+        return;
+      }
+      ghFetch("/gists", {
+        method: "POST",
+        body: {
+          description: CLOUD_GIST_DESC, public: false,
+          files: { "barq-sync.json": { content: JSON.stringify(syncPayload()) } }
+        }
+      }, function (e3, g3) {
+        if (e3 || !g3 || !g3.id) { syncResetBtn(); toast("تعذر إنشاء مخزن المزامنة"); return; }
+        cloud.gistId = g3.id;
+        done("أُنشئ مخزن المزامنة الخاص بك ✓");
+      });
+    });
+  };
+  ensure();
+}
+
+/* ================= إقلاع ================= */
+renderCloudCard();
+newTab("", true);
+document.addEventListener("keydown", function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === "t") { e.preventDefault(); newTab("", true); }
+  if ((e.ctrlKey || e.metaKey) && e.key === "w") { e.preventDefault(); closeTab(activeTab); }
+  if (e.key === "F6") { e.preventDefault(); $("omni").focus(); }
+});
+</script>
+</body>
+</html>

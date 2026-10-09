@@ -1485,3 +1485,26 @@ Stage Summary:
 - barq142.zip الآن داخل المستودع على GitHub (main/public/downloads/) وبنفس البصمة المتسقة مع السكربت والrelease.
 - لا CI: الكومِتان لا يعدلان desktop/** — حزم 1.4.2 موجودة أصلاً على release stable.
 - درس مكرر: رسائل UUID المكسورة تظهر في كومِتات worklog التلقائية — تتطلب amend عربي ثم force-with-lease بعد fetch.
+
+---
+Task ID: BARQ-CLOUD-143
+Agent: orchestrator (Z.ai Code)
+Task: خطة المستخدم الخمسية — ملفات في GitHub، تحديث تلقائي مباشر، واجهة على GitHub، حساب مثل كروم، 4 نسخ
+
+Work Log:
+- فحص شامل كشف أن الجلسات السابقة بنت الأساس: deploy-pages.yml (Pages يعمل فعلاً على /browser/)، build-android.yml (APK minSdk 14 على release)، build-desktop.yml (8 حزم) — وعرض rg المضلل «branches: ain]» كان خدعة عرض (od -c أثبت «branches: [main]» سليم).
+- برق ويب (public/web/index.html ~38KB): واجهة متصفح كاملة بملف واحد — تبويبات + شريط عنوان RTL + iframe sandbox + صفحة بداية (بحث DDG + 8 اختصارات) + سجل ومفضلة localStorage + لوحة جانبية (سجل/مفضلة/حساب/تنزيل) + شاشة «الموقع يمنع التضمين» مع زر فتح تبويب + روابط release الثابتة.
+- حساب برق السحابي (مثل كروم): دخول بـGitHub PAT (صلاحية gist فقط) → Gist خاص «barq-sync (برق)» → السجل + المفضلة تتبعك من أي جهاز بالعالم؛ الدمج بالأحدث بلا تكرار (سقف 300/200)؛ إنشاء تلقائي للمخزن عند أول دخول؛ مزامنة عند الدخول + زر يدوي + صامتة عند الإغلاق (before-quit في desktop).
+- desktop 1.4.3: main.js أضاف httpReq عامة (POST/PATCH/GET مع توثيق) + قسم سحابي كامل (cloud.json + cloudLoad/cloudSync/cloudMergeRemote/cloudVerifyToken) + IPC (barq:cloud-state/login/logout/sync) + electron-updater (فحص عند الإقلاع + كل 4 ساعات + autoDownload + سؤال إعادة تشغيل + صمت تام على الأخطاء، يتخطى بيئة التطوير عبر app.isPackaged) + dialog استيراد. preload.js أضاف 4 دوال cloud. panel.html/panel.js أضافا قسم «الحساب السحابي — يتبعك من أي مكان» في لوحة الحساب.
+- package.json: version 1.4.3 + dependencies.electron-updater ^6.3.9 + build.publish {provider:github, owner, repo} — وbuild-desktop.yml يرفع الآن latest.yml + blockmap مع كل الأرتيفاكت (شرط عمل التحديث التلقائي).
+- اختبار harness 1.4.3 (tmp-test/barq143-harness.js): 20/20 PASS — إقلاع سليم بلا electron-updater مثبت، استعادة جلسة سحابية، رفض رموز خاطئة، رفض GitHub فعلي عبر HTTPS لرمز مزيف، فشل آمن لمزامنة gist مزيف، خروج سحابي يمسح الجلسة فقط، انحدار الحساب المحلي والتصفح. + انحدار 1.4.1 (8/8) + harness 1.4.2 (32/32) = 60 PASS.
+- برق ويب مُتحقق منه بمتصفح حقيقي (agent-browser): صفحة البداية، فتح ويكيبيديا داخل iframe بنجاح، النجمة صارت ذهبية، اللوحة الجانبية بتبويباتها، شاشة الحساب السحابي، رفض رمز مزيف عبر GitHub API (toast «الرمز غير صالح»)، زر رجوع يعود للرئيسية، تبويب جديد (2 tabs) — صفر أخطاء وحدة.
+- بناء التصدير الثابت محلياً (محاكاة deploy-pages: حذف src/app/api مؤقتاً + STATIC_EXPORT=1): نجح — out/web/index.html (38KB) سيصل إلى /browser/web/ على Pages. البناء بلا حذف api يفشل (route handlers مع output:export) — الworkflow يحذفها أصلاً فسليم.
+- BARQ-DESKTOP.md: صف 1.4.3 (الحالي) + قسم «النسخ الأربع + الواجهة» بجدول الروابط الثابتة وشرح آلية التحديث التلقائي.
+- روابط برق ويب حدثت إلى 1.4.3 (Setup/Portable/win7).
+
+Stage Summary:
+- النقاط الخمس مغطاة: (1) كل الملفات في GitHub أصلاً — المصدر desktop/ + الحزم على release. (2) تحديث تلقائي مباشر من 1.4.3 فصاعداً عبر electron-updater + latest.yml — بناء CI يرفع ويحدّث كل المستخدمين بمجرد الدفع. (3) الواجهة على GitHub Pages موجودة + برق ويب سيضاف على /browser/web/. (4) حساب سحابي مثل كروم: Gist عبر GitHub — نفس الحساب من أي جهاز بالعالم (مطبق في برق ويب + برق desktop). (5) النسخ الأربع: exe مثبت + exe محمول + برق ويب HTML + APK أندرويد 4.0+.
+- ملاحظة صادقة: مستخدمو 1.4.2 الحاليون لا يملكون updater — تحديثهم الأخير اليدوي إلى 1.4.3 ثم كل شيء تلقائي. المحمول والويندوز 7 يتحققان يدوياً (حد تقني معروف).
+- برق ويب حدوده الصريحة: مواقع تمنع iframe (Google/YouTube) تظهر شاشة «يمنع التضمين» مع زر فتح تبويب — البحث يفتح DDG في تبويب جديد.
+- الكومِت جاهز — الدفع بانتظار توكن جديد (token8 ألغاه المستخدم بعد الدفع السابق كما نُصح).

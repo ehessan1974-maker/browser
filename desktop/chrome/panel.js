@@ -6,6 +6,7 @@
 //         وزر «مسح الكل» يُعطّل تلقائياً عندما يكون السجل فارغاً،
 //         + مقبض سحب على حافة اللوحة لتغيير عرضها (main يتابع المؤشر ويحفظ العرض)
 // 1.4.2 — لوحة «الحساب»: تسجيل دخول اختياري (محلي) — بلا حساب يعمل برق طبيعياً 100%
+// 1.4.3 — الحساب السحابي: دخول GitHub — السجل والمفضلة تتبعك من أي مكان في العالم (مثل كروم)
 "use strict";
 
 const ENGINE_NAMES = {
@@ -255,7 +256,111 @@ function paintAccount(user) {
       inputs[i].addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
     }
   }
+  // 1.4.3 — الحساب السحابي: يتبعك من أي مكان في العالم (مثل كروم) — اختياري تماماً
+  renderCloudInto(box);
   el.list.appendChild(box);
+}
+
+function renderCloudInto(box) {
+  let cs = null;
+  try { cs = window.barq.cloudState && window.barq.cloudState(); } catch (e) {}
+  Promise.resolve(cs).then(function (st) {
+    try { paintCloud(box, st || {}); } catch (e) {}
+  }).catch(function () {});
+}
+
+function paintCloud(box, st) {
+  const part = document.createElement("div");
+  part.className = "cloud-part";
+  const divider = document.createElement("div");
+  divider.className = "divider";
+  divider.textContent = "الحساب السحابي — يتبعك من أي مكان";
+  part.appendChild(divider);
+  if (st.signed) {
+    const ok = document.createElement("div");
+    ok.className = "cloud-ok";
+    const av = document.createElement("div");
+    av.className = "av";
+    av.textContent = String(st.login || "?").charAt(0).toUpperCase();
+    const txt = document.createElement("div");
+    const n = document.createElement("div");
+    n.className = "n";
+    n.textContent = st.name || st.login || "";
+    const s = document.createElement("div");
+    s.className = "s";
+    s.textContent = "GitHub • " + (st.lastSync ? "آخر مزامنة: " + fmtTime(st.lastSync) : "لم تُزامَن بعد");
+    txt.appendChild(n); txt.appendChild(s);
+    ok.appendChild(av); ok.appendChild(txt);
+    part.appendChild(ok);
+    const sync = document.createElement("button");
+    sync.className = "go";
+    sync.textContent = "↻ مزامنة الآن (السجل + المفضلة)";
+    sync.addEventListener("click", function () {
+      sync.disabled = true; sync.textContent = "جارٍ المزامنة…";
+      window.barq.cloudSync().then(function (r) {
+        sync.disabled = false;
+        if (r && r.ok) {
+          sync.textContent = "↻ مزامنة الآن (السجل + المفضلة)";
+          renderAccount();
+        } else {
+          sync.textContent = "↻ حاول مجدداً";
+          acctMsg(box, (r && r.msg) || "تعذّرت المزامنة");
+        }
+      }).catch(function () { sync.disabled = false; sync.textContent = "↻ حاول مجدداً"; });
+    });
+    part.appendChild(sync);
+    const out = document.createElement("button");
+    out.className = "go";
+    out.style.background = "rgba(242,139,130,.15)";
+    out.textContent = "🚪 خروج من الحساب السحابي";
+    out.addEventListener("click", function () {
+      window.barq.cloudLogout().then(function () { renderAccount(); }).catch(function () {});
+    });
+    part.appendChild(out);
+  } else {
+    const note = document.createElement("div");
+    note.className = "note";
+    note.innerHTML = 'سجّل دخولك بحساب GitHub — سجلك ومفضلتك تُحفظ في مخزن خاص بك ' +
+      'وتنتظرك على أي جهاز في العالم. اختياري تماماً.';
+    part.appendChild(note);
+    const inp = document.createElement("input");
+    inp.id = "cloud-token";
+    inp.type = "password";
+    inp.placeholder = "ghp_… الصق رمز الوصول هنا";
+    inp.autocomplete = "off";
+    part.appendChild(inp);
+    const go = document.createElement("button");
+    go.className = "go";
+    go.textContent = "☁️ دخول برق السحابي";
+    const submit = function () {
+      const tok = inp.value.trim();
+      if (!tok) { acctMsg(box, "الصق رمز الوصول أولاً"); return; }
+      go.disabled = true; go.textContent = "جارٍ التحقق…";
+      window.barq.cloudLogin(tok).then(function (r) {
+        go.disabled = false;
+        if (r && r.ok) {
+          go.textContent = "☁️ دخول برق السحابي";
+          renderAccount();
+        } else {
+          go.textContent = "☁️ دخول برق السحابي";
+          acctMsg(box, (r && r.msg) || "تعذّر الدخول السحابي");
+        }
+      }).catch(function () { go.disabled = false; go.textContent = "☁️ دخول برق السحابي"; acctMsg(box, "تعذّر الاتصال — أعد المحاولة"); });
+    };
+    go.addEventListener("click", submit);
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+    part.appendChild(go);
+    const link = document.createElement("div");
+    link.className = "tiny";
+    link.innerHTML = 'افتح <span class="link" id="cloud-new">رمز وصول جديد بصلاحية gist فقط</span> — ' +
+      "الرمز يبقى على جهازك ولا يراه أحد غيرك";
+    part.appendChild(link);
+    const lnk = link.querySelector("#cloud-new");
+    lnk.addEventListener("click", function () {
+      try { window.open("https://github.com/settings/tokens/new?scopes=gist&description=barq-sync", "_blank"); } catch (e) {}
+    });
+  }
+  box.appendChild(part);
 }
 
 function render() {

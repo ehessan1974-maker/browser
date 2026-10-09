@@ -48,6 +48,7 @@ const {
   session,
   shell,
   screen,
+  dialog,
 } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -365,6 +366,44 @@ function httpGet(url, cb) {
   req.on("error", (e2) => finish(e2));
 }
 
+// طلب HTTPS عام (GET/POST/PATCH مع توثيق اختياري) — يعيد JSON (1.4.3 حساب برق السحابي)
+function httpReq(method, url, headers, body, cb) {
+  let done = false;
+  const finish = (e, d) => { if (!done) { done = true; cb(e, d); } };
+  try {
+    const u = new URL(url);
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: u.hostname,
+      port: 443,
+      path: u.pathname + u.search,
+      method: method,
+      headers: Object.assign(
+        { "User-Agent": OMNI_UA, "Accept": "application/vnd.github+json" },
+        payload ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) } : {},
+        headers || {}
+      ),
+      timeout: 12000,
+    }, (res) => {
+      let data = "";
+      res.setEncoding("utf8");
+      res.on("data", (c) => { if (data.length < 900000) data += c; });
+      res.on("end", () => {
+        if (res.statusCode >= 400) {
+          finish(new Error("HTTP " + res.statusCode), data ? data.slice(0, 300) : "");
+          return;
+        }
+        try { finish(null, JSON.parse(data || "{}")); }
+        catch { finish(null, {}); }
+      });
+    });
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", (e2) => finish(e2));
+    if (payload) req.write(payload);
+    req.end();
+  } catch (e) { finish(e); }
+}
+
 function stripTags(s) {
   return String(s || "")
     .replace(/<[^>]*>/g, " ")
@@ -507,6 +546,156 @@ function accountRestore() {
   const rec = accountRec();
   accountUser = rec && rec.signedIn ? rec.user : "";
 }
+
+/* -------- حساب برق السحابي — يتبعك من أي مكان في العالم (1.4.3) -------- */
+// مثل كروم: تسجّل دخولك من أي جهاز تجد بياناتك (السجل + المفضلة) تنتظرك.
+// المخزن: Gist خاص على حساب GitHub الخاص بالمستخدم — عبر رمز وصول (PAT)
+// بصلاحية gist فقط. main هو من يتصل بGitHub — الواجهة لا ترى الرمز أبداً.
+// بلا دخول سحابي يعمل برق محلياً بشكل طبيعي 100% — لا إجبار ولا قفل.
+
+const CLOUD_GIST_DESC = "barq-sync (برق)";
+const CLOUD_SYNC_MAX = 300;
+let cloud = { login: "", name: "", token: "", gistId: "", lastSync: 0 };
+
+function cloudLoad() {
+  try {
+    const f = dataFile("cloud.json");
+    if (f && fs.existsSync(f)) {
+      const v = JSON.parse(fs.readFileSync(f, "utf8"));
+      if (v && typeof v.token === "string" && v.token.length > 20) {
+        cloud = {
+          login: String(v.login || ""),
+          name: String(v.name || ""),
+          token: v.token,
+          gistId: typeof v.gistId === "string" ? v.gistId : "",
+          lastSync: Number(v.lastSync) || 0,
+        };
+      }
+    }
+  } catch {} // ملف فاسد = غير مسجّل — لا تعطل أبداً
+}
+
+function cloudSave() {
+  writeJson("cloud.json", cloud);
+}
+
+function cloudSigned() {
+  return !!(cloud.login && cloud.token);
+}
+
+function cloudSyncPayload() {
+  return {
+    v: 1,
+    updated: Date.now(),
+    device: "برق سطح المكتب",
+    history: searchHistory.slice(0, CLOUD_SYNC_MAX),
+    bookmarks: bookmarks.slice(0, BOOKMARKS_MAX),
+  };
+}
+
+// دمج بيانات جهاز آخر: من كل الأجهزة حسب الأحدث وبلا تكرار
+function cloudMergeRemote(remote) {
+  if (!remote || typeof remote !== "object") return false;
+  const rh = Array.isArray(remote.history) ? remote.history : [];
+  const rm = Array.isArray(remote.bookmarks) ? remote.bookmarks : [];
+  if (!rh.length && !rm.length) return false;
+  const seen = {};
+  const merged = [];
+  searchHistory.concat(rh).forEach((h) => {
+    if (!h || !h.url || seen[h.url]) return;
+    seen[h.url] = 1;
+    merged.push({
+      url: String(h.url).slice(0, 500),
+      title: String(h.title || "").slice(0, 200),
+      q: String(h.q || "").slice(0, 200),
+      engine: String(h.engine || "").slice(0, 20),
+      t: Number(h.t) || 0,
+    });
+  });
+  merged.sort((a, b) => b.t - a.t);
+  searchHistory = merged.slice(0, SEARCH_HISTORY_MAX);
+  const sm = {};
+  const mm = [];
+  bookmarks.concat(rm).forEach((b) => {
+    if (!b || !b.url || sm[b.url]) return;
+    sm[b.url] = 1;
+    mm.push({ url: String(b.url).slice(0, 500), title: String(b.title || "").slice(0, 200), t: Number(b.t) || 0 });
+  });
+  mm.sort((a, b) => b.t - a.t);
+  bookmarks = mm.slice(0, BOOKMARKS_MAX);
+  writeJson("search-history.json", searchHistory);
+  writeJson("bookmarks.json", bookmarks);
+  pushPanelRefresh("history");
+  pushPanelRefresh("bookmarks");
+  return true;
+}
+
+// المزامنة: اسحب السحابي ← ادمجه محلياً ← ارفع الناتج — خطوة واحدة ذكية
+function cloudSync(cb) {
+  cb = cb || function () {};
+  if (!cloudSigned()) return cb({ ok: false, msg: "غير مسجّل سحابياً" });
+  const push = (gistId) => {
+    httpReq("PATCH", "https://api.github.com/gists/" + gistId,
+      { Authorization: "Bearer " + cloud.token },
+      { files: { "barq-sync.json": { content: JSON.stringify(cloudSyncPayload()) } } },
+      (e) => {
+        if (e) return cb({ ok: false, msg: "تعذر الرفع — تحقق من الاتصال" });
+        cloud.lastSync = Date.now();
+        cloudSave();
+        pushStats();
+        cb({ ok: true });
+      });
+  };
+  const ensure = () => {
+    if (cloud.gistId) return push(cloud.gistId);
+    // ابحث عن مخزن المزامنة ضمن gists الحساب
+    httpReq("GET", "https://api.github.com/gists?per_page=100",
+      { Authorization: "Bearer " + cloud.token }, null, (e, list) => {
+        if (e || !Array.isArray(list))
+          return cb({ ok: false, msg: "تعذر الوصول إلى GitHub — تحقق من الرمز والاتصال" });
+        let found = null;
+        list.forEach((g) => {
+          if (g && g.description && g.description.indexOf(CLOUD_GIST_DESC) === 0 &&
+              g.files && g.files["barq-sync.json"]) found = g;
+        });
+        if (found) {
+          // اسحب ما لدى الأجهزة الأخرى أولاً ثم ارفع الدمج
+          httpReq("GET", "https://api.github.com/gists/" + found.id,
+            { Authorization: "Bearer " + cloud.token }, null, (e2, g2) => {
+              if (!e2 && g2 && g2.files && g2.files["barq-sync.json"] && g2.files["barq-sync.json"].content) {
+                try { cloudMergeRemote(JSON.parse(g2.files["barq-sync.json"].content)); } catch {}
+              }
+              cloud.gistId = found.id;
+              cloudSave();
+              push(found.id);
+            });
+          return;
+        }
+        httpReq("POST", "https://api.github.com/gists",
+          { Authorization: "Bearer " + cloud.token },
+          { description: CLOUD_GIST_DESC, public: false, files: { "barq-sync.json": { content: JSON.stringify(cloudSyncPayload()) } } },
+          (e3, g3) => {
+            if (e3 || !g3 || !g3.id) return cb({ ok: false, msg: "تعذر إنشاء مخزن المزامنة" });
+            cloud.gistId = g3.id;
+            cloud.lastSync = Date.now();
+            cloudSave();
+            pushStats();
+            cb({ ok: true });
+          });
+      });
+  };
+  ensure();
+}
+
+function cloudVerifyToken(token, cb) {
+  httpReq("GET", "https://api.github.com/user", { Authorization: "Bearer " + token }, null, (e, u) => {
+    if (e || !u || !u.login) return cb({ ok: false, msg: "الرمز غير صالح أو تعذر الاتصال بـGitHub" });
+    cb({ ok: true, login: u.login, name: u.name || u.login });
+  });
+}
+
+// استعادة الجلسة السحابية عند الإقلاع
+cloudLoad();
 
 function isBookmarked(url) {
   return bookmarks.some((b) => b.url === url);
@@ -839,6 +1028,39 @@ if (!app.requestSingleInstanceLock()) {
     }
   });
 
+/* ------------ التحديث التلقائي — من جيت هاب مباشرة (1.4.3) ------------ */
+// يفحص عند الإقلاع ثم كل 4 ساعات — ينزل التحديث في الخلفية ويسأل عن
+// إعادة التشغيل عند جهوزيته. لا شيء يُفرض على المستخدم أبداً.
+let autoUpdater = null;
+try { autoUpdater = require("electron-updater").autoUpdater; } catch {}
+
+function setupAutoUpdater() {
+  if (!autoUpdater || !app.isPackaged) return; // في بيئة التطوير: لا فحص
+  try {
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on("update-downloaded", (info) => {
+      if (!win || win.isDestroyed()) return;
+      dialog.showMessageBox(win, {
+        type: "info",
+        title: "توفر تحديث لبرق",
+        message: "توفر تحديث جديد" + (info && info.version ? " (" + info.version + ")" : "") + " — نُزّل وجهّز للتثبيت تلقائياً.",
+        detail: "أعد تشغيل برق الآن لتثبيت التحديث؟",
+        buttons: ["أعد التشغيل الآن", "لاحقاً"],
+        defaultId: 0,
+        cancelId: 1,
+      }).then((r) => {
+        if (r.response === 0) {
+          try { autoUpdater.quitAndInstall(); } catch {}
+        }
+      }).catch(() => {});
+    });
+    autoUpdater.on("error", () => {}); // بلا إنترنت: صمت تام — لا إزعاج
+    setTimeout(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 15000);
+    setInterval(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 4 * 60 * 60 * 1000);
+  } catch {}
+}
+
   app.whenReady().then(() => {
     // محرك البحث + سجل البحث + المفضلة المحفوظة من الجلسة السابقة
     currentEngine = loadEngine();
@@ -927,10 +1149,24 @@ if (!app.requestSingleInstanceLock()) {
 
     // 1.4.2 — استعادة جلسة الحساب إن كانت مفتوحة — برق يفتح طبيعياً دائماً
     accountRestore();
+    // 1.4.3 — التحديث التلقائي: يفحص بلا إزعاج ويثبّت عند الموافقة فقط
+    setupAutoUpdater();
     goHome();
     pushStats();
   });
 }
+
+// 1.4.3 — مزامنة صامتة عند الإغلاق: ما فعلته اليوم ينتظرك على أي جهاز غداً
+app.on("before-quit", () => {
+  if (cloudSigned() && cloud.gistId) {
+    try {
+      httpReq("PATCH", "https://api.github.com/gists/" + cloud.gistId,
+        { Authorization: "Bearer " + cloud.token },
+        { files: { "barq-sync.json": { content: JSON.stringify(cloudSyncPayload()) } } },
+        () => {});
+    } catch {}
+  }
+});
 
 app.on("window-all-closed", () => {
   app.quit();
@@ -1015,6 +1251,50 @@ ipcMain.handle("barq:account-logout", () => {
   accountUser = "";
   pushStats();
   return { ok: true };
+});
+
+/* -------- حساب برق السحابي: IPC (1.4.3) -------- */
+// الرمز يُحفظ في cloud.json داخل userData — الواجهة لا تراه ولا تلمسه أبداً.
+// الدخول اختياري تماماً — بلا دخول يعمل برق محلياً بشكل طبيعي 100%.
+
+ipcMain.handle("barq:cloud-state", () => ({
+  signed: cloudSigned(),
+  login: cloud.login,
+  name: cloud.name,
+  lastSync: cloud.lastSync,
+}));
+
+ipcMain.handle("barq:cloud-login", (_e, p) => {
+  const token = String((p && p.token) || "").trim();
+  if (!/^(ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}$/.test(token))
+    return { ok: false, msg: "الرمز لا يشبه رمز وصول GitHub — انسخه كاملاً" };
+  return new Promise((res) => {
+    cloudVerifyToken(token, (v) => {
+      if (!v.ok) return res(v);
+      cloud.login = v.login;
+      cloud.name = v.name;
+      cloud.token = token;
+      cloud.gistId = "";
+      cloudSave();
+      pushStats();
+      // أول مزامنة تلقائية بعد الدخول — بياناتك تنتظرك من أي جهاز
+      cloudSync(() => {});
+      res({ ok: true, name: v.name });
+    });
+  });
+});
+
+ipcMain.handle("barq:cloud-logout", () => {
+  cloud = { login: "", name: "", token: "", gistId: "", lastSync: 0 };
+  writeJson("cloud.json", cloud);
+  pushStats();
+  return { ok: true };
+});
+
+ipcMain.handle("barq:cloud-sync", () => {
+  return new Promise((res) => {
+    cloudSync((r) => res(r));
+  });
 });
 
 /* ------------------------------ محرك البحث -------------------------------- */

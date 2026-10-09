@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld("barq", {
   accountRegister: (user, pass, confirm) =>
     ipcRenderer.invoke("barq:account-register", { user: String(user || ""), pass: String(pass || ""), confirm: String(confirm || "") }),
   accountLogout: () => ipcRenderer.invoke("barq:account-logout"),
+  // 1.4.3 — الحساب السحابي: يتبعك من أي مكان في العالم (مثل كروم)
+  // الرمز يُمرَّر لمرة واحدة إلى main — يُحفظ في cloud.json ولا يعود للواجهة
+  cloudState: () => ipcRenderer.invoke("barq:cloud-state"),
+  cloudLogin: (token) => ipcRenderer.invoke("barq:cloud-login", { token: String(token || "") }),
+  cloudLogout: () => ipcRenderer.invoke("barq:cloud-logout"),
+  cloudSync: () => ipcRenderer.invoke("barq:cloud-sync"),
   // 1.2.4 — تبديل جهة اللوحة الجانبية
   panelSide: (s) => ipcRenderer.send("barq:panel-side", s),
   // 1.4.0 — تغيير عرض اللوحة بالسحب من حافتها
