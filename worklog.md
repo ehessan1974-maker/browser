@@ -1452,3 +1452,21 @@ Stage Summary:
 - الصيغة النهائية بالمطلوب حرفياً: بلا حساب يعمل برق طبيعياً 100% ومن أراد دخل بحسابه محلياً مشفّراً.
 - درس محفوظ: أخطاء 500 العابرة من GitHub أثناء بناء الويندوز تُعالج بrerun-failed-jobs لا بإعادة كتابة كود.
 - token7 استُعمل للدفع والتحقق — يستحق الإلغاء الآن.
+
+---
+Task ID: BARQ-FIX-142-ZIP
+Agent: orchestrator (Z.ai Code)
+Task: «barq142.zip غير موجود» — المستخدم لا يجد حزمة الترقية الدقيقة 1.4.2
+
+Work Log:
+- فحص الوضع: كود 1.4.2 (تسجيل دخول اختياري) مكتمل وممدوع origin/main (d2ad513 + ce52f57)، والحزم الثمانية الكاملة على release stable — لكن barq142.zip لم يكن قد نُسخ إلى public/downloads/ (نسيان من الجلسة السابقة عند الانقطاع).
+- نسخ download/barq-1.4.2/barq142.zip (36,924 بايت) إلى public/downloads/barq142.zip — تحقق SHA256 بعد النسخ: dce87f68befec8e3deed583934a9535accf1748eefaeb9a97a689793735f7683 (مطابق للأصل).
+- تحقق السكربت: بوابة SHA256 في Barq-Upgrade-1.4.2.ps1 تشير إلى نفس البصمة — السكربت والحزمة والكود كلها متسقة (النسخة النهائية بلوحة الحساب panel.html، بلا lock.html).
+- اختبار HTTP عبر dev server: /downloads/barq142.zip → 200 و /downloads/Barq-Upgrade-1.4.2.ps1 → 200.
+- جرد release stable عبر صفحة HTML العامة (API محدود بالمعدل): حزم 1.4.2 كاملة موجودة (Setup ia32/x64/أوني، Portable ia32، win7 ia32 exe+zip، AppImage، dmg).
+- محاولة الدفع: token7 رجع 401 (ملغى — سلوك أمان صحيح) → الكومِت المحلي 5de58eb بانتظار توكن جديد.
+
+Stage Summary:
+- barq142.zip متاح الآن للتنزيل الفوري من لوحة المعاينة على /downloads/barq142.zip.
+- GitHub release stable يحتوي كل حزم 1.4.2 الثمانية الكاملة — المستخدم يستطيع التثبيت الكامل من هناك.
+- المتبقي: دفع كومِت 5de58eb (ملف public/downloads/barq142.zip) عند وصول توكن جديد.
