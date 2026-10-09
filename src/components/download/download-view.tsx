@@ -57,10 +57,8 @@ const OS_LABELS: Record<DetectedOS, string> = {
 const noopSubscribe = (): (() => void) => () => {};
 const getServerOS = (): DetectedOS => "unknown";
 
-/* ---------- Real download & deep-link targets ---------- */
-
-// كل ملفات التثبيت الحقيقية منشورة على release المستقر (تبنيها CI)
-// وتربطها data المنصات عبر platform.url.
+// ترتيب الخانات — ويندوز أولاً لأنه الأكثر طلباً
+const GRID_ORDER: PlatformKey[] = ["windows", "android", "macos", "linux"];
 
 // barq:// deep link: opens the installed app directly. If it is not
 // installed, Chrome falls back to the encoded URL instead of erroring.
@@ -81,6 +79,46 @@ function Ltr({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* ---------- Button label (shared states) ---------- */
+
+function ButtonInner({
+  isDownloading,
+  isDone,
+  progress,
+  label,
+}: {
+  isDownloading: boolean;
+  isDone: boolean;
+  progress: number;
+  label: string;
+}) {
+  if (isDownloading) {
+    return (
+      <>
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+        جارٍ التنزيل{" "}
+        <span dir="ltr" className="font-display">
+          {Math.round(progress)}%
+        </span>
+      </>
+    );
+  }
+  if (isDone) {
+    return (
+      <>
+        <Check className="h-5 w-5" aria-hidden="true" />
+        انطلق التنزيل — افحص شريط المتصفح
+      </>
+    );
+  }
+  return (
+    <>
+      <DownloadIcon className="h-5 w-5" aria-hidden="true" />
+      {label}
+    </>
+  );
+}
+
 /* ---------- Main view ---------- */
 
 export function DownloadView() {
@@ -93,18 +131,12 @@ export function DownloadView() {
     getServerOS,
   );
 
-  const android = platforms[0];
-  const isAndroidDownloading = activeKey === "android";
-  const isAndroidDone = doneKey === "android";
-
-  // The platform recommended for this device
+  const isIOS = detected === "ios";
   const recommendedKey: PlatformKey | null =
     detected === "ios" || detected === "unknown" ? null : detected;
-  const recommended = recommendedKey
-    ? platforms.find((p) => p.key === recommendedKey) ?? null
-    : null;
-
-  const isIOS = detected === "ios";
+  const ordered = GRID_ORDER.map(
+    (k) => platforms.find((p) => p.key === k)!,
+  ).filter(Boolean);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -142,7 +174,7 @@ export function DownloadView() {
       </header>
 
       <main className="flex-1">
-        <section className="relative overflow-hidden py-12 md:py-16">
+        <section className="relative overflow-hidden py-10 md:py-14">
           {/* Background */}
           <div
             aria-hidden="true"
@@ -154,360 +186,264 @@ export function DownloadView() {
           />
 
           <div className="relative mx-auto w-full max-w-4xl px-4 sm:px-6">
-            {/* Hero */}
+            {/* Hero — مختصر، والخانات مباشرة تحته */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-400/25 bg-emerald-400/10 glow-emerald">
-                <PlatformLogo
-                  kind="android"
-                  className="h-10 w-10 text-emerald-300"
-                />
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-400/25 bg-emerald-400/10 glow-emerald">
+                <Zap className="h-8 w-8 text-emerald-300" aria-hidden="true" />
               </span>
-              <h1 className="mt-6 text-3xl font-extrabold leading-tight sm:text-4xl md:text-5xl">
-                حمّل برق لأندرويد
+              <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl">
+                حمّل برق — اختر نظامك
               </h1>
-              <p className="mx-auto mt-4 max-w-xl leading-8 text-muted-foreground">
-                متصفح خفيف يفتح الصفحات في{" "}
-                <Ltr>85ms</Ltr> ويحجب أكثر من{" "}
-                <Ltr>3,500</Ltr> متعقّب — أقل من{" "}
-                <Ltr>8MB</Ltr> ويعمل حتى على الأجهزة القديمة.
+              <p className="mx-auto mt-3 max-w-xl leading-8 text-muted-foreground">
+                متصفح خفيف يحجب المتعقّبات — نسخ لـويندوز وأندرويد وماك ولينكس،
+                والتنزيل يبدأ فوراً بضغطة واحدة.
               </p>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                 <span
                   dir="ltr"
                   className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-display text-xs text-muted-foreground"
                 >
                   v{BARQ_VERSION}-beta
                 </span>
-                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
-                  <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
-                  متوافق مع أندرويد <Ltr>4.0</Ltr> فما فوق
-                </span>
                 <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-muted-foreground">
                   مجاني · مفتوح المصدر
                 </span>
               </div>
+              {detected !== "unknown" && !isIOS && (
+                <p className="mx-auto mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <ShieldCheck
+                    className="h-4 w-4 shrink-0 text-emerald-400"
+                    aria-hidden="true"
+                  />
+                  جهازك يعمل بنظام{" "}
+                  <strong className="text-foreground">
+                    {OS_LABELS[detected]}
+                  </strong>{" "}
+                  — خانته موسومة بـ«لجهازك»
+                </p>
+              )}
+              {isIOS && (
+                <p className="mx-auto mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Info
+                    className="h-4 w-4 shrink-0 text-amber-400"
+                    aria-hidden="true"
+                  />
+                  جهازك <strong className="text-foreground">iOS</strong> — برق
+                  لأندرويد وسطح المكتب، ونسخة iOS قريباً. حمّل الـAPK وأرسله
+                  لجهاز أندرويد:
+                </p>
+              )}
             </motion.div>
 
-            {/* Primary download card */}
+            {/* خانات التنزيل — أعلى الصفحة مباشرة */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.1 }}
-              className="relative mt-10 overflow-hidden rounded-3xl border border-emerald-400/25 bg-gradient-to-bl from-emerald-500/15 via-emerald-500/5 to-transparent p-6 md:p-8"
+              className="mt-8 grid gap-4 sm:grid-cols-2"
             >
-              <div className="relative">
-                {/* Detected OS hint */}
-                {detected !== "unknown" && (
-                  <p className="mb-4 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-                    {isIOS ? (
-                      <>
-                        <Info
-                          className="h-4 w-4 shrink-0 text-amber-400"
-                          aria-hidden="true"
-                        />
-                        جهازك يعمل بنظام{" "}
-                        <strong className="text-foreground">iOS</strong> — برق
-                        متوفر حاليًا لأندرويد وسطح المكتب، ونسخة iOS قريبًا.
-                        حمّل الـ APK وأرسله لجهاز أندرويد:
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck
-                          className="h-4 w-4 shrink-0 text-emerald-400"
-                          aria-hidden="true"
-                        />
-                        جهازك يعمل بنظام{" "}
-                        <strong className="text-foreground">
-                          {OS_LABELS[detected]}
-                        </strong>{" "}
-                        — النسخة المناسبة جاهزة:
-                      </>
+              {ordered.map((platform) => {
+                const isDownloading = activeKey === platform.key;
+                const isDone = doneKey === platform.key;
+                const isRecommended = recommendedKey === platform.key;
+                const secKey = `${platform.key}-x32`;
+                const secDownloading = activeKey === secKey;
+                const secDone = doneKey === secKey;
+                return (
+                  <article
+                    key={platform.key}
+                    className={`relative flex flex-col overflow-hidden rounded-2xl border bg-zinc-900/60 p-5 transition ${
+                      isRecommended
+                        ? "border-emerald-400/40 shadow-[0_0_24px_rgb(16_185_129/0.15)]"
+                        : "border-white/10 hover:border-emerald-400/30"
+                    }`}
+                  >
+                    {isRecommended && (
+                      <span className="absolute end-4 top-4 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">
+                        لجهازك
+                      </span>
                     )}
-                  </p>
-                )}
-
-                {/* File + action row */}
-                <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between">
-                  <div className="flex items-center gap-3 text-center sm:text-start">
-                    <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/10 sm:flex">
-                      <PlatformLogo
-                        kind="android"
-                        className="h-7 w-7 text-emerald-300"
-                      />
-                    </span>
-                    <div>
-                      <p
-                        dir="ltr"
-                        className="font-mono text-sm text-muted-foreground"
-                      >
-                        {android.file}
-                      </p>
-                      <p className="mt-0.5 text-sm">
-                        <span
-                          dir="ltr"
-                          className="font-display font-bold text-emerald-300"
-                        >
-                          {android.size}
-                        </span>{" "}
-                        · حزمة <Ltr>APK</Ltr> مباشرة بلا متجر
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    asChild
-                    disabled={isBusy || isAndroidDone}
-                    aria-label={`تنزيل برق لأندرويد — الملف ${android.file} بحجم ${android.size}`}
-                    className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-400 px-8 text-base font-extrabold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60 sm:w-auto"
-                  >
-                    <a
-                      href={android.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => {
-                        if (!isBusy && !isAndroidDone) start(android);
-                      }}
-                    >
-                      {isAndroidDownloading ? (
-                        <>
-                          <Loader2
-                            className="h-5 w-5 animate-spin"
-                            aria-hidden="true"
-                          />
-                          جارٍ التنزيل{" "}
-                          <span dir="ltr" className="font-display">
-                            {Math.round(progress)}%
-                          </span>
-                        </>
-                      ) : isAndroidDone ? (
-                        <>
-                          <Check className="h-5 w-5" aria-hidden="true" />
-                          اكتمل التنزيل — افتح الملف لتثبيته
-                        </>
-                      ) : (
-                        <>
-                          <DownloadIcon
-                            className="h-5 w-5"
-                            aria-hidden="true"
-                          />
-                          تنزيل لأندرويد
-                        </>
-                      )}
-                    </a>
-                  </Button>
-                </div>
-
-                {/* Deep link — users with برق installed open it directly, no browser */}
-                {detected === "android" && (
-                  <p className="mt-4 text-center">
-                    <a
-                      href={BARQ_INTENT_URL}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 underline-offset-4 transition hover:text-emerald-200 hover:underline"
-                    >
-                      <Smartphone
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                      عندك برق مثبّت؟ افتحه الآن مباشرة
-                    </a>
-                  </p>
-                )}
-
-                {/* Progress bar */}
-                {isAndroidDownloading && (
-                  <div
-                    className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10"
-                    role="progressbar"
-                    aria-label="تقدم تنزيل برق لأندرويد"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(progress)}
-                  >
-                    <div
-                      className="h-full rounded-full bg-emerald-400 transition-[width] duration-100 ease-linear"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                )}
-
-                {/* Android install steps */}
-                <ol className="mt-6 grid gap-3 sm:grid-cols-3">
-                  {androidInstallSteps.map((step, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/20 p-4"
-                    >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 font-display text-sm font-bold text-emerald-300">
-                        {i + 1}
-                      </span>
-                      <span className="text-sm leading-7 text-muted-foreground">
-                        {step}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </motion.div>
-
-            {/* Other platforms */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.55 }}
-              className="mt-12"
-            >
-              <h2 className="text-center text-xl font-extrabold">
-                متوفر أيضًا على أنظمة أخرى
-              </h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {platforms.map((platform) => {
-                  const isDownloading = activeKey === platform.key;
-                  const isDone = doneKey === platform.key;
-                  const isRecommended = recommendedKey === platform.key;
-                  return (
-                    <article
-                      key={platform.key}
-                      className={`relative flex flex-col overflow-hidden rounded-2xl border bg-zinc-900/60 p-5 transition ${
-                        isRecommended
-                          ? "border-emerald-400/40 shadow-[0_0_24px_rgb(16_185_129/0.15)]"
-                          : "border-white/10 hover:border-emerald-400/30"
-                      }`}
-                    >
-                      {isRecommended && (
-                        <span className="absolute end-4 top-4 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">
-                          لجهازك
-                        </span>
-                      )}
-                      <span className="w-fit rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-2.5">
                         <PlatformLogo
                           kind={platform.logo}
                           className="h-5 w-5 text-emerald-300"
                         />
                       </span>
-                      <h3
+                      <span
                         dir="ltr"
-                        className="mt-3 font-display text-lg font-extrabold"
+                        className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-0.5 font-display text-[10px] text-muted-foreground"
                       >
-                        {platform.osLatin}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {platform.req}
-                      </p>
-                      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/30 px-2.5 py-2">
-                        <span
-                          dir="ltr"
-                          className="truncate font-mono text-[10px] text-muted-foreground"
-                        >
-                          {platform.file}
-                        </span>
-                        <span
-                          dir="ltr"
-                          className="shrink-0 font-display text-xs font-bold text-emerald-300"
-                        >
-                          {platform.size}
-                        </span>
-                      </div>
-                      <Button
-                        asChild
-                        disabled={isBusy || isDone}
-                        aria-label={`تنزيل برق لنظام ${platform.os} — الملف ${platform.file}`}
-                        className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60"
+                        {platform.arch}
+                      </span>
+                    </div>
+                    <h2
+                      dir="ltr"
+                      className="mt-3 font-display text-lg font-extrabold"
+                    >
+                      {platform.osLatin}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {platform.req}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/30 px-2.5 py-2">
+                      <span
+                        dir="ltr"
+                        className="truncate font-mono text-[10px] text-muted-foreground"
                       >
-                        <a
-                          href={platform.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => {
-                            if (!isBusy && !isDone) start(platform);
-                          }}
-                        >
-                          {isDownloading ? (
-                          <>
-                            <Loader2
-                              className="h-4 w-4 animate-spin"
-                              aria-hidden="true"
-                            />
-                            <span dir="ltr" className="font-display">
-                              {Math.round(progress)}%
-                            </span>
-                          </>
-                        ) : isDone ? (
-                          <>
-                            <Check
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                            />
-                            اكتمل
-                          </>
-                        ) : (
-                          <>
-                            <DownloadIcon
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                            />
-                            تنزيل
-                          </>
-                        )}
-                        </a>
-                      </Button>
+                        {platform.file}
+                      </span>
+                      <span
+                        dir="ltr"
+                        className="shrink-0 font-display text-xs font-bold text-emerald-300"
+                      >
+                        {platform.size}
+                      </span>
+                    </div>
 
-                      {platform.alts?.map((alt) => (
+                    {/* الزر الرئيسي — تنزيل حقيقي */}
+                    <Button
+                      type="button"
+                      onClick={() => start(platform)}
+                      disabled={isBusy || isDone}
+                      aria-label={`تنزيل برق لنظام ${platform.os} — الملف ${platform.file} بحجم ${platform.size}`}
+                      className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-60"
+                    >
+                      <ButtonInner
+                        isDownloading={isDownloading}
+                        isDone={isDone}
+                        progress={progress}
+                        label={
+                          platform.key === "android"
+                            ? "تنزيل APK"
+                            : `تنزيل ${platform.arch.startsWith("x64") ? "64-bit" : ""}`.trim()
+                        }
+                      />
+                    </Button>
+
+                    {/* زر 32-bit الحقيقي لويندوز */}
+                    {platform.secondary && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          start({
+                            key: secKey,
+                            file: platform.secondary!.file,
+                            size: platform.secondary!.size,
+                            url: platform.secondary!.url,
+                          })
+                        }
+                        disabled={isBusy || secDone}
+                        aria-label={`تنزيل برق 32-bit — الملف ${platform.secondary.file} بحجم ${platform.secondary.size}`}
+                        className="mt-2 flex h-10 items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-transparent font-bold text-emerald-300 hover:bg-emerald-400/10 disabled:opacity-60"
+                      >
+                        <ButtonInner
+                          isDownloading={secDownloading}
+                          isDone={secDone}
+                          progress={progress}
+                          label={platform.secondary.label}
+                        />
+                      </Button>
+                    )}
+
+                    {/* نسخ ويندوز 7 — روابط صغيرة */}
+                    {platform.alts?.map((alt) => (
+                      <a
+                        key={alt.file}
+                        href={alt.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition hover:text-emerald-300"
+                        title={alt.file}
+                      >
+                        <DownloadIcon
+                          className="h-3 w-3 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {alt.label}
+                        <span dir="ltr" className="font-display">
+                          ({alt.size})
+                        </span>
+                      </a>
+                    ))}
+
+                    {/* تنبيه حظر كروم — داخل خانة ويندوز فقط */}
+                    {platform.key === "windows" && (
+                      <p className="mt-3 rounded-md border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+                        إن حَظَر كروم التنزيل وظهر تحذير «اتصال غير آمن»:
+                        اضغط <kbd className="font-display">Ctrl</kbd>+
+                        <kbd className="font-display">J</kbd> لفتح التنزيلات
+                        ثم زر <span className="text-amber-300">«الاحتفاظ»</span>{" "}
+                        وأكّد بـ«الاحتفاظ على أي حال» — التحذير احترازي فقط
+                        لأن الملف بلا توقيع رقمي، والرابط مشفّر بالكامل.
+                      </p>
+                    )}
+
+                    {/* فتح برق مباشرة على أندرويد */}
+                    {platform.key === "android" && detected === "android" && (
+                      <p className="mt-3 text-center">
                         <a
-                          key={alt.file}
-                          href={alt.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition hover:text-emerald-300"
-                          title={alt.file}
+                          href={BARQ_INTENT_URL}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 underline-offset-4 transition hover:text-emerald-200 hover:underline"
                         >
-                          <DownloadIcon
-                            className="h-3 w-3 shrink-0"
+                          <Smartphone
+                            className="h-4 w-4"
                             aria-hidden="true"
                           />
-                          {alt.label}
-                          <span dir="ltr" className="font-display">
-                            ({alt.size})
-                          </span>
+                          عندك برق مثبّت؟ افتحه الآن مباشرة
                         </a>
-                      ))}
+                      </p>
+                    )}
 
-                      {platform.key === "windows" && (
-                        <p className="mt-3 rounded-md border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
-                          إن حَظَر كروم التنزيل وظهر تحذير «اتصال غير آمن»:
-                          اضغط <kbd className="font-display">Ctrl</kbd>+
-                          <kbd className="font-display">J</kbd> لفتح التنزيلات
-                          ثم زر <span className="text-amber-300">«الاحتفاظ»</span>{" "}
-                          وأكّد بـ«الاحتفاظ على أي حال» — التحذير احترازي فقط
-                          لأن الملف بلا توقيع رقمي، والرابط مشفّر بالكامل.
-                        </p>
-                      )}
-
-                      {isDownloading && (
+                    {/* Progress bars */}
+                    {(isDownloading || secDownloading) && (
+                      <div
+                        className="absolute inset-x-0 bottom-0 h-1"
+                        role="progressbar"
+                        aria-label={`تقدم تنزيل ${platform.osLatin}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(progress)}
+                      >
                         <div
-                          className="absolute inset-x-0 bottom-0 h-1"
-                          role="progressbar"
-                          aria-label={`تقدم تنزيل ${platform.osLatin}`}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={Math.round(progress)}
-                        >
-                          <div
-                            className="h-full bg-emerald-400 transition-[width] duration-100 ease-linear"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
+                          className="h-full bg-emerald-400 transition-[width] duration-100 ease-linear"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </motion.div>
+
+            {/* خطوات تثبيت أندرويد */}
+            <motion.ol
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.55 }}
+              className="mt-8 grid gap-3 sm:grid-cols-3"
+            >
+              {androidInstallSteps.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/20 p-4"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 font-display text-sm font-bold text-emerald-300">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm leading-7 text-muted-foreground">
+                    {step}
+                  </span>
+                </li>
+              ))}
+            </motion.ol>
 
             {/* Trust strip */}
             <motion.div
@@ -515,7 +451,7 @@ export function DownloadView() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55 }}
-              className="mt-12 flex flex-wrap items-center justify-center gap-2"
+              className="mt-10 flex flex-wrap items-center justify-center gap-2"
             >
               {[
                 {

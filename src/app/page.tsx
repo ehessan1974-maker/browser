@@ -15,13 +15,13 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <Hero />
+        <Download />
         <MetricsStrip />
         <BrowserDemo />
         <Features />
         <Automation />
         <Comparison />
         <Privacy />
-        <Download />
       </main>
       <Footer />
     </div>

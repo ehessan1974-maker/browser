@@ -11,9 +11,11 @@ export type Platform = {
   size: string;
   req: string;
   arch: string;
-  /** Real installer URL on the stable GitHub release */
+  /** الرابط الحقيقي للملف — يُنزَّل فعلياً عند الضغط */
   url: string;
-  /** نسخ ثانوية (مثل 32-bit أو ويندوز 7) — روابط صغيرة تحت زر التنزيل */
+  /** زر ثانٍ حقيقي (مثل 32-bit لويندوز) يظهر تحت الزر الرئيسي */
+  secondary?: { label: string; file: string; size: string; url: string };
+  /** نسخ إضافية (ويندوز 7...) — روابط صغيرة تحت الأزرار */
   alts?: { label: string; file: string; size: string; url: string }[];
   featured?: boolean;
 };
@@ -47,13 +49,13 @@ export const platforms: Platform[] = [
     req: "Windows 10/11 — 64 بت",
     arch: "x64 · مثبّت",
     url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-x64.exe`,
+    secondary: {
+      label: "تنزيل نسخة 32-bit — للأجهزة القديمة (ويندوز 10/11)",
+      file: `Barq-Setup-${BARQ_VERSION}-ia32.exe`,
+      size: "‎~73MB",
+      url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
+    },
     alts: [
-      {
-        label: "نسخة 32-bit لويندوز 10/11 — الأنسب للأجهزة القديمة",
-        file: `Barq-Setup-${BARQ_VERSION}-ia32.exe`,
-        size: "‎~73MB",
-        url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
-      },
       {
         label: "نسخة محمولة بدون تثبيت — ويندوز 7 أو 10 (32 بت)",
         file: `Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,

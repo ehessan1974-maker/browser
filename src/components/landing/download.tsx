@@ -353,6 +353,71 @@ export default function Download() {
                   onStart={start}
                 />
 
+                {/* زر 32-bit الحقيقي — تنزيل فعلي من release */}
+                {platform.secondary && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      start({
+                        key: `${platform.key}-x32`,
+                        file: platform.secondary!.file,
+                        size: platform.secondary!.size,
+                        url: platform.secondary!.url,
+                      })
+                    }
+                    disabled={isBusy || doneKey === `${platform.key}-x32`}
+                    aria-label={`تنزيل برق 32-bit — الملف ${platform.secondary.file}`}
+                    className="mt-2 flex h-10 items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-transparent font-bold text-emerald-300 hover:bg-emerald-400/10 disabled:opacity-60"
+                  >
+                    {activeKey === `${platform.key}-x32` ? (
+                      <>
+                        <Loader2
+                          className="h-4 w-4 animate-spin"
+                          aria-hidden="true"
+                        />
+                        <span dir="ltr" className="font-display">
+                          {Math.round(progress)}%
+                        </span>
+                      </>
+                    ) : doneKey === `${platform.key}-x32` ? (
+                      <>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                        انطلق التنزيل
+                      </>
+                    ) : (
+                      <>
+                        <DownloadIcon
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                        {platform.secondary.label}
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {/* نسخ إضافية (ويندوز 7) — روابط حقيقية */}
+                {platform.alts?.map((alt) => (
+                  <a
+                    key={alt.file}
+                    href={alt.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground transition hover:text-emerald-300"
+                    title={alt.file}
+                  >
+                    <DownloadIcon
+                      className="h-3 w-3 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {alt.label}
+                    <span dir="ltr" className="font-display">
+                      ({alt.size})
+                    </span>
+                  </a>
+                ))}
+
                 {/* Download progress bar */}
                 {isDownloading && (
                   <div

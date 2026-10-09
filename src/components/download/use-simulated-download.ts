@@ -7,12 +7,14 @@ type DownloadTarget = {
   key: string;
   file: string;
   size: string;
+  /** الرابط الحقيقي للملف — يُنزَّل فعلياً عند الضغط */
+  url: string;
 };
 
 /**
- * Simulated download state machine shared by the landing section
- * and the /download page: idle → downloading (progress %) → done.
- * Completion toast fires automatically with the target file info.
+ * تنزيل حقيقي 100% — عند الضغط يُنشئ رابطاً مخفياً ويضغطه فيبدأ
+ * تنزيل الملف الفعلي من release المستقر عبر شريط تنزيل المتصفح.
+ * الحركة على الزر مجرد تغذية بصرية، والتنزيل نفسه حقيقي دائماً.
  */
 export function useSimulatedDownload() {
   const { toast } = useToast();
@@ -35,8 +37,8 @@ export function useSimulatedDownload() {
         const target = targetRef.current;
         if (target) {
           toast({
-            title: "اكتمل تنزيل الملف",
-            description: `${target.file} — تحقق من مجلد التنزيلات أو إشعارات النظام`,
+            title: "التنزيل يعمل الآن عبر المتصفح",
+            description: `${target.file} — إن لم يظهر في شريط التنزيل اضغط الزر مجدداً`,
           });
         }
         window.setTimeout(() => setDoneKey(null), 2600);
@@ -49,12 +51,27 @@ export function useSimulatedDownload() {
     (target: DownloadTarget): void => {
       if (activeKey || doneKey === target.key) return;
       targetRef.current = target;
+
+      /* التنزيل الحقيقي — رابط مخفي يضغط نفسه */
+      try {
+        const a = document.createElement("a");
+        a.href = target.url;
+        a.download = target.file;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch {
+        /* احتياط — افتح في تبويب جديد إن رفض المتصفح */
+        window.open(target.url, "_blank", "noopener,noreferrer");
+      }
+
       setDoneKey(null);
       setActiveKey(target.key);
       setProgress(0);
       toast({
-        title: "بدأ التنزيل",
-        description: `${target.file} (${target.size})`,
+        title: "بدأ تنزيل الملف الفعلي",
+        description: `${target.file} (${target.size}) — افحص شريط تنزيل المتصفح`,
       });
     },
     [activeKey, doneKey, toast],
