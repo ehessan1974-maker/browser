@@ -21,23 +21,23 @@ jobs:
             target: win
             artifact: Barq-Windows
             artifact_path: |
-            desktop/dist/*.exe
-            desktop/dist/*.yml
-            desktop/dist/*.blockmap
+              desktop/dist/*.exe
+              desktop/dist/*.yml
+              desktop/dist/*.blockmap
           - os: macos-latest
             target: mac
             artifact: Barq-macOS
             artifact_path: |
-            desktop/dist/Barq-*.dmg
-            desktop/dist/*.yml
-            desktop/dist/*.blockmap
+              desktop/dist/Barq-*.dmg
+              desktop/dist/*.yml
+              desktop/dist/*.blockmap
           - os: ubuntu-latest
             target: linux
             artifact: Barq-Linux
             artifact_path: |
-            desktop/dist/Barq-*.AppImage
-            desktop/dist/*.yml
-            desktop/dist/*.blockmap
+              desktop/dist/Barq-*.AppImage
+              desktop/dist/*.yml
+              desktop/dist/*.blockmap
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
