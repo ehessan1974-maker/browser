@@ -39,6 +39,24 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: "/browser"
           NEXT_PUBLIC_SITE_URL: "https://ehessan1974-maker.github.io/browser"
 
+      - name: Mirror release downloads into the site
+        # لماذا؟ نطاق release-assets.githubusercontent.com محجوب/متقطع على بعض
+        # الشبكات (سوريا وإيران وغيرها) بينما github.io يفتح — فننسخ أصول
+        # الإصدار المستقر داخل الموقع نفسه ليصبح التنزيل من نفس النطاق المفتوح.
+        run: |
+          V=$(sed -n 's/.*BARQ_VERSION = "\(.*\)";/\1/p' src/lib/download-data.ts)
+          echo "Barq version: $V"
+          mkdir -p out/downloads
+          BASE="https://github.com/ehessan1974-maker/browser/releases/download/stable"
+          FILES="barq-android.apk Barq-Setup-$V-x64.exe Barq-Setup-$V-ia32.exe Barq-Setup-win7-$V-ia32.exe Barq-Setup-win7-$V-ia32.zip Barq-$V.dmg Barq-$V.AppImage latest.yml latest-mac.yml latest-linux.yml"
+          for f in $FILES; do
+            echo "Mirroring $f ..."
+            curl -fL --retry 3 --connect-timeout 20 --max-time 300 \
+              -o "out/downloads/$f" "$BASE/$f" \
+              || echo "::warning::mirror failed for $f — site serves the rest"
+          done
+          ls -la out/downloads
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:

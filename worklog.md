@@ -1765,3 +1765,22 @@ Work Log:
 
 Stage Summary:
 - درس مسجل للدورات القادمة: تحديث البصمات يجب أن يصدر كومِتاً **منفصلاً بعد اكتمال سيرات البناء** ولا قبله — وإلا تتفكك البصمات المعروضة عن الأصول المستبدلة.
+
+---
+Task ID: BARQ-MIRROR-2
+Agent: orchestrator (Z.ai Code)
+Task: إعادة بناء مرآة التنزيلات بعد فقدان كومِتات محلية بسبب استعادة البيئة من snapshot قديم + الدفع والنشر
+
+Work Log:
+- حادثة بيئية مسجلة: بين الرسائل استُعيدت بيئة العمل من snapshot قديم جداً (عصر 1.4.2) — main المحلي رجع لـ8d3cddc وضاع كومِتا BARQ-146-FINAL (c7ee87b) وBARQ-MIRROR (814f0f7) وملفاتهما. السيرفر سليم 100% (origin/main = 85c3df3 — كل دورة 1.4.6 محفوظة).
+- درس دائم: قبل أي عمل قارن main مع origin/main — إن كان السيرفر أحدث فالمحلي قديم snapshot: reset --hard origin/main ثم أعد إنشاء العمل المحلي غير المدفوع.
+- نفذ: reset --hard origin/main (المحلي = 85c3df3) ثم أُعيدت تعديلات المرآة الخمسة حرفياً:
+  1) deploy-pages.yml: خطوة Mirror release downloads (7 أصول + 3 ملفات latest*.yml إلى out/downloads، إصدار مشتق آلياً، فشل ملف لا يُسقط النشر).
+  2) download-data.ts: MIRROR (${BASE_PATH}/downloads) — كل الروابط الأساسية للمرآة + GITHUB_FALLBACK alt لكل منصة.
+  3) version.json: apk → https://ehessan1974-maker.github.io/browser/downloads/barq-android.apk.
+  4) public/light.html: الأزرار الثلاثة للمرآة المطلقة + ملاحظات محدثة.
+  5) landing/download.tsx: نصوص «أقل من 8 ميغابايت» ×3 → ‎18KB فقط + شرح المحرك المدمج.
+- مؤجل للإصدار القادم (يتطلب إعادة بناء تطبيقات): نسختا light.html المجمّعتان (android assets + desktop chrome) + تحويل electron-updater feed إلى generic على مرآة الموقع كي يعمل التحديث التلقائي حيث أصول جيت هاب محجوبة.
+
+Stage Summary:
+- المرآة مستعادة كاملة على أساس 85c3df3 — كومِت جديد بانتظار الدفع بالتوكن الجديد ثم تحقق حي (HEAD ×10 + sha256 عينات + متصفح).

@@ -26,6 +26,14 @@ export const BARQ_VERSION = "1.4.6";
 const STABLE =
   "https://github.com/ehessan1974-maker/browser/releases/download/stable";
 
+/* المرآة داخل الموقع نفسه — سير Pages ينسخ أصول الإصدار إلى out/downloads
+   وقت النشر. ميزتها: نفس نطاق الموقع الذي يفتح حتى حيث يكون نطاق أصول
+   جيت هاب (release-assets.githubusercontent.com) محجوباً أو متقطعاً. */
+const MIRROR = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/downloads`;
+const GITHUB_FALLBACK = {
+  label: "لو تعطّل رابط الموقع — تنزيل من مستودع جيت هاب مباشرة",
+};
+
 export const platforms: Platform[] = [
   {
     key: "android",
@@ -36,7 +44,15 @@ export const platforms: Platform[] = [
     size: "‎18KB",
     req: "أندرويد 4.0 فما فوق",
     arch: "APK · كل المعالجات",
-    url: `${STABLE}/barq-android.apk`,
+    url: `${MIRROR}/barq-android.apk`,
+    alts: [
+      {
+        ...GITHUB_FALLBACK,
+        file: "barq-android.apk (من جيت هاب)",
+        size: "‎18KB",
+        url: `${STABLE}/barq-android.apk`,
+      },
+    ],
     featured: true,
   },
   {
@@ -48,25 +64,31 @@ export const platforms: Platform[] = [
     size: "‎‎~78MB",
     req: "Windows 10/11 — 64 بت",
     arch: "x64 · مثبّت",
-    url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-x64.exe`,
+    url: `${MIRROR}/Barq-Setup-${BARQ_VERSION}-x64.exe`,
     secondary: {
       label: "تنزيل نسخة 32-bit — للأجهزة القديمة (ويندوز 10/11)",
       file: `Barq-Setup-${BARQ_VERSION}-ia32.exe`,
       size: "‎~73MB",
-      url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
+      url: `${MIRROR}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
     },
     alts: [
       {
         label: "نسخة محمولة بدون تثبيت — ويندوز 7 أو 10 (32 بت)",
         file: `Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,
         size: "‎~85MB",
-        url: `${STABLE}/Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,
+        url: `${MIRROR}/Barq-Setup-win7-${BARQ_VERSION}-ia32.zip`,
       },
       {
         label: "مثبّت ويندوز 7 — 32 بت",
         file: `Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
         size: "‎~62MB",
-        url: `${STABLE}/Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
+        url: `${MIRROR}/Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
+      },
+      {
+        ...GITHUB_FALLBACK,
+        file: `Barq-Setup-${BARQ_VERSION}-ia32.exe (من جيت هاب)`,
+        size: "‎~73MB",
+        url: `${STABLE}/Barq-Setup-${BARQ_VERSION}-ia32.exe`,
       },
     ],
   },
@@ -79,7 +101,15 @@ export const platforms: Platform[] = [
     size: "‎‎~94MB",
     req: "macOS 12 أو أحدث",
     arch: "Apple Silicon · صورة تثبيت",
-    url: `${STABLE}/Barq-${BARQ_VERSION}.dmg`,
+    url: `${MIRROR}/Barq-${BARQ_VERSION}.dmg`,
+    alts: [
+      {
+        ...GITHUB_FALLBACK,
+        file: `Barq-${BARQ_VERSION}.dmg (من جيت هاب)`,
+        size: "‎‎~94MB",
+        url: `${STABLE}/Barq-${BARQ_VERSION}.dmg`,
+      },
+    ],
   },
   {
     key: "linux",
@@ -90,7 +120,15 @@ export const platforms: Platform[] = [
     size: "‎‎~104MB",
     req: "Ubuntu 20.04+ أو ما يعادلها",
     arch: "x64 · AppImage",
-    url: `${STABLE}/Barq-${BARQ_VERSION}.AppImage`,
+    url: `${MIRROR}/Barq-${BARQ_VERSION}.AppImage`,
+    alts: [
+      {
+        ...GITHUB_FALLBACK,
+        file: `Barq-${BARQ_VERSION}.AppImage (من جيت هاب)`,
+        size: "‎‎~104MB",
+        url: `${STABLE}/Barq-${BARQ_VERSION}.AppImage`,
+      },
+    ],
   },
 ];
 
