@@ -2,6 +2,9 @@ package com.ehessan1974.barq;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +13,11 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
 
 /**
  * برق — متصفح مستقل لأندرويد (4.0+).
@@ -24,6 +32,11 @@ import android.webkit.WebViewClient;
  *
  * ويستقبل روابط barq:// و App Links فيفتح التطبيق نفسه
  * بدون المرور بأي متصفح آخر.
+ *
+ * 1.4.6 — إشعار التحديث من داخل البرنامج: عند كل فتح يجلب التطبيق بصمت
+ * ملف version.json الصغير (~100 بايت) من موقع برق، فإن وجد إصداراً
+ * أحدث أظهر رسالة عربية بزر «تحديث الآن» يفتح رابط APK الأحدث.
+ * صمت تام عند أي خطأ أو انقطاع إنترنت — لا إزعاج أبداً.
  */
 public class MainActivity extends Activity {
 
@@ -32,6 +45,9 @@ public class MainActivity extends Activity {
     /** النسخة الكاملة من الواجهة — رابط اختياري من داخل الصفحة المحلية */
     private static final String FULL_SITE =
             "https://ehessan1974-maker.github.io/browser/";
+    /** ملف الإصدار الأحدث — يستضيفه موقع برق، يُحدّث مع كل إصدار */
+    private static final String VERSION_URL =
+            "https://ehessan1974-maker.github.io/browser/version.json";
 
     private WebView web;
     private String loadedUrl = "";
@@ -55,6 +71,95 @@ public class MainActivity extends Activity {
         setContentView(web);
 
         web.loadUrl(resolveTarget(getIntent() != null ? getIntent().getData() : null));
+
+        startUpdateCheck();
+    }
+
+    /* -------- 1.4.6 — إشعار التحديث من داخل البرنامج -------- */
+
+    /** يبدأ فحص الإصدار في خيط خلفية — لا يمسّ إطلاق الصفحة المحلية إطلاقاً */
+    private void startUpdateCheck() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String[] upd = fetchUpdateInfo(); // [الإصدار, رابط APK] أو null
+                if (upd == null) return; // بلا إنترنت أو أي خطأ — صمت تام
+                if (compareVersions(upd[0], BuildConfig.VERSION_NAME) > 0) {
+                    showUpdateDialog(upd[0], upd[1]);
+                }
+            }
+        }, "barq-update-check").start();
+    }
+
+    /** يجلب version.json ويعيد [الإصدار, رابط APK] — أو null عند أي فشل */
+    private String[] fetchUpdateInfo() {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(VERSION_URL).openConnection();
+            c.setConnectTimeout(6000);
+            c.setReadTimeout(6000);
+            c.setRequestProperty("Cache-Control", "no-cache");
+            if (c.getResponseCode() != 200) return null;
+            BufferedReader r = new BufferedReader(
+                    new InputStreamReader(c.getInputStream(), "UTF-8"));
+            StringBuilder b = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) b.append(line);
+            r.close();
+            JSONObject o = new JSONObject(b.toString());
+            String v = o.optString("version", "");
+            String apk = o.optString("apk", "");
+            if (v.length() == 0) return null;
+            return new String[]{v, apk};
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (c != null) try { c.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
+    /** مقارنة إصدارات "1.4.6" نمطياً: >0 إذا a أحدث من b */
+    private static int compareVersions(String a, String b) {
+        String[] pa = a.split("\\.");
+        String[] pb = b.split("\\.");
+        int n = Math.max(pa.length, pb.length);
+        for (int i = 0; i < n; i++) {
+            int x = i < pa.length ? parseIntSafe(pa[i]) : 0;
+            int y = i < pb.length ? parseIntSafe(pb[i]) : 0;
+            if (x != y) return x - y;
+        }
+        return 0;
+    }
+
+    private static int parseIntSafe(String s) {
+        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return 0; }
+    }
+
+    /** رسالة التحديث — من داخل البرنامج نفسه */
+    private void showUpdateDialog(final String version, final String apkUrl) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (isFinishing()) return;
+                if (Build.VERSION.SDK_INT >= 17 && isDestroyed()) return;
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("⚡ تحديث جديد لبرق")
+                        .setMessage("يتوفر تحديث جديد لبرق — الإصدار " + version
+                                + "\nحجم التنزيل صغير جداً وسيبدأ عبر متصفح الهاتف مباشرة.")
+                        .setPositiveButton("تحديث الآن",
+                                new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                try {
+                                    startActivity(new Intent(
+                                            Intent.ACTION_VIEW, Uri.parse(apkUrl)));
+                                } catch (Exception ignored) {}
+                            }
+                        })
+                        .setNegativeButton("لاحقاً", null)
+                        .show();
+            }
+        });
     }
 
     private String resolveTarget(Uri data) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   ShieldBan,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,43 @@ const BARQ_INTENT_URL =
 // Raw <a> tags ignore Next's basePath — prefix manually for GitHub Pages.
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const homeHref = `${BASE_PATH}/`;
+const RELEASE_URL = "https://github.com/ehessan1974-maker/browser/releases/tag/stable";
+
+/* ---------- 1.4.6 — الشريط الحي: أحدث إصدار على جيت هاب ---------- */
+
+// مقارنة إصدارات نمطية: هل a أحدث من b؟
+function isNewerVersion(a: string, b: string): boolean {
+  const pa = a.split(".").map((x) => parseInt(x, 10) || 0);
+  const pb = b.split(".").map((x) => parseInt(x, 10) || 0);
+  const n = Math.max(pa.length, pb.length);
+  for (let i = 0; i < n; i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d > 0;
+  }
+  return false;
+}
+
+/** يجلب version.json (نشره سير الأندرويد مع كل إصدار) — إن ظهر إصدار أحدث
+ * من بيانات الصفحة، يُعرض شريط أخضر فوراً بروابط الإصدار الجديد.
+ * هكذا تصل النسخ الجديدة إلى «مجلد التنزيل» فور اكتمالها دون انتظار. */
+function useRemoteRelease() {
+  const [version, setVersion] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${BASE_PATH}/version.json`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { version?: unknown } | null) => {
+        if (alive && d && typeof d.version === "string") {
+          setVersion(d.version);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return version && isNewerVersion(version, BARQ_VERSION) ? version : null;
+}
 
 /* ---------- Small helpers ---------- */
 
@@ -138,6 +176,8 @@ export function DownloadView() {
   const ordered = GRID_ORDER.map(
     (k) => platforms.find((p) => p.key === k)!,
   ).filter(Boolean);
+  // 1.4.6 — إصدار أحدث على جيت هاب من الموجود في بيانات الصفحة؟
+  const newerRelease = useRemoteRelease();
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -240,6 +280,29 @@ export function DownloadView() {
                 </p>
               )}
             </motion.div>
+
+            {/* 1.4.6 — شريط الإصدار الأحدث: يظهر فور توفر نسخة أحدث على جيت هاب */}
+            {newerRelease && (
+              <motion.a
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                href={RELEASE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mx-auto mt-5 flex w-fit max-w-full items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:border-emerald-400/50 hover:bg-emerald-400/15"
+              >
+                <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  صدر إصدار أحدث: برق{" "}
+                  <span dir="ltr" className="font-display">
+                    {newerRelease}
+                  </span>{" "}
+                  — ملفاته على صفحة الإصدارات في جيت هاب الآن
+                </span>
+                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+              </motion.a>
+            )}
 
             {/* خانات التنزيل — أعلى الصفحة مباشرة */}
             <motion.div

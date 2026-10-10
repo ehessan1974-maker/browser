@@ -33,6 +33,9 @@
 //         ببرق يمُح مع السجل — «مسح الكل» يعطّل الزرين فوراً ويقفّل سجل كروم الداخلي،
 //         وحذف مدخل واحد يزيله من مسار الرجوع والتقدم (بالاتجاهين) حتى لو كانت
 //         الجلسة نفسها، مع استبدال إعادة التوجيه السريعة لنفس الموقع بدل تكديسها.
+// 1.4.6 — إشعار التحديث من داخل البرنامج كما طلبه المستخدم:
+//         رسالة فورية «يتوفر تحديث جديد» لحظة اكتشافه (وليس فقط عند اكتمال
+//         تنزيله)، والفحص كل 30 دقيقة بدل 4 ساعات حتى يصل الخبر للجميع أسرع.
 // 1.4.5 — خاصيات كروم في الشريط الفوقاني وقائمة 3 نقاط:
 //         تكبير/تصغير خط الصفحة (أزرار + Ctrl+= / Ctrl+- / Ctrl+0)،
 //         ترجمة الصفحة عبر غوغل (translate.goog)، خانة تنزيلات كاملة مثل كروم
@@ -1182,8 +1185,9 @@ if (!app.requestSingleInstanceLock()) {
   });
 
 /* ------------ التحديث التلقائي — من جيت هاب مباشرة (1.4.3) ------------ */
-// يفحص عند الإقلاع ثم كل 4 ساعات — ينزل التحديث في الخلفية ويسأل عن
-// إعادة التشغيل عند جهوزيته. لا شيء يُفرض على المستخدم أبداً.
+// 1.4.6 — رسالة فورية «يتوفر تحديث جديد» لحظة الاكتشاف + فحص كل 30 دقيقة.
+// ينزل التحديث في الخلفية ويُبلّغ المستخدم بلحظة الاكتشاف ولحظة الجهوزية.
+// لا شيء يُفرض على المستخدم أبداً.
 let autoUpdater = null;
 try { autoUpdater = require("electron-updater").autoUpdater; } catch {}
 
@@ -1192,6 +1196,26 @@ function setupAutoUpdater() {
   try {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    // 1.4.6 — رسالة فورية عند اكتشاف تحديث: مرة واحدة لكل إصدار، لا إزعاج بالتكرار
+    let notifiedAvailable = "";
+    autoUpdater.on("update-available", (info) => {
+      const v = info && info.version ? String(info.version) : "";
+      if (!v || v === notifiedAvailable) return;
+      notifiedAvailable = v;
+      if (!win || win.isDestroyed()) return;
+      dialog
+        .showMessageBox(win, {
+          type: "info",
+          title: "تحديث جديد لبرق",
+          message:
+            "يتوفر تحديث جديد لبرق" + (v ? " — الإصدار " + v : "") + ".",
+          detail: "جارٍ تنزيله الآن في الخلفية… سنخبرك فور جهوزيته للتثبيت.",
+          buttons: ["حسناً"],
+          defaultId: 0,
+          noLink: true,
+        })
+        .catch(() => {});
+    });
     autoUpdater.on("update-downloaded", (info) => {
       if (!win || win.isDestroyed()) return;
       dialog.showMessageBox(win, {
@@ -1210,7 +1234,8 @@ function setupAutoUpdater() {
     });
     autoUpdater.on("error", () => {}); // بلا إنترنت: صمت تام — لا إزعاج
     setTimeout(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 15000);
-    setInterval(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 4 * 60 * 60 * 1000);
+    // 1.4.6 — كل 30 دقيقة بدل 4 ساعات: التحديث الجديد يصل للجميع أسرع بكثير
+    setInterval(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 30 * 60 * 1000);
   } catch {}
 }
 

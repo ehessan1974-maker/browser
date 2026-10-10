@@ -8,8 +8,8 @@ android {
         applicationId "com.ehessan1974.barq"
         minSdk 14          // Android 4.0 — كما وعدنا
         targetSdk 33
-        versionCode 3
-        versionName "1.4.5"
+        versionCode 4
+        versionName "1.4.6"
     }
 
     signingConfigs {
