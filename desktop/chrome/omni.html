@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>برق • بحث شامل</title>
+<link rel="stylesheet" href="theme.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -54,6 +55,29 @@
   .item .s { color: #a9bdb5; font-size: 13px; margin-top: 4px; line-height: 1.7; }
   .empty { color: #6f877e; font-size: 13px; }
   .empty a { color: #34d399; }
+
+  /* 1.4.7 — الوضع النهاري المرح */
+  :root[data-theme="day"] body {
+    background: radial-gradient(1200px 600px at 50% -10%, #fff3cf 0%, #ffe9b8 55%, #ffdf9e 100%);
+    color: var(--text);
+  }
+  :root[data-theme="day"] h1 { color: var(--acc); }
+  :root[data-theme="day"] .sub, :root[data-theme="day"] .open-row, :root[data-theme="day"] .st { color: var(--muted); }
+  :root[data-theme="day"] .hint { color: var(--dim); }
+  :root[data-theme="day"] .hint b { color: var(--acc); }
+  :root[data-theme="day"] input { border-color: var(--line2); background: var(--field); color: var(--text); }
+  :root[data-theme="day"] input:focus { border-color: var(--accline); box-shadow: 0 0 0 3px var(--hover); }
+  :root[data-theme="day"] form button { border-color: var(--accline); background: var(--accbg); color: var(--acc); }
+  :root[data-theme="day"] form button:active { background: var(--accbg); }
+  :root[data-theme="day"] .open-row a { border-color: rgba(150,100,20,.28); background: rgba(255,255,255,.6); color: var(--soft); }
+  :root[data-theme="day"] .open-row a:hover { border-color: var(--accline); color: var(--acc); }
+  :root[data-theme="day"] section { background: rgba(255,255,255,.55); border-color: rgba(150,100,20,.22); }
+  :root[data-theme="day"] section h2 { color: var(--acc); }
+  :root[data-theme="day"] .item a { color: var(--text); }
+  :root[data-theme="day"] .item a:hover { color: var(--acc); }
+  :root[data-theme="day"] .item .u { color: var(--dim); }
+  :root[data-theme="day"] .item .s { color: var(--soft); }
+  :root[data-theme="day"] .empty a { color: var(--acc); }
 </style>
 </head>
 <body>
@@ -104,6 +128,15 @@
 
   <script>
     "use strict";
+    /* 1.4.7 — المظهر: نهاري مرح / ليلي — من main عبر الاستعلام والبث الحي */
+    function applyTheme(t) {
+      document.documentElement.setAttribute("data-theme", t === "day" ? "day" : "night");
+    }
+    applyTheme(new URLSearchParams(location.search).get("theme") || "night");
+    if (window.omni && window.omni.onTheme) {
+      try { window.omni.onTheme(function (d) { applyTheme(d && d.theme); }); } catch (e) {}
+    }
+
     var Q = (new URLSearchParams(location.search).get("q") || "").trim();
     var NAMES = {
       google: "جوجل", youtube: "يوتيوب", x: "إكس", maps: "خرائط جوجل",

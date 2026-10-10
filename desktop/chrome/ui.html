@@ -4,26 +4,27 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'" />
 <title>برق</title>
+<link rel="stylesheet" href="theme.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
   body {
     font-family: "Segoe UI", Tahoma, sans-serif;
-    background: #0c1210; color: #e7f0ec;
+    background: var(--bg); color: var(--text);
     position: relative; user-select: none;
   }
   .bar {
     display: flex; align-items: center; gap: 8px;
     height: 56px; padding: 0 10px;
-    border-bottom: 1px solid rgba(255,255,255,.08);
+    border-bottom: 1px solid var(--line);
   }
   button {
     flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04);
-    color: #a7bdb4; font-size: 15px; cursor: pointer; display: grid; place-items: center;
+    border: 1px solid var(--line); background: var(--accbg);
+    color: var(--muted); font-size: 15px; cursor: pointer; display: grid; place-items: center;
     transition: background .06s, color .06s, border-color .06s, transform .05s;
   }
-  button:hover:not(:disabled) { background: rgba(52,211,153,.14); color: #34d399; }
+  button:hover:not(:disabled) { background: var(--hover); color: var(--acc); }
   /* 1.2.4 — إحساس الضغط: كل زر ينخفض ويغمق لحظة الضغط الفعلية عليه */
   button:active:not(:disabled) {
     transform: translateY(1px) scale(.92);
@@ -35,187 +36,65 @@
   button:disabled { opacity: .35; cursor: default; }
   button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* النجمة وهي مضاءة */
-  button.star-on { color: #f5b83d; border-color: rgba(245,184,61,.5); background: rgba(245,184,61,.12); }
+  button.star-on { color: var(--amber); border-color: var(--amberline); background: var(--amberbg); }
   button.star-on svg { fill: currentColor; }
-  /* الزر صاحب اللوحة المفتوحة يبقى مضيئاً (نمط كروم) */
-  button.on { color: #34d399; border-color: rgba(52,211,153,.55); background: rgba(52,211,153,.14); }
-  select {
-    flex: 0 0 auto; height: 34px; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35);
-    color: #a7bdb4; font-size: 12.5px; padding: 0 6px; cursor: pointer; outline: none;
-    font-family: "Segoe UI", Tahoma, sans-serif;
-  }
-  select:hover { color: #34d399; border-color: rgba(52,211,153,.45); }
-  select option { background: #14201b; color: #e7f0ec; }
+  /* الزر صاحب القائمة العائمة المفتوحة يبقى مضيئاً (نمط كروم) */
+  button.on { color: var(--acc); border-color: var(--accline); background: var(--accbg); }
   form { flex: 1 1 auto; display: flex; align-items: center; }
   input {
     width: 100%; height: 36px; border-radius: 18px;
-    border: 1px solid rgba(255,255,255,.1); outline: none;
-    background: rgba(0,0,0,.35); color: #e7f0ec;
+    border: 1px solid var(--line2); outline: none;
+    background: var(--field); color: var(--text);
     padding: 0 16px; font-size: 13.5px; direction: ltr; text-align: left;
     font-family: Consolas, monospace;
   }
-  input:focus { border-color: rgba(52,211,153,.55); box-shadow: 0 0 0 2px rgba(52,211,153,.15); }
+  input:focus { border-color: var(--accline); box-shadow: 0 0 0 2px var(--hover); }
   .shield {
     flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
     height: 34px; padding: 0 12px; border-radius: 17px;
-    border: 1px solid rgba(52,211,153,.25); background: rgba(52,211,153,.08);
-    color: #34d399; font-size: 12.5px; font-weight: 700; cursor: default;
+    border: 1px solid var(--accline); background: var(--accbg);
+    color: var(--acc); font-size: 12.5px; font-weight: 700; cursor: pointer;
     direction: ltr;
   }
+  .shield:hover { filter: brightness(1.12); }
   .shield svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
-  .logo { flex: 0 0 auto; font-weight: 800; font-size: 15px; color: #34d399; padding: 0 2px; }
+  .logo { flex: 0 0 auto; font-weight: 800; font-size: 15px; color: var(--acc); padding: 0 2px; }
 
-  /* اللوحتان الجانبيتان بنمط كروم (1.2.2): على الحافة اليسرى كامل الارتفاع تحت الشريط،
-     والعرض الفعلي 360px يطابق PANEL_W في main.js — الصفحة تنضغط جانبياً لا تحت
-     1.2.3: خلفية أفتح وخط أبيض كبير — الوضوح على شاشات الأجهزة القديمة الضعيفة
-     1.2.4: جهة اللوحة قابلة للتبديل يسار/يمين بزر في رأس اللوحة والاختيار محفوظ */
-  /* 1.2.6: ستايلات اللوحة انتقلت إلى panel.html */
-
-  /* 1.4.4 — قائمة محركات البحث المنسدلة: خانة اختيار لكل محرك */
-  .edrop { flex: 0 0 auto; position: relative; }
+  /* 1.4.4 — زر قائمة محركات البحث (القائمة نفسها صارت عائمة في pop.html — 1.4.7) */
   #engineBtn {
     width: auto; min-width: 86px; height: 34px; padding: 0 10px; gap: 6px;
     display: flex; align-items: center; justify-content: center;
     font-size: 12.5px; font-weight: 700; font-family: inherit;
   }
   #engineBtn svg { width: 13px; height: 13px; }
-  .emenu {
-    position: absolute; top: 42px; right: 0; z-index: 60;
-    width: 236px; max-height: 380px; overflow-y: auto;
-    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 6px;
-  }
-  .eng-row {
-    display: flex; align-items: center; gap: 9px;
-    padding: 7px 9px; border-radius: 9px; cursor: pointer;
-    font-size: 13px; color: #cfe0d9;
-  }
-  .eng-row:hover { background: rgba(52,211,153,.1); }
-  .eng-row input { width: 15px; height: 15px; accent-color: #34d399; cursor: pointer; flex: 0 0 auto; }
-  .eng-row .eng-name { flex: 1; }
-  .eng-row.cur .eng-name { color: #34d399; font-weight: 700; }
-  .eng-row.cur .eng-badge::after {
-    content: "افتراضي"; font-size: 10px; color: #0c1210;
-    background: #34d399; border-radius: 999px; padding: 2px 8px;
-  }
-  .eng-row.shake { animation: shake .25s; }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(3px); }
-    75% { transform: translateX(-3px); }
+
+  /* 1.4.7 — الوضع النهاري المرح: تعديلات فوق الأساس الليلي */
+  :root[data-theme="day"] button:active:not(:disabled) {
+    background: var(--accbg);
+    border-color: var(--accline);
+    color: #fff;
+    box-shadow: inset 0 2px 5px rgba(120,80,10,.35);
   }
 
-  /* 1.4.4 — نافذة المتعقبات المحجوبة: الأسماء الحقيقية والأعداد */
-  .shield { cursor: pointer; }
-  .shield.on { color: #34d399; border-color: rgba(52,211,153,.55); background: rgba(52,211,153,.14); }
-  .tpop {
-    position: absolute; top: 42px; left: 10px; z-index: 60;
-    width: 310px; display: flex; flex-direction: column;
-    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 10px 12px;
-  }
-  .tpop-h { color: #34d399; font-weight: 800; font-size: 13px; margin-bottom: 4px; }
-  .tpop-sub { color: #93a8a0; font-size: 11.5px; margin-bottom: 8px; }
-  .tpop-list { overflow-y: auto; max-height: 224px; }
-  .trk-row {
-    display: flex; justify-content: space-between; gap: 8px;
-    padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,.05);
-    font-size: 12px; direction: ltr;
-  }
-  .trk-d { color: #e7f0ec; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .trk-n { color: #34d399; font-weight: 700; }
-  .trk-empty { color: #6f877e; font-size: 12px; padding: 8px 2px; }
-  .tpop-note {
-    color: #6f877e; font-size: 10.5px; margin-top: 8px;
-    border-top: 1px solid rgba(255,255,255,.06); padding-top: 6px;
-  }
-
-  /* 1.4.5 — خانة التنزيلات مثل كروم: قائمة منبثقة من الشريط */
-  .dpop {
-    position: absolute; top: 42px; left: 10px; z-index: 60;
-    width: 372px; display: flex; flex-direction: column;
-    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 10px 12px;
-  }
-  .dpop-h { color: #34d399; font-weight: 800; font-size: 13px; margin-bottom: 8px; }
-  .dlist { overflow-y: auto; max-height: 300px; }
-  .drow { border-bottom: 1px solid rgba(255,255,255,.05); padding: 7px 0; }
-  .drow:last-child { border-bottom: none; }
-  .drow-t {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  }
-  .drow-f {
-    color: #e7f0ec; font-size: 12.5px; font-weight: 700;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr;
-  }
-  .drow-s { color: #93a8a0; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
-  .dbar {
-    height: 4px; border-radius: 4px; background: rgba(255,255,255,.08);
-    margin-top: 6px; overflow: hidden;
-  }
-  .dbar > i {
-    display: block; height: 100%; background: #34d399; border-radius: 4px;
-    transition: width .2s linear;
-  }
-  .drow-a { display: flex; gap: 6px; margin-top: 7px; }
-  .drow-a button {
-    width: auto; height: 24px; padding: 0 10px; border-radius: 8px;
-    font-size: 11px; font-family: inherit;
-  }
-  .dempty { color: #6f877e; font-size: 12px; padding: 8px 2px; line-height: 1.9; }
-  .dfoot { border-top: 1px solid rgba(255,255,255,.06); margin-top: 8px; padding-top: 8px; text-align: left; }
-  .dfoot button {
-    width: auto; height: 26px; padding: 0 12px; border-radius: 8px; font-size: 11.5px;
-    font-family: inherit;
-  }
-  /* شارة التنزيل الجارية على زر الشريط */
+  /* 1.4.5 — شارة التنزيل الجارية على زر الشريط */
   #dlbtn { position: relative; }
   #dlbtn .dl-dot {
     position: absolute; top: 4px; left: 4px; width: 8px; height: 8px;
-    border-radius: 999px; background: #34d399;
+    border-radius: 999px; background: var(--acc);
     box-shadow: 0 0 6px rgba(52,211,153,.8); display: none;
   }
+  :root[data-theme="day"] #dlbtn .dl-dot { box-shadow: 0 0 6px rgba(234,138,0,.8); }
   #dlbtn.busy .dl-dot { display: block; }
-
-  /* 1.4.5 — قائمة 3 نقاط للإعدادات */
-  .menu3 {
-    position: absolute; top: 42px; left: 10px; z-index: 60;
-    width: 284px; display: flex; flex-direction: column;
-    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 6px;
-  }
-  .mrow {
-    display: flex; align-items: center; gap: 10px; width: 100%;
-    padding: 9px 10px; border-radius: 9px; cursor: pointer;
-    font-size: 13px; color: #cfe0d9; background: none; border: none;
-    text-align: right; font-family: inherit;
-  }
-  .mrow:hover:not(:disabled) { background: rgba(52,211,153,.1); color: #34d399; }
-  .mrow:disabled { opacity: .4; cursor: default; }
-  .mrow .mi { width: 17px; text-align: center; flex-shrink: 0; }
-  .mrow .mk {
-    margin-inline-start: auto; color: #6f877e; font-size: 10.5px;
-    direction: ltr; font-family: Consolas, monospace;
-  }
-  .mrow.zoom-label { cursor: default; }
-  .mrow.zoom-label:hover { background: none; color: #cfe0d9; }
-  .mrow.zoom-label .zoom-pct { color: #34d399; font-weight: 800; margin-inline-start: auto; font-size: 12px; direction: ltr; }
-  .msep { height: 1px; background: rgba(255,255,255,.07); margin: 5px 8px; }
-  .mfoot {
-    color: #6f877e; font-size: 10.5px; text-align: center;
-    padding: 7px 8px 3px; direction: ltr; font-family: Consolas, monospace;
-  }
-  </style>
+</style>
 </head>
 <body>
   <div class="bar">
     <span class="logo">⚡ برق</span>
 
-    <button id="back" title="رجوع" aria-label="رجوع">
+    <button id="back" title="رجوع — حوّم لقائمة الصفحات السابقة" aria-label="رجوع">
       <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
     </button>
-    <button id="fwd" title="تقدّم" aria-label="تقدّم">
+    <button id="fwd" title="تقدّم — حوّم لقائمة الصفحات التالية" aria-label="تقدّم">
       <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
     </button>
     <button id="reload" title="تحديث" aria-label="تحديث">
@@ -225,14 +104,13 @@
       <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
     </button>
 
-    <!-- 1.4.4 — قائمة محركات البحث: خانة اختيار لكل محرك (محفوظة — الافتراضي جوجل)
-         والنقر على الاسم نفسه يجعله المحرك الافتراضي -->
-    <div class="edrop" id="edrop">
+    <!-- 1.4.7 — قائمة المحركات صارت عائمة فوق الصفحة (pop.html): الافتراضي جوجل
+         أمامه ✓ وكلمة «افتراضي»، والصح لكل محرك = يشارك في البحث الشامل -->
+    <div id="edrop">
       <button id="engineBtn" title="محركات البحث — التفعيل والافتراضي" aria-label="قائمة محركات البحث">
         <span id="engineName">…</span>
         <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
       </button>
-      <div class="emenu" id="engineMenu" hidden></div>
     </div>
 
     <form id="go">
@@ -265,77 +143,25 @@
       <span id="count">0</span>
     </span>
 
-    <!-- 1.4.4 — نافذة المتعقبات المحجوبة: أسماء النطاقات وعدد الطلبات الملغاة من كل منها -->
-    <div class="tpop" id="shieldPop" hidden>
-      <div class="tpop-h">🛡 المتعقبات المحجوبة فعلياً</div>
-      <div class="tpop-sub" id="shieldSub"></div>
-      <div class="tpop-list" id="shieldList"></div>
-      <div class="tpop-note">كل طلب من هذه النطاقات أُلغي قبل الاتصال — حجب مؤكد على مستوى الشبكة</div>
-    </div>
+    <!-- 1.4.7 — زر إضافات كروم (الشكوى 4): يفتح القائمة العائمة للإضافات -->
+    <button id="extbtn" title="إضافات كروم — المثبتة وتحميل إضافة جديدة" aria-label="إضافات كروم">
+      <svg viewBox="0 0 24 24"><path d="M10 3a2 2 0 1 1 4 0v1h3a2 2 0 0 1 2 2v3h-1a2 2 0 1 0 0 4h1v3a2 2 0 0 1-2 2h-3v-1a2 2 0 1 0-4 0v1H7a2 2 0 0 1-2-2v-3H4a2 2 0 1 1 0-4h1V6a2 2 0 0 1 2-2h3z"/></svg>
+    </button>
 
-    <!-- 1.4.5 — خانة التنزيلات مثل كروم -->
+    <!-- 1.4.5 — خانة التنزيلات مثل كروم (القائمة العائمة في pop.html) -->
     <button id="dlbtn" title="التنزيلات" aria-label="التنزيلات">
       <svg viewBox="0 0 24 24"><path d="M12 3v11M6.5 9.5l5.5 5 5.5-5"/><path d="M4 20h16"/></svg>
       <span class="dl-dot"></span>
     </button>
-    <div class="dpop" id="dlPop" hidden>
-      <div class="dpop-h">⬇ التنزيلات</div>
-      <div class="dlist" id="dlList"></div>
-      <div class="dfoot">
-        <button id="dlClear" type="button">مسح المكتملة</button>
-      </div>
-    </div>
 
-    <!-- 1.4.5 — قائمة 3 نقاط للإعدادات -->
+    <!-- 1.4.7 — قائمة الإعدادات والمزيد صارت عائمة وتضم كل شيء (pop.html) -->
     <button id="menuBtn" title="الإعدادات والمزيد" aria-label="الإعدادات والمزيد">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>
     </button>
-    <div class="menu3" id="menuPop" hidden>
-      <button class="mrow zoom-label" id="zoomLabelRow" type="button" disabled>
-        <span class="mi">🔎</span>
-        حجم الصفحة
-        <span class="zoom-pct" id="zoomPct">100%</span>
-      </button>
-      <button class="mrow" id="zoomIn" type="button">
-        <span class="mi">➕</span>
-        تكبير الخط
-        <span class="mk">Ctrl + +</span>
-      </button>
-      <button class="mrow" id="zoomOut" type="button">
-        <span class="mi">➖</span>
-        تصغير الخط
-        <span class="mk">Ctrl + -</span>
-      </button>
-      <button class="mrow" id="zoomReset" type="button">
-        <span class="mi">↺</span>
-        الحجم الأصلي
-        <span class="mk">Ctrl + 0</span>
-      </button>
-      <div class="msep"></div>
-      <button class="mrow" id="translateRow" type="button">
-        <span class="mi">🌐</span>
-        ترجمة الصفحة عبر غوغل
-      </button>
-      <button class="mrow" id="dlRow" type="button">
-        <span class="mi">⬇</span>
-        التنزيلات
-      </button>
-      <div class="msep"></div>
-      <button class="mrow" id="lightRow" type="button">
-        <span class="mi">⚡</span>
-        نسخة برق الخفيفة (HTML)
-      </button>
-      <button class="mrow" id="cacheRow" type="button">
-        <span class="mi">🧹</span>
-        مسح الكاش المؤقت
-      </button>
-      <div class="mfoot" id="aboutRow">برق</div>
-    </div>
   </div>
 
-  <!-- 1.2.6: اللوحتان انتقلتا إلى panel.html — BrowserView مستقل يرسم فوق الصفحة
-       (زر الساعة/المفضلة هنا يرسل طلب الفتح فقط، والإضاءة تأتي من main) -->
-
+  <!-- 1.4.7 — كل القوائم المنبثقة صارت BrowserView عائم مستقل (pop.html) يرسم فوق
+       الصفحة بلا أي إزاحة لها: تُفتح بالطلب فقط وتُغلق بالنقر خارجها أو Escape أو التنقل -->
   <script src="ui.js"></script>
 </body>
 </html>

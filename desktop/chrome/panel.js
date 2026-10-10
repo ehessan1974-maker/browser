@@ -418,3 +418,21 @@ document.addEventListener("mouseup", function () {
 
 applySide();
 setStatus("…");
+
+/* ---------- 1.4.7 — المظهر: اللوحة تتبع موضوع برق (نهاري مرح / ليلي) ---------- */
+
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t === "day" ? "day" : "night");
+}
+
+try {
+  window.barq.themeGet().then(function (d) {
+    applyTheme(d && d.theme);
+  }).catch(function () {});
+} catch (e) {}
+
+try {
+  window.barq.onTheme(function (d) {
+    applyTheme(d && d.theme);
+  });
+} catch (e) {}

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>برق • البداية</title>
+<link rel="stylesheet" href="theme.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -73,6 +74,31 @@
     .tiles { grid-template-columns: repeat(4, 74px); }
     .chips button { padding: 6px 12px; font-size: 12px; }
   }
+
+  /* 1.4.7 — الوضع النهاري المرح: شمس دافئة على كريمي فرح */
+  :root[data-theme="day"] body {
+    background: radial-gradient(1200px 600px at 50% -10%, #fff3cf 0%, #ffe9b8 55%, #ffdf9e 100%);
+    color: var(--text);
+  }
+  :root[data-theme="day"] .mark {
+    border-color: rgba(234,138,0,.4);
+    background: rgba(245,158,11,.16);
+    box-shadow: 0 0 60px rgba(245,158,11,.3);
+  }
+  :root[data-theme="day"] h1 { color: var(--text); }
+  :root[data-theme="day"] h1 span { color: var(--acc); }
+  :root[data-theme="day"] .tag, :root[data-theme="day"] .engines .lbl, :root[data-theme="day"] .note { color: var(--muted); }
+  :root[data-theme="day"] .note b { color: var(--acc); }
+  :root[data-theme="day"] input { border-color: var(--line2); background: var(--field); color: var(--text); }
+  :root[data-theme="day"] input:focus { border-color: var(--accline); box-shadow: 0 0 0 3px var(--hover); }
+  :root[data-theme="day"] .chips button { border-color: rgba(150,100,20,.28); background: rgba(255,255,255,.6); color: var(--soft); }
+  :root[data-theme="day"] .chips button:hover { border-color: var(--accline); color: var(--acc); }
+  :root[data-theme="day"] .chips button:active { background: var(--accbg); border-color: var(--accline); color: #fff; box-shadow: inset 0 2px 5px rgba(120,80,10,.3); }
+  :root[data-theme="day"] .chips button.on { background: var(--accbg); border-color: var(--accline); color: var(--acc); font-weight: 700; }
+  :root[data-theme="day"] a.tile { border-color: rgba(150,100,20,.22); background: rgba(255,255,255,.55); color: var(--soft); }
+  :root[data-theme="day"] a.tile:hover { border-color: var(--accline); background: rgba(245,158,11,.12); }
+  :root[data-theme="day"] a.tile:active { background: var(--accbg); border-color: var(--accline); }
+  :root[data-theme="day"] .tile i { background: rgba(245,158,11,.16); }
 </style>
 </head>
 <body>
@@ -115,7 +141,16 @@
       { id: "x",          name: "إكس (تويتر)" },
       { id: "maps",       name: "خرائط جوجل" }
     ];
-    var ENGINE = new URLSearchParams(location.search).get("engine") || "duckduckgo";
+    var ENGINE = new URLSearchParams(location.search).get("engine") || "google"; // 1.4.7 — الافتراضي جوجل
+
+    /* 1.4.7 — المظهر: نهاري مرح / ليلي — من main عبر الاستعلام والبث الحي */
+    function applyTheme(t) {
+      document.documentElement.setAttribute("data-theme", t === "day" ? "day" : "night");
+    }
+    applyTheme(new URLSearchParams(location.search).get("theme") || "night");
+    if (window.omni && window.omni.onTheme) {
+      try { window.omni.onTheme(function (d) { applyTheme(d && d.theme); }); } catch (e) {}
+    }
 
     var chips = document.getElementById("chips");
     for (var i = 0; i < ENGINES.length; i++) {

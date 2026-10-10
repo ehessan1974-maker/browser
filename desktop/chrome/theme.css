@@ -1,0 +1,57 @@
+/* برق 1.4.7 — متغيرات المظهر الموحدة لكل واجهة برق (الشكوى 6: وضع نهاري بألوان مرح + وضع ليلي)
+   الليلي هو الأساس كما كان برق دائماً، والنهاري مرح: كريمي دافئ + عنبري شمسي + مرجاني.
+   كل ملف يضع data-theme على <html> ويلتزم المتغيرات — والتبديل من قائمة الإعدادات. */
+
+:root,
+:root[data-theme="night"] {
+  --bg: #0c1210;
+  --bg2: #14201b;
+  --panel: #18251f;
+  --card: #14201b;
+  --text: #e7f0ec;
+  --soft: #cfe0d9;
+  --muted: #93a8a0;
+  --dim: #6f877e;
+  --line: rgba(255, 255, 255, 0.08);
+  --line2: rgba(255, 255, 255, 0.12);
+  --field: rgba(0, 0, 0, 0.35);
+  --hover: rgba(52, 211, 153, 0.1);
+  --acc: #34d399;
+  --acc-strong: #3ee0a2;
+  --accbg: rgba(52, 211, 153, 0.14);
+  --accline: rgba(52, 211, 153, 0.35);
+  --amber: #f5b83d;
+  --amberbg: rgba(245, 184, 61, 0.12);
+  --amberline: rgba(245, 184, 61, 0.5);
+  --danger: #f87171;
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  --winbg: #0c1210;
+  --pop-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* الوضع النهاري المرح — ألوان فرحة: شمس عنبرية على كريمي دافئ */
+:root[data-theme="day"] {
+  --bg: #fff6e0;
+  --bg2: #fffdf4;
+  --panel: #fff1d0;
+  --card: #fffdf4;
+  --text: #4a3418;
+  --soft: #6b4e23;
+  --muted: #8a6b3f;
+  --dim: #a98c5f;
+  --line: rgba(150, 100, 20, 0.2);
+  --line2: rgba(150, 100, 20, 0.32);
+  --field: #ffffff;
+  --hover: rgba(245, 158, 11, 0.14);
+  --acc: #ea8a00;
+  --acc-strong: #d97c00;
+  --accbg: rgba(245, 158, 11, 0.18);
+  --accline: rgba(234, 138, 0, 0.5);
+  --amber: #e0580a;
+  --amberbg: rgba(224, 88, 10, 0.12);
+  --amberline: rgba(224, 88, 10, 0.55);
+  --danger: #e11d48;
+  --shadow: 0 14px 40px rgba(120, 80, 10, 0.28);
+  --winbg: #fff6e0;
+  --pop-bg: #fff8e6;
+}

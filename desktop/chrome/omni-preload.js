@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("omni", {
   bing: (q) => ipcRenderer.invoke("barq:omni-bing", q),
   enabled:    () => ipcRenderer.invoke("barq:omni-enabled"),
   setEnabled: (ids) => ipcRenderer.send("barq:omni-set-enabled", ids),
+  // 1.4.7 — المظهر للصفحات الداخلية (نهاري مرح / ليلي): main يبث التغيير لكل العروض
+  themeGet: () => ipcRenderer.invoke("barq:theme-get"),
+  onTheme: (cb) => ipcRenderer.on("barq:theme-changed", (_e, d) => cb(d)),
 });
 
 // 1.4.0 — أمان السحب: إفلات الفأرة فوق الصفحة (خارج اللوحة) يُنهي تغيير العرض أيضاً

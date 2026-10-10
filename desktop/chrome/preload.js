@@ -20,10 +20,33 @@ contextBridge.exposeInMainWorld("barq", {
   onOmniEnabled: (cb) => ipcRenderer.on("barq:omni-enabled-changed", (_e, d) => cb(d)),
   // 1.4.4 — درع المتعقبات: أسماء النطاقات المحجوبة فعلياً وأعدادها
   trackers: () => ipcRenderer.invoke("barq:trackers"),
-  // 1.4.4 — القوائم المنبثقة من الشريط: الصفحة تنزاح أسفلها في main
-  uiPop: (h) => ipcRenderer.send("barq:ui-pop", h),
-  uiPopClose: () => ipcRenderer.send("barq:ui-pop-close"),
-  onUiPopClosed: (cb) => ipcRenderer.on("barq:ui-pop-closed", () => cb()),
+  // 1.4.7 — القوائم العائمة: BrowserView مستقل فوق الصفحة بلا إزاحتها
+  popOpen: (o) => ipcRenderer.send("barq:ui-pop", o),
+  popClose: () => ipcRenderer.send("barq:ui-pop-close"),
+  popSize: (h) => ipcRenderer.send("barq:pop-size", h),
+  popReady: () => ipcRenderer.send("barq:pop-ready"),
+  onPopClosed: (cb) => ipcRenderer.on("barq:ui-pop-closed", () => cb()),
+  onPopShow: (cb) => ipcRenderer.on("barq:pop-show", (_e, d) => cb(d)),
+  onPopHidden: (cb) => ipcRenderer.on("barq:pop-hidden", () => cb()),
+  onPopRequest: (cb) => ipcRenderer.on("barq:pop-request", (_e, d) => cb(d)),
+  barPop: (t) => ipcRenderer.send("barq:bar-pop-request", t),
+  hoverLeave: () => ipcRenderer.send("barq:hover-leave"),
+  hoverEnter: () => ipcRenderer.send("barq:hover-enter"),
+  // 1.4.7 — المظهر: نهاري مرح / ليلي (يُحفظ في main ويُبث لكل الواجهات)
+  themeGet: () => ipcRenderer.invoke("barq:theme-get"),
+  themeSet: (t) => ipcRenderer.send("barq:theme-set", t),
+  onTheme: (cb) => ipcRenderer.on("barq:theme-changed", (_e, d) => cb(d)),
+  // 1.4.7 — سجل رجوع/تقدم لقوائم التحويم + القفز لأي موضع في المسار
+  navHistory: () => ipcRenderer.invoke("barq:nav-history"),
+  navGoto: (i) => ipcRenderer.send("barq:nav-goto", i),
+  // 1.4.7 — إضافات كروم: القائمة المثبتة + تحميل مجلد غير مضغوط + إزالة
+  extList: () => ipcRenderer.invoke("barq:ext-list"),
+  extLoad: () => ipcRenderer.invoke("barq:ext-load"),
+  extRemove: (id) => ipcRenderer.send("barq:ext-remove", id),
+  // 1.4.7 — إعدادات إضافية في قائمة «الإعدادات والمزيد»
+  openDlFolder: () => ipcRenderer.send("barq:open-dl-folder"),
+  clearBrowsing: () => ipcRenderer.send("barq:clear-browsing"),
+  checkUpdates: () => ipcRenderer.send("barq:check-updates"),
   // 1.2.0 — سجل البحث والمفضلة
   panel: (name) => ipcRenderer.send("barq:panel", name),
   // 1.4.2 — زر حساب برق: يفتح لوحة الحساب (الدخول اختياري — بلا حساب يعمل برق طبيعياً)

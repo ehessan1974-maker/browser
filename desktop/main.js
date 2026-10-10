@@ -33,6 +33,16 @@
 //         ببرق يمُح مع السجل — «مسح الكل» يعطّل الزرين فوراً ويقفّل سجل كروم الداخلي،
 //         وحذف مدخل واحد يزيله من مسار الرجوع والتقدم (بالاتجاهين) حتى لو كانت
 //         الجلسة نفسها، مع استبدال إعادة التوجيه السريعة لنفس الموقع بدل تكديسها.
+// 1.4.7 — قوائم عائمة حقيقية + إضافات كروم + مظهر نهاري مرح / ليلي:
+//         كل القوائم المنبثقة (المحركات، المتعقبات، التنزيلات، الإعدادات، الإضافات،
+//         وسجل رجوع/تقدم عند التحويم) صارت BrowserView مستقلاً يرسم فوق الصفحة —
+//         الصفحة لا تنزاح ولا تنضغط أبداً (الشكوى 2)، تُفتح بالطلب فقط وتُغلق
+//         بالنقر خارجها أو Escape أو التنقل، والقائمة النشطة دائماً أعلى طبقة (الشكوى 3).
+//         جوجل هو محرك البحث الافتراضي الرسمي مع ✓ وكلمة «افتراضي» أمامه (الشكوى 1)،
+//         زر إضافات كروم يعرض المثبتة ويحمّل مجلد إضافة غير مضغوط ويحذف (الشكوى 4)،
+//         قائمة الإعدادات ضُمّ إليها كل ما يمكن ضمه (الشكوى 5)،
+//         مظهر ليلي + نهاري بألوان مرحة يُحفظ ويُطبق على كل واجهة برق (الشكوى 6)،
+//         وتحويم زرّي رجوع/تقدم يسدل قائمة السجل المحفوظ والنقر على مدخل يقفز إليه (الشكوى 7).
 // 1.4.6 — إشعار التحديث من داخل البرنامج كما طلبه المستخدم:
 //         رسالة فورية «يتوفر تحديث جديد» لحظة اكتشافه (وليس فقط عند اكتمال
 //         تنزيله)، والفحص كل 30 دقيقة بدل 4 ساعات حتى يصل الخبر للجميع أسرع.
@@ -93,7 +103,8 @@ const SEARCH_ENGINES = {
   x:          { name: "إكس (تويتر)", url: "https://x.com/search?q=" },
   maps:       { name: "خرائط جوجل", url: "https://www.google.com/maps/search/" },
 };
-const DEFAULT_ENGINE = "duckduckgo";
+// 1.4.7 — جوجل هو الافتراضي الرسمي (كان دك دك جو بالخطأ بينما كل توثيق الواجهة يقول جوجل)
+const DEFAULT_ENGINE = "google";
 
 let currentEngine = DEFAULT_ENGINE;
 
@@ -109,8 +120,18 @@ function loadEngine() {
   try {
     const f = engineFile();
     if (f && fs.existsSync(f)) {
-      const id = JSON.parse(fs.readFileSync(f, "utf8")).engine;
-      if (SEARCH_ENGINES[id]) return id;
+      const v = JSON.parse(fs.readFileSync(f, "utf8"));
+      const id = v && v.engine;
+      if (SEARCH_ENGINES[id]) {
+        // 1.4.7 — ترحيل لمرة واحدة: ملف بلا علامة نسخة وقيمته دك دك جو تعني
+        // الافتراضي المصنعي القديم لا اختيار مستخدم واعٍ → جوجل. أي اختيار آخر
+        // أو ملف بعلامة v:2 يُحترم كما هو.
+        if (!v.v && id === "duckduckgo") {
+          saveEngine(DEFAULT_ENGINE);
+          return DEFAULT_ENGINE;
+        }
+        return id;
+      }
     }
   } catch {}
   return DEFAULT_ENGINE;
@@ -119,8 +140,46 @@ function loadEngine() {
 function saveEngine(id) {
   try {
     const f = engineFile();
-    if (f) fs.writeFileSync(f, JSON.stringify({ engine: id }), "utf8");
+    if (f) fs.writeFileSync(f, JSON.stringify({ engine: id, v: 2 }), "utf8");
   } catch {}
+}
+
+/* ---------------- 1.4.7: المظهر — نهاري مرح / ليلي (الشكوى 6) ---------------- */
+// "night" الليلي الهادئ (هوية برق) | "day" النهاري المرح (كريمي دافئ + عنبري شمسي).
+// يُحفظ في theme.json ويُبث لكل الواجهات: الشريط، اللوحة، القائمة العائمة، والصفحات الداخلية.
+let theme = "night";
+
+function loadTheme() {
+  try {
+    const v = JSON.parse(fs.readFileSync(dataFile("theme.json"), "utf8"));
+    if (v && (v.theme === "day" || v.theme === "night")) return v.theme;
+  } catch {}
+  return "night";
+}
+
+function broadcastTheme() {
+  const payload = { theme };
+  [win, panelView, popView].forEach((v) => {
+    try {
+      if (v && !v.webContents.isDestroyed()) v.webContents.send("barq:theme-changed", payload);
+    } catch {}
+  });
+  try {
+    if (view && !view.webContents.isDestroyed()) view.webContents.send("barq:theme-changed", payload);
+  } catch {}
+  try {
+    if (win && !win.isDestroyed()) {
+      win.setBackgroundColor(theme === "day" ? "#fff6e0" : "#0c1210");
+    }
+  } catch {}
+}
+
+function setTheme(t) {
+  theme = t === "day" ? "day" : "night";
+  try {
+    fs.writeFileSync(dataFile("theme.json"), JSON.stringify({ theme }), "utf8");
+  } catch {}
+  broadcastTheme();
 }
 
 /* ---------------------- سجل البحث والمفضلة (1.2.0) ---------------------- */
@@ -134,7 +193,11 @@ const PANEL_MAX = 640;  // أقصى عرض بالسحب (1.4.0)
 let searchHistory = []; // { url, title, q, engine, t } — سجل تصفح كامل (1.4.0)
 let bookmarks = [];     // { url, title, t }
 let panelOpenName = null; // null | "history" | "bookmarks"
-let uiPopH = 0; // 1.4.4: ارتفاع القائمة المنبثقة المفتوحة من الشريط (0 = مغلقة)
+// 1.4.7 — القائمة العائمة: BrowserView مستقل يرسم فوق الصفحة بلا إزاحتها
+// (نهاية آلية «الصفحة تنزاح أسفل القائمة» — الصفحة لا تتحرك أبداً الآن)
+let popView = null;
+let popType = null;       // engines | shield | downloads | menu | ext | hback | hfwd
+let popHoverTimer = null; // مؤقت غلق قوائم التحويم (رجوع/تقدم)
 let panelSide = "left";   // جهة اللوحة — main هو مصدر الحقيقة الوحيد ويُحفظ على القرص
 let panelW = PANEL_W;     // عرض اللوحة الذي اختاره المستخدم بالسحب (1.4.0)
 
@@ -253,6 +316,7 @@ function logVisit(url) {
 // العنوان الحقيقي يصل متأخراً (page-title-updated) — نحدّث مدخله لا نكرره
 function updateHistoryTitle(url, title) {
   if (!url || !title) return;
+  navTitles[url] = String(title).slice(0, 160); // 1.4.7 — لعناوين قوائم رجوع/تقدم
   const e = searchHistory.find((x) => x.url === url);
   const t = String(title).slice(0, 200);
   if (e && e.title !== t) {
@@ -273,6 +337,7 @@ let navStack = [];     // روابط فقط — الأحدث في النهاية
 let navPos = -1;       // موضع الصفحة الحالية في المسار
 let navBtnNav = false; // التنقل الجاري بدأ من زر رجوع/تقدم
 let lastNavAt = 0;     // لكشف إعادة التوجيه السريعة لنفس الموقع — تُستبدل لا تُكدّس
+const navTitles = Object.create(null); // 1.4.7: آخر عنوان لكل رابط بالمسار (لقوائم التحويم)
 
 function navCur() {
   return navPos >= 0 && navPos < navStack.length ? navStack[navPos] : null;
@@ -318,13 +383,18 @@ function trackInPageNav(url) {
 
 // زر رجوع/تقدم: يتبع مسار برق — بعد المسح يصل فقط لما لم يُمسح
 function goNav(delta) {
+  goNavTo(navPos + delta);
+}
+
+// 1.4.7 — قفز لأي موضع في المسار (نقر مدخل من قائمة رجوع/تقدم بالتحويم)
+function goNavTo(idx) {
   if (!view || view.webContents.isDestroyed()) return;
-  const idx = navPos + delta;
   if (idx < 0 || idx >= navStack.length) return;
   const url = navStack[idx];
   if (!url) return;
   navPos = idx;
   navBtnNav = true;
+  closePop(); // اختيار وجهة من القائمة يغلقها
   view.webContents.loadURL(url).catch(() => {});
 }
 
@@ -601,6 +671,10 @@ function pushDownloads() {
     try {
       if (win && !win.isDestroyed()) {
         win.webContents.send("barq:downloads", { list: downloadsList() });
+      }
+      // 1.4.7 — القائمة العائمة للتنزيلات تتحدث لحظياً أيضاً
+      if (popView && !popView.webContents.isDestroyed()) {
+        popView.webContents.send("barq:downloads", { list: downloadsList() });
       }
     } catch {}
   }, 200);
@@ -908,7 +982,7 @@ function setPanel(name) {
     return;
   }
   panelOpenName = n;
-  closeUiPop(); // 1.4.4: فتح اللوحة الجانبية يغلق قائمة المحركات المنسدلة
+  closePop(); // 1.4.7: فتح اللوحة الجانبية يغلق أي قائمة عائمة مفتوحة
   layout(); // 1.2.7: الصفحة تنزاح أولاً لتفرغ مكان اللوحة (سلوك كروم)
   if (win.getBrowserViews().indexOf(panelView) === -1) {
     win.addBrowserView(panelView); // آخر من أُرفق = أعلى طبقة فوق الصفحة
@@ -1044,7 +1118,7 @@ function navigate(target) {
 function goHome() {
   if (!view || view.webContents.isDestroyed()) return;
   view.webContents
-    .loadFile(HOME_FILE, { query: { engine: currentEngine } })
+    .loadFile(HOME_FILE, { query: { engine: currentEngine, theme: theme } })
     .catch(() => {});
 }
 
@@ -1071,7 +1145,7 @@ function handleInternal(raw) {
     } else if (u.pathname === "/omni") {
       // صفحة البحث الشامل — من زر «الكل» بالرئيسية أو من داخل الصفحة نفسها
       view.webContents
-        .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: q ? { q: q } : {} })
+        .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: Object.assign(q ? { q: q } : {}, { theme }) })
         .catch(() => {});
     }
   } catch {}
@@ -1084,7 +1158,7 @@ function attachViewEvents() {
 
   wc.on("did-navigate", (_e, url) => {
     blockedCurrent = 0;
-    closeUiPop(); // 1.4.4: أي تنقل يغلق قائمة المحركات/نافذة المتعقبات المفتوحة
+    closePop(); // 1.4.7: أي تنقل يغلق أي قائمة عائمة مفتوحة
     trackNav(url); // 1.4.1: تحديث مسار رجوع/تقدم (يمسح مع السجل)
     logVisit(url); // 1.4.0: كل تنقل يدخل السجل — نقرة رابط، عنوان، رجوع، تقدم
     // 1.4.5: كروم يحفظ حجم الخط عبر التنقلات — نعيد التطبيق بعد كل تنقل
@@ -1137,11 +1211,86 @@ function attachViewEvents() {
   });
 }
 
-// 1.4.4 — إغلاق أي قائمة منبثقة من الشريط: الصفحة ترجع لكامل مساحتها فوراً
-function closeUiPop() {
-  if (!uiPopH) return;
-  uiPopH = 0;
-  layout();
+// 1.4.7 — القوائم العائمة: BrowserView مستقل يظهر فوق الصفحة لحظة الطلب فقط
+// ولا يلمس حدود الصفحة إطلاقاً (لا إزاحة ولا انضغاط — نهاية آلية 1.4.4).
+// يُغلق بالنقر خارجه أو Escape أو أي تنقل، والقائمة النشطة دائماً أعلى طبقة (فوق اللوحة الجانبية كذلك).
+const POP_W = { engines: 264, shield: 330, downloads: 384, menu: 306, ext: 366, hback: 344, hfwd: 344 };
+
+function popBounds(payload, h) {
+  const [w, wh] = win.getContentSize();
+  const width = POP_W[payload.type] || 320;
+  const height = Math.max(60, Math.min(Number(h) || 260, wh - CHROME_H - 6));
+  let x;
+  if (payload.align === "right") {
+    x = (Number(payload.x) || 0) + (Number(payload.w) || 0) - width; // حافة القائمة اليمنى مع الزر (RTL)
+  } else {
+    x = Number(payload.x) || 0; // من الحافة اليسرى للزر (قوائم يسار الشريط + التحويم)
+  }
+  x = Math.max(6, Math.min(x, Math.max(6, w - width - 6)));
+  return { x, y: CHROME_H - 8, width, height };
+}
+
+function ensurePopView() {
+  if (popView && !popView.webContents.isDestroyed()) return;
+  popView = new BrowserView({
+    webPreferences: {
+      preload: path.join(__dirname, "chrome", "preload.js"),
+      contextIsolation: true,
+      sandbox: true,
+    },
+  });
+  popView.webContents.loadFile(path.join(__dirname, "chrome", "pop.html"));
+  bindZoomKeys(popView.webContents);
+  try {
+    popView.webContents.send("barq:theme-changed", { theme });
+  } catch {}
+  // نقر الصفحة أثناء فتح القائمة = نقر خارجها → إغلاق (سلوك كروم).
+  // تفقد الشريط التركيز لحظة النقر: إن لم يكن القائمة ولا الشريط هو المستقبل → غلق.
+  popView.webContents.on("blur", () => {
+    setTimeout(() => {
+      if (!popType || !win || win.isDestroyed()) return;
+      try {
+        if (popView.webContents.isFocused() || win.webContents.isFocused()) return;
+      } catch {}
+      closePop();
+    }, 40);
+  });
+}
+
+function openPop(payload) {
+  if (!win || win.isDestroyed()) return;
+  const type = payload && POP_W[payload.type] ? payload.type : null;
+  if (!type) return;
+  if (popHoverTimer) { clearTimeout(popHoverTimer); popHoverTimer = null; }
+  if (popType === type) return; // مفتوحة نفسها — والزر يبدّل من جهته
+  ensurePopView();
+  popType = type;
+  if (win.getBrowserViews().indexOf(popView) === -1) {
+    win.addBrowserView(popView); // آخر من أُرفق = أعلى طبقة (فوق الصفحة واللوحة معاً)
+  }
+  popView.setBounds(popBounds(payload, 280));
+  try {
+    popView.webContents.send("barq:pop-show", {
+      type,
+      hover: type === "hback" || type === "hfwd",
+    });
+  } catch {}
+}
+
+function closePop() {
+  if (popHoverTimer) { clearTimeout(popHoverTimer); popHoverTimer = null; }
+  if (!popType) return;
+  popType = null;
+  try {
+    if (popView && !popView.webContents.isDestroyed()) popView.webContents.send("barq:pop-hidden");
+  } catch {}
+  try {
+    if (win && !win.isDestroyed() &&
+        popView && !popView.webContents.isDestroyed() &&
+        win.getBrowserViews().indexOf(popView) !== -1) {
+      win.removeBrowserView(popView);
+    }
+  } catch {}
   try {
     if (win && !win.isDestroyed()) win.webContents.send("barq:ui-pop-closed");
   } catch {}
@@ -1150,10 +1299,10 @@ function closeUiPop() {
 function layout() {
   if (!win || win.isDestroyed() || !view) return;
   const [w, h] = win.getContentSize();
-  // 1.4.4: قائمة المحركات/نافذة المتعقبات المنبثقة من الشريط تُنزح الصفحة أسفلها
-  // كي لا تغطيها طبقة العرض — نفس منطق إزاحة اللوحة الجانبية تماماً
-  const top = CHROME_H + uiPopH;
-  const height = Math.max(0, h - CHROME_H - uiPopH);
+  // 1.4.7 — الصفحة دائماً كامل المساحة تحت الشريط: القوائم العائمة ترسم فوقها
+  // بلا أي إزاحة أو انضغاط (كانت تنزحها أسفلها وقتل هذا الإحساس المزعج)
+  const top = CHROME_H;
+  const height = Math.max(0, h - CHROME_H);
   // 1.2.7 — سلوك كروم: اللوحة مفتوحة => الصفحة تنزاح للجهة المقابلة وتنضغط،
   // اللوحة مغلقة => الصفحة كامل المساحة. واللوحة تبقى أعلى طبقة، فلو تعذّرت
   // الإزاحة على جهاز قديم فأسوأ حالة رسمها فوق الصفحة — لا اختفاء ولا تغطية معكوسة.
@@ -1196,6 +1345,27 @@ function setupAutoUpdater() {
   try {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    // 1.4.7 — «فحص التحديثات الآن» من قائمة الإعدادات: رسالة «أنت على أحدث إصدار» عند الطلب اليدوي فقط
+    let manualUpdateCheck = false;
+    ipcMain.on("barq:check-updates", () => {
+      manualUpdateCheck = true;
+      try { autoUpdater.checkForUpdates(); } catch { manualUpdateCheck = false; }
+    });
+    autoUpdater.on("update-not-available", () => {
+      if (!manualUpdateCheck) return; // الفحص الآلي الدوري صامت — الرسالة لطلب المستخدم فقط
+      manualUpdateCheck = false;
+      if (!win || win.isDestroyed()) return;
+      dialog
+        .showMessageBox(win, {
+          type: "info",
+          title: "برق محدَّث",
+          message: "أنت على أحدث إصدار من برق (" + app.getVersion() + ").",
+          buttons: ["حسناً"],
+          defaultId: 0,
+          noLink: true,
+        })
+        .catch(() => {});
+    });
     // 1.4.6 — رسالة فورية عند اكتشاف تحديث: مرة واحدة لكل إصدار، لا إزعاج بالتكرار
     let notifiedAvailable = "";
     autoUpdater.on("update-available", (info) => {
@@ -1232,7 +1402,20 @@ function setupAutoUpdater() {
         }
       }).catch(() => {});
     });
-    autoUpdater.on("error", () => {}); // بلا إنترنت: صمت تام — لا إزعاج
+    autoUpdater.on("error", () => {
+      if (!manualUpdateCheck) return; // بلا إنترنت: صمت تام — لا إزعاج
+      manualUpdateCheck = false;
+      if (!win || win.isDestroyed()) return;
+      dialog
+        .showMessageBox(win, {
+          type: "info",
+          title: "فحص التحديثات",
+          message: "تعذر فحص التحديثات الآن — تحقق من اتصالك بالإنترنت.",
+          buttons: ["حسناً"],
+          noLink: true,
+        })
+        .catch(() => {});
+    });
     setTimeout(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 15000);
     // 1.4.6 — كل 30 دقيقة بدل 4 ساعات: التحديث الجديد يصل للجميع أسرع بكثير
     setInterval(() => { try { autoUpdater.checkForUpdates(); } catch {} }, 30 * 60 * 1000);
@@ -1240,6 +1423,8 @@ function setupAutoUpdater() {
 }
 
   app.whenReady().then(() => {
+    // 1.4.7 — المظهر المحفوظ قبل إنشاء النافذة (خلفية النافذة بلون الموضوع)
+    theme = loadTheme();
     // محرك البحث + سجل البحث + المفضلة المحفوظة من الجلسة السابقة
     currentEngine = loadEngine();
     // 1.4.0 — ترحيل صيغة السجل القديمة ({q,engine,t}) إلى صيغة التصفح الكاملة
@@ -1288,7 +1473,7 @@ function setupAutoUpdater() {
       minWidth: 780,
       minHeight: 560,
       title: "برق",
-      backgroundColor: "#0c1210",
+      backgroundColor: theme === "day" ? "#fff6e0" : "#0c1210",
       autoHideMenuBar: true,
       webPreferences: {
         preload: path.join(__dirname, "chrome", "preload.js"),
@@ -1327,7 +1512,11 @@ function setupAutoUpdater() {
     bindZoomKeys(panelView.webContents);
 
     layout();
-    win.on("resize", layout);
+    // 1.4.7 — تغيير حجم النافذة أثناء قائمة مفتوحة يغلقها (المرساة تتغير) — سلوك كروم
+    win.on("resize", () => {
+      layout();
+      if (popType) closePop();
+    });
     // 1.2.7: كل تغيير لحجم/وضع النافذة يعيد حساب إزاحة الصفحة وحدود اللوحة معاً
     win.on("maximize", layout);
     win.on("unmaximize", layout);
@@ -1338,12 +1527,53 @@ function setupAutoUpdater() {
       win = null;
     });
 
+    // 1.4.7 — النقر على الصفحة أثناء قائمة مفتوحة يغلقها: فقدان تركيز الشريط = نقر خارج القائمة
+    win.webContents.on("blur", () => {
+      if (!popType) return;
+      setTimeout(() => {
+        if (!popType || !win || win.isDestroyed()) return;
+        try {
+          if (popView && !popView.webContents.isDestroyed() && popView.webContents.isFocused()) return;
+        } catch {}
+        closePop();
+      }, 40);
+    });
+
     // 1.4.2 — استعادة جلسة الحساب إن كانت مفتوحة — برق يفتح طبيعياً دائماً
     accountRestore();
     // 1.4.3 — التحديث التلقائي: يفحص بلا إزعاج ويثبّت عند الموافقة فقط
     setupAutoUpdater();
     goHome();
     pushStats();
+
+    // 1.4.7 — لقطات تطوير اختيارية عبر متغيرات البيئة فقط (بلا أي أثر على المستخدم):
+    // BARQ_SHOT=ملف.png لقطة بعد الإقلاع، BARQ_CLICK=معرّف زر للنقر قبل اللقطة
+    if (process.env.BARQ_SHOT && win && !win.isDestroyed()) {
+      setTimeout(() => {
+        const finish = () => {
+          const save = (wc, p) =>
+            wc.capturePage().then((img) => {
+              try { fs.writeFileSync(p, img.toPNG()); } catch {}
+            }).catch(() => {});
+          const saves = [save(win.webContents, process.env.BARQ_SHOT)];
+          // القائمة العائمة BrowserView مستقل — تُلتقط من محتواها مباشرة
+          if (popView && !popView.webContents.isDestroyed() && popType) {
+            saves.push(save(popView.webContents, process.env.BARQ_SHOT + ".pop.png"));
+          }
+          Promise.all(saves).then(() => app.quit()).catch(() => app.quit());
+        };
+        const id = String(process.env.BARQ_CLICK || "");
+        if (id) {
+          win.webContents
+            .executeJavaScript(
+              "(function(){var b=document.getElementById(" + JSON.stringify(id) + ");if(b)b.click();})()"
+            )
+            .then(() => setTimeout(finish, 1300), () => setTimeout(finish, 400));
+        } else {
+          setTimeout(finish, 400);
+        }
+      }, 4500);
+    }
   });
 }
 
@@ -1387,6 +1617,10 @@ function syncOmniEnabled() {
     if (win && !win.isDestroyed()) {
       win.webContents.send("barq:omni-enabled-changed", { enabled: omniEnabled.slice() });
     }
+    // 1.4.7 — قائمة المحركات العائمة تتحدث لحظياً أيضاً
+    if (popView && !popView.webContents.isDestroyed()) {
+      popView.webContents.send("barq:omni-enabled-changed", { enabled: omniEnabled.slice() });
+    }
   } catch {}
   pushStats();
 }
@@ -1418,14 +1652,55 @@ ipcMain.handle("barq:trackers", () => ({
   recent: blockedLog.slice(-12).reverse(),
 }));
 
-// 1.4.4 — القوائم المنبثقة من الشريط: الصفحة تنزاح أسفلها لحظة الفتح
-ipcMain.on("barq:ui-pop", (_e, h) => {
-  const n = Math.max(0, Math.min(420, Number(h) || 0));
-  if (n === uiPopH) return;
-  uiPopH = n;
-  layout();
+// 1.4.7 — القوائم العائمة: فتح (payload: type,x,y,w,align من الواجهة) وغلق وضبط الارتفاع
+ipcMain.on("barq:ui-pop", (_e, payload) => {
+  if (payload && payload.type) {
+    openPop(payload);
+    return;
+  }
+  closePop(); // احتياط — نداء بلا نوع = غلق
 });
-ipcMain.on("barq:ui-pop-close", () => closeUiPop());
+ipcMain.on("barq:ui-pop-close", () => closePop());
+ipcMain.on("barq:pop-size", (_e, h) => {
+  if (!popType || !popView || popView.webContents.isDestroyed() || !win || win.isDestroyed()) return;
+  try {
+    const cur = popView.getBounds();
+    const b = popBounds({ type: popType }, h);
+    popView.setBounds({ x: cur.x, y: cur.y, width: cur.width, height: b.height });
+  } catch {}
+});
+// pop.html قد يجهز بعد أول طلب فتح — نعيد بث نوع القائمة المنتظرة
+ipcMain.on("barq:pop-ready", () => {
+  if (popType && popView && !popView.webContents.isDestroyed()) {
+    try {
+      popView.webContents.send("barq:pop-show", {
+        type: popType,
+        hover: popType === "hback" || popType === "hfwd",
+      });
+    } catch {}
+  }
+});
+// التبديل بين القوائم من داخل القائمة نفسها (من الإعدادات → التنزيلات مثلاً)
+ipcMain.on("barq:bar-pop-request", (_e, t) => {
+  const type = String(t || "");
+  closePop();
+  if (win && !win.isDestroyed() && POP_W[type]) {
+    win.webContents.send("barq:pop-request", { type });
+  }
+});
+// قوائم التحويم (رجوع/تقدم): خروج المؤشر من الزر والقائمة معاً يبدأ عدّاً قصيراً للغلق،
+// ودخوله لأي منهما يلغيه — نفس إحساس قوائم كروم
+ipcMain.on("barq:hover-leave", () => {
+  if (popType !== "hback" && popType !== "hfwd") return;
+  if (popHoverTimer) clearTimeout(popHoverTimer);
+  popHoverTimer = setTimeout(() => {
+    popHoverTimer = null;
+    closePop();
+  }, 450);
+});
+ipcMain.on("barq:hover-enter", () => {
+  if (popHoverTimer) { clearTimeout(popHoverTimer); popHoverTimer = null; }
+});
 
 ipcMain.on("barq:navigate", (_e, raw) => {
   const input = String(raw == null ? "" : raw).trim();
@@ -1456,7 +1731,7 @@ function omniOpenPage(q) {
   const s = String(q || "").trim();
   if (!view || view.webContents.isDestroyed()) return;
   view.webContents
-    .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: s ? { q: s } : {} })
+    .loadFile(path.join(__dirname, "chrome", "omni.html"), { query: Object.assign(s ? { q: s } : {}, { theme }) })
     .catch(() => {});
 }
 ipcMain.on("barq:back", () => goNav(-1));   // 1.4.1: يتبع مسار برق — يمسح مع السجل
@@ -1726,7 +2001,93 @@ ipcMain.on("barq:clear-cache", () => {
 ipcMain.on("barq:light", () => {
   if (!view || view.webContents.isDestroyed()) return;
   view.webContents
-    .loadFile(path.join(__dirname, "chrome", "light.html"))
+    .loadFile(path.join(__dirname, "chrome", "light.html"), { query: { theme } })
     .catch(() => {});
 });
 ipcMain.handle("barq:about", () => ({ version: app.getVersion() }));
+
+/* ------- 1.4.7: المظهر + سجل التحويم + إضافات كروم + إعدادات إضافية ------- */
+
+ipcMain.handle("barq:theme-get", () => ({ theme }));
+ipcMain.on("barq:theme-set", (_e, t) => setTheme(t === "day" ? "day" : "night"));
+
+// سجل رجوع/تقدم لقوائم التحويم — مع الفهرس الأصلي في المسار للقفز المباشر
+ipcMain.handle("barq:nav-history", () => {
+  const item = (i, u) => ({
+    i,
+    url: u,
+    title: navTitles[u] ||
+      (searchHistory.find((x) => x.url === u) || {}).title ||
+      "",
+  });
+  const back = [];
+  for (let i = navPos - 1; i >= 0 && back.length < 14; i--) {
+    if (navStack[i]) back.push(item(i, navStack[i]));
+  }
+  const fwd = [];
+  for (let i = navPos + 1; i < navStack.length && fwd.length < 14; i++) {
+    if (navStack[i]) fwd.push(item(i, navStack[i]));
+  }
+  return { back, fwd };
+});
+ipcMain.on("barq:nav-goto", (_e, idx) => {
+  const i = Math.floor(Number(idx) || 0);
+  if (i >= 0 && i < navStack.length) goNavTo(i);
+});
+
+// إضافات كروم: عرض المثبتة + تحميل مجلد غير مضغوط + إزالة — على الجلسة الافتراضية
+ipcMain.handle("barq:ext-list", () => {
+  try {
+    const ses = session.defaultSession;
+    if (typeof ses.getAllExtensions !== "function") return { supported: false, list: [] };
+    return {
+      supported: typeof ses.loadExtension === "function",
+      list: ses.getAllExtensions().map((x) => ({
+        id: x.id,
+        name: x.name,
+        version: x.version || "",
+      })),
+    };
+  } catch {
+    return { supported: false, list: [] };
+  }
+});
+ipcMain.handle("barq:ext-load", async () => {
+  try {
+    const ses = session.defaultSession;
+    if (typeof ses.loadExtension !== "function") {
+      return { ok: false, msg: "محرك هذه النسخة لا يدعم إضافات كروم" };
+    }
+    const r = await dialog.showOpenDialog(win, {
+      title: "اختر مجلد الإضافة غير المضغوطة (يحوي manifest.json)",
+      properties: ["openDirectory"],
+    });
+    if (r.canceled || !r.filePaths.length) return { ok: false, msg: "" };
+    const ext = await ses.loadExtension(r.filePaths[0], { allowFileAccess: true });
+    return { ok: true, name: ext && ext.name ? ext.name : "إضافة" };
+  } catch {
+    return {
+      ok: false,
+      msg: "تعذر تحميل الإضافة — تأكد أنها إضافة كروم غير مضغوطة تحوي manifest.json. إضافات Manifest V3 قد لا تعمل كاملة.",
+    };
+  }
+});
+ipcMain.on("barq:ext-remove", (_e, id) => {
+  try {
+    if (typeof session.defaultSession.removeExtension === "function") {
+      session.defaultSession.removeExtension(String(id || ""));
+    }
+  } catch {}
+});
+
+ipcMain.on("barq:open-dl-folder", () => {
+  try { shell.openPath(app.getPath("downloads")); } catch {}
+});
+ipcMain.on("barq:clear-browsing", () => {
+  try { session.defaultSession.clearCache(); } catch {}
+  try {
+    session.defaultSession.clearStorageData({
+      storages: ["cookies", "localstorage", "indexdb", "serviceworkers", "cachestorage"],
+    });
+  } catch {}
+});

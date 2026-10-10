@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>برق — النسخة الخفيفة</title>
+<link rel="stylesheet" href="theme.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -73,6 +74,23 @@
     border-top: 1px solid rgba(255,255,255,.06); padding-top: 14px; line-height: 2;
   }
   .foot a { color: #34d399; }
+
+  /* 1.4.7 — الوضع النهاري المرح */
+  :root[data-theme="day"] body { background: #fff6e0; color: #4a3418; }
+  :root[data-theme="day"] .logo { color: #d97c00; }
+  :root[data-theme="day"] .tag, :root[data-theme="day"] .note, :root[data-theme="day"] .foot, :root[data-theme="day"] .erow span { color: #8a6b3f; }
+  :root[data-theme="day"] .note b { color: #6b4e23; }
+  :root[data-theme="day"] .chip { border-color: rgba(234,138,0,.45); color: #b45f00; }
+  :root[data-theme="day"] form.s input { border-color: rgba(150,100,20,.3); background: #fff; color: #4a3418; }
+  :root[data-theme="day"] form.s input:focus { border-color: rgba(234,138,0,.6); }
+  :root[data-theme="day"] form.s button { border-color: rgba(234,138,0,.5); background: rgba(245,158,11,.15); color: #b45f00; }
+  :root[data-theme="day"] .erow a { border-color: rgba(150,100,20,.28); background: rgba(255,255,255,.6); color: #6b4e23; }
+  :root[data-theme="day"] .erow a.on { border-color: rgba(234,138,0,.65); color: #b45f00; }
+  :root[data-theme="day"] h2 { color: #b45f00; }
+  :root[data-theme="day"] .grid a { background: rgba(255,255,255,.6); border-color: rgba(150,100,20,.22); color: #4a3418; }
+  :root[data-theme="day"] .dl a.btn { background: rgba(245,158,11,.14); border-color: rgba(234,138,0,.5); color: #b45f00; }
+  :root[data-theme="day"] .dl a.ghost { background: rgba(255,255,255,.6); border-color: rgba(150,100,20,.28); color: #6b4e23; }
+  :root[data-theme="day"] .foot a { color: #b45f00; }
 </style>
 </head>
 <body>
@@ -133,6 +151,15 @@
 <script>
 (function () {
   "use strict";
+  /* 1.4.7 — المظهر: نهاري مرح / ليلي — من main عبر الاستعلام والبث الحي */
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t === "day" ? "day" : "night");
+  }
+  applyTheme(new URLSearchParams(location.search).get("theme") || "night");
+  if (window.omni && window.omni.onTheme) {
+    try { window.omni.onTheme(function (d) { applyTheme(d && d.theme); }); } catch (e) {}
+  }
+
   var sf = document.getElementById("sf");
   var row = document.getElementById("erow");
   var links = row.getElementsByTagName("a");
