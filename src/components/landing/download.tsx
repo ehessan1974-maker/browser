@@ -3,9 +3,11 @@
 import { type ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
+  ArrowLeft,
   Check,
   Cpu,
   Download as DownloadIcon,
+  FileCode,
   HardDrive,
   Loader2,
   MemoryStick,
@@ -33,6 +35,9 @@ import {
   type Platform,
 } from "@/lib/download-data";
 import { useToast } from "@/hooks/use-toast";
+
+// Raw <a> tags ignore Next's basePath — prefix manually for GitHub Pages.
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 /* ---------- Small helpers ---------- */
 
@@ -289,6 +294,30 @@ export default function Download() {
             </div>
           )}
         </motion.div>
+
+        {/* 1.4.5 — نسخة برق الخفيفة (HTML): تفتح من أي متصفح حتى القديم */}
+        <motion.a
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.55 }}
+          href={`${BASE_PATH}/light.html`}
+          className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/60 p-4 transition hover:border-emerald-400/40 hover:bg-zinc-900/80 sm:p-5"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-400/10">
+            <FileCode className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold sm:text-base">
+              بدون تثبيت — نسخة برق الخفيفة (HTML)
+            </span>
+            <span className="mt-1 block text-xs leading-6 text-muted-foreground">
+              ملف واحد يفتح من أي متصفح كان — بحث وروابط سريعة وروابط تحميل برق
+              بداخله
+            </span>
+          </span>
+          <ArrowLeft className="h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+        </motion.a>
 
         {/* Desktop platform cards */}
         <div className="mt-6 grid gap-6 md:grid-cols-3">

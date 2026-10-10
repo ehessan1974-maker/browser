@@ -8,6 +8,9 @@
 // 1.4.2 — زر حساب برق (دخول اختياري — بلا حساب يعمل كل شيء طبيعياً)
 // 1.4.4 — قائمة المحركات بخانة اختيار لكل محرك (محفوظة، الافتراضي جوجل) +
 //         درع يعرض أسماء المتعقبات المحجوبة فعلياً + زر «شامل» يبدّل الكل/السابق
+// 1.4.5 — خاصيات كروم: زر تنزيلات بقائمة تقدم حي (تُفتح تلقائياً عند بدء
+//         التنزيل مثل كروم) + قائمة 3 نقاط (تكبير/تصغير الخط، ترجمة غوغل،
+//         التنزيلات، النسخة الخفيفة HTML، مسح الكاش، حول برق)
 "use strict";
 
 const el = {
@@ -31,12 +34,30 @@ const el = {
   shieldPop: document.getElementById("shieldPop"),
   shieldSub: document.getElementById("shieldSub"),
   shieldList: document.getElementById("shieldList"),
+  // 1.4.5 — التنزيلات + قائمة 3 نقاط
+  dlbtn: document.getElementById("dlbtn"),
+  dlPop: document.getElementById("dlPop"),
+  dlList: document.getElementById("dlList"),
+  dlClear: document.getElementById("dlClear"),
+  menuBtn: document.getElementById("menuBtn"),
+  menuPop: document.getElementById("menuPop"),
+  zoomPct: document.getElementById("zoomPct"),
+  zoomIn: document.getElementById("zoomIn"),
+  zoomOut: document.getElementById("zoomOut"),
+  zoomReset: document.getElementById("zoomReset"),
+  translateRow: document.getElementById("translateRow"),
+  dlRow: document.getElementById("dlRow"),
+  lightRow: document.getElementById("lightRow"),
+  cacheRow: document.getElementById("cacheRow"),
+  aboutRow: document.getElementById("aboutRow"),
 };
 
 let focused = false;
 let enginesData = null; // { current, enabled:[], list:[] } — main مصدر الحقيقة
-let openPop = null;     // null | "engines" | "shield"
+let openPop = null;     // null | "engines" | "shield" | "downloads" | "menu"
 let shieldTimer = null;
+let dlData = [];        // آخر قائمة تنزيلات من main — تُرسم عند فتح القائمة وكل تحديث
+let lastState = null;   // آخر حالة تنقل — لتعطيل زر الترجمة حين لا تنطبق
 
 /* ------------------------- إضاءة أزرار اللوحتين ------------------------- */
 
@@ -48,6 +69,7 @@ window.barq.onPanelButtons(function (s) {
 
 function render(s) {
   // 1.4.2 — برق يعمل طبيعياً دائماً — الحساب اختياري: الزر يضيء فقط والجلسة مفتوحة
+  lastState = s;
   el.back.disabled = !s.canBack;
   el.fwd.disabled = !s.canFwd;
   if (!focused) el.url.value = s.isHome ? "" : s.url;
@@ -59,6 +81,13 @@ function render(s) {
   el.accountbtn.title = s.account
     ? "الحساب: " + s.account + " — فتح لوحة الحساب"
     : "حساب برق — تسجيل الدخول (اختياري)";
+  // 1.4.5 — الترجمة عبر غوغل تنطبق على صفحات الويب فقط (ليس صفحات برق الداخلية ولا translate.goog نفسها)
+  const canTranslate =
+    !!s.url && /^https?:\/\//i.test(s.url) && s.url.indexOf(".translate.goog/") === -1;
+  el.translateRow.disabled = !canTranslate;
+  el.translateRow.title = canTranslate
+    ? "ترجمة الصفحة الحالية إلى العربية عبر غوغل"
+    : "افتح صفحة ويب أولاً ثم ترجمها";
   const engName = s.engineName || "دك دك جو";
   el.url.placeholder = s.isHome
     ? "برق • صفحة البداية — ابحث في " + engName + " أو اكتب عنوانًا…"
@@ -242,6 +271,7 @@ el.shield.addEventListener("click", function (e) {
 document.addEventListener("click", function (e) {
   if (!openPop) return;
   if (el.engineMenu.contains(e.target) || el.shieldPop.contains(e.target)) return;
+  if (el.dlPop.contains(e.target) || el.menuPop.contains(e.target)) return;
   closePop();
 });
 document.addEventListener("keydown", function (e) {
@@ -251,10 +281,176 @@ window.barq.onUiPopClosed(function () {
   openPop = null;
   el.engineMenu.hidden = true;
   el.shieldPop.hidden = true;
+  el.dlPop.hidden = true;
+  el.menuPop.hidden = true;
   el.engineBtn.classList.remove("on");
   el.shield.classList.remove("on");
+  el.dlbtn.classList.remove("on");
+  el.menuBtn.classList.remove("on");
   if (shieldTimer) { clearInterval(shieldTimer); shieldTimer = null; }
 });
+
+/* ---------------- 1.4.5: خانة التنزيلات مثل كروم ---------------- */
+// قائمة منبثقة بالتقدم الحي، تُفتح تلقائياً عند بدء أي تنزيل (سلوك كروم)
+
+function fmtBytes(n) {
+  if (!Number.isFinite(n) || n <= 0) return "";
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+  if (n < 1073741824) return (n / 1048576).toFixed(1) + " MB";
+  return (n / 1073741824).toFixed(2) + " GB";
+}
+
+function dlStateLabel(d) {
+  if (d.state === "completed") return "اكتمل";
+  if (d.state === "cancelled") return "أُلغي";
+  if (d.state === "interrupted") return "فشل";
+  const pct = d.total ? Math.min(100, Math.round((d.received / d.total) * 100)) : 0;
+  const sz = d.total ? fmtBytes(d.received) + " من " + fmtBytes(d.total) : fmtBytes(d.received);
+  return pct + "% — " + sz;
+}
+
+function dlBusy() {
+  var busy = false;
+  for (var k = 0; k < dlData.length; k++) {
+    if (dlData[k].state === "progressing") { busy = true; break; }
+  }
+  el.dlbtn.classList.toggle("busy", busy);
+}
+
+function drawDownloads() {
+  if (openPop !== "downloads") return;
+  dlBusy();
+  if (!dlData.length) {
+    el.dlList.innerHTML =
+      '<div class="dempty">لا تنزيلات بعد — أي ملف تنزّله من أي صفحة سيظهر هنا بتقدمه الحي مثل كروم تماماً</div>';
+    try { window.barq.uiPop(150); } catch (e) {}
+    return;
+  }
+  let html = "";
+  for (var i = 0; i < dlData.length; i++) {
+    var d = dlData[i];
+    var pct = d.total ? Math.min(100, Math.round((d.received / d.total) * 100)) : 0;
+    var prog = d.state === "progressing"
+      ? '<div class="dbar"><i style="width:' + pct + '%"></i></div>' : "";
+    var acts = "";
+    if (d.state === "completed") {
+      acts = '<div class="drow-a">' +
+        '<button type="button" data-do="open" data-id="' + d.id + '">فتح</button>' +
+        '<button type="button" data-do="show" data-id="' + d.id + '">إظهار بالمجلد</button>' +
+        "</div>";
+    } else if (d.state === "progressing") {
+      acts = '<div class="drow-a">' +
+        '<button type="button" data-do="cancel" data-id="' + d.id + '">إلغاء</button>' +
+        "</div>";
+    }
+    html += '<div class="drow">' +
+      '<div class="drow-t"><span class="drow-f">' + esc(d.file) +
+      '</span><span class="drow-s">' + esc(dlStateLabel(d)) + "</span></div>" +
+      prog + acts + "</div>";
+  }
+  el.dlList.innerHTML = html;
+  var rows = Math.min(dlData.length, 5);
+  try { window.barq.uiPop(Math.min(400, 110 + rows * 78)); } catch (e) {}
+}
+
+function toggleDownloads() {
+  if (openPop === "downloads") { closePop(); return; }
+  closePop();
+  openPop = "downloads";
+  el.dlPop.hidden = false;
+  el.dlbtn.classList.add("on");
+  window.barq.downloads().then(function (r) {
+    dlData = (r && r.list) || [];
+    drawDownloads();
+  }).catch(function () { drawDownloads(); });
+  drawDownloads();
+}
+
+el.dlbtn.addEventListener("click", function (e) {
+  e.stopPropagation();
+  toggleDownloads();
+});
+el.dlClear.addEventListener("click", function () {
+  try { window.barq.downloadsClear(); } catch (e) {}
+});
+
+// أزرار عناصر التنزيل (فتح/إظهار/إلغاء) — تفويض عبر القائمة
+el.dlList.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button[data-do]") : null;
+  if (!b) return;
+  var id = Number(b.getAttribute("data-id"));
+  var doWhat = b.getAttribute("data-do");
+  if (doWhat === "open") window.barq.downloadOpen(id);
+  else if (doWhat === "show") window.barq.downloadShow(id);
+  else if (doWhat === "cancel") window.barq.downloadCancel(id);
+});
+
+// تحديث حي من main — القائمة تتحدث فوراً أثناء التنزيل
+window.barq.onDownloads(function (d) {
+  dlData = (d && d.list) || [];
+  dlBusy();
+  drawDownloads();
+});
+// سلوك كروم: الفقاعة تُفتح تلقائياً لحظة بدء التنزيل
+window.barq.onDownloadStart(function () {
+  if (openPop !== "downloads") toggleDownloads();
+});
+
+/* ---------------- 1.4.5: قائمة 3 نقاط للإعدادات ---------------- */
+
+function toggleMenu() {
+  if (openPop === "menu") { closePop(); return; }
+  closePop();
+  openPop = "menu";
+  el.menuPop.hidden = false;
+  el.menuBtn.classList.add("on");
+  try { window.barq.uiPop(390); } catch (e) {}
+}
+
+el.menuBtn.addEventListener("click", function (e) {
+  e.stopPropagation();
+  toggleMenu();
+});
+
+el.zoomIn.addEventListener("click", function () {
+  try { window.barq.zoom("in"); } catch (e) {}
+});
+el.zoomOut.addEventListener("click", function () {
+  try { window.barq.zoom("out"); } catch (e) {}
+});
+el.zoomReset.addEventListener("click", function () {
+  try { window.barq.zoom("reset"); } catch (e) {}
+});
+el.translateRow.addEventListener("click", function () {
+  closePop();
+  try { window.barq.translate(); } catch (e) {}
+});
+el.dlRow.addEventListener("click", function () {
+  toggleDownloads();
+});
+el.lightRow.addEventListener("click", function () {
+  closePop();
+  try { window.barq.light(); } catch (e) {}
+});
+el.cacheRow.addEventListener("click", function () {
+  try { window.barq.clearCache(); } catch (e) {}
+  el.cacheRow.querySelector(".mi").textContent = "✅";
+  setTimeout(function () { el.cacheRow.querySelector(".mi").textContent = "🧹"; }, 1200);
+});
+
+// نسبة الحجم الحية داخل القائمة
+window.barq.onZoomChanged(function (d) {
+  if (d && d.percent) el.zoomPct.textContent = d.percent + "%";
+});
+window.barq.zoomGet().then(function (d) {
+  if (d && d.percent) el.zoomPct.textContent = d.percent + "%";
+}).catch(function () {});
+
+// سطر «حول برق» — رقم الإصدار من main نفسه
+window.barq.about().then(function (d) {
+  if (d && d.version) el.aboutRow.textContent = "برق v" + d.version;
+}).catch(function () {});
 
 /* ------------------------------ بقية الأزرار ------------------------------ */
 

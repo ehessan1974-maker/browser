@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>برق — النسخة الخفيفة</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: #0c1210; color: #e7f0ec; min-height: 100vh;
+    padding: 20px 14px 44px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .head { text-align: center; margin-bottom: 20px; }
+  .logo { font-size: 32px; font-weight: 800; color: #34d399; }
+  .tag { color: #93a8a0; font-size: 13.5px; margin-top: 5px; line-height: 1.8; }
+  .chip {
+    display: inline-block; margin-top: 12px; padding: 5px 15px; border-radius: 999px;
+    border: 1px solid rgba(52,211,153,.4); color: #34d399; font-size: 12px;
+    text-decoration: none;
+  }
+  .chip:active { background: rgba(52,211,153,.2); }
+  form.s { display: flex; gap: 8px; margin: 0 0 10px; }
+  form.s input {
+    flex: 1; height: 50px; min-width: 0; border-radius: 25px;
+    border: 1px solid rgba(255,255,255,.14); background: #14201b;
+    color: #e7f0ec; padding: 0 18px; font-size: 15px; outline: none;
+    font-family: inherit;
+  }
+  form.s input:focus { border-color: rgba(52,211,153,.6); }
+  form.s button {
+    height: 50px; padding: 0 22px; border-radius: 25px; cursor: pointer;
+    border: 1px solid rgba(52,211,153,.5); background: rgba(52,211,153,.15);
+    color: #34d399; font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  form.s button:active { background: rgba(52,211,153,.35); }
+  .erow { text-align: center; margin-bottom: 22px; }
+  .erow span { color: #6f877e; font-size: 11.5px; display: block; margin-bottom: 6px; }
+  .erow a {
+    display: inline-block; margin: 3px 2px; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    color: #cfe0d9; font-size: 12.5px; text-decoration: none; cursor: pointer;
+  }
+  .erow a.on { border-color: rgba(52,211,153,.65); color: #34d399; }
+  h2 { font-size: 15px; color: #34d399; margin: 20px 0 10px; }
+  .grid { text-align: center; font-size: 0; }
+  .grid a {
+    display: inline-block; width: 31%; margin: 1%; padding: 13px 4px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; color: #e7f0ec; font-size: 13.5px; font-weight: 700;
+    text-decoration: none; vertical-align: middle;
+  }
+  .grid a:active { background: rgba(52,211,153,.15); }
+  .dl a.btn {
+    display: block; margin: 0 0 10px; padding: 14px 10px; border-radius: 12px;
+    background: rgba(52,211,153,.14); border: 1px solid rgba(52,211,153,.5);
+    color: #34d399; font-size: 14.5px; font-weight: 800; text-align: center;
+    text-decoration: none;
+  }
+  .dl a.btn:active { background: rgba(52,211,153,.3); }
+  .dl a.ghost {
+    background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.14);
+    color: #cfe0d9; font-weight: 600;
+  }
+  .note {
+    color: #6f877e; font-size: 11.5px; margin-top: 12px; line-height: 2;
+    border-top: 1px dashed rgba(255,255,255,.08); padding-top: 10px;
+  }
+  .note b { color: #93a8a0; }
+  .foot {
+    text-align: center; color: #6f877e; font-size: 12px; margin-top: 26px;
+    border-top: 1px solid rgba(255,255,255,.06); padding-top: 14px; line-height: 2;
+  }
+  .foot a { color: #34d399; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="logo">⚡ برق</div>
+    <div class="tag">النسخة الخفيفة — تفتح من أي متصفح كان، حتى الأقدم منها</div>
+    <a class="chip" href="https://github.com/ehessan1974-maker/browser/releases/latest">صفحة آخر إصدار من برق</a>
+  </div>
+
+  <form class="s" id="sf" action="https://www.google.com/search" method="get">
+    <input id="q" type="text" name="q" placeholder="ابحث في الويب…" aria-label="البحث">
+    <button type="submit">ابحث</button>
+  </form>
+  <div class="erow" id="erow">
+    <span>محرك البحث (اضغط لاختياره):</span>
+    <a data-a="https://www.google.com/search?q=" class="on">جوجل</a>
+    <a data-a="https://duckduckgo.com/?q=">دك دك جو</a>
+    <a data-a="https://www.bing.com/search?q=">بينج</a>
+    <a data-a="https://www.youtube.com/results?search_query=">يوتيوب</a>
+    <a data-a="https://ar.wikipedia.org/w/index.php?search=">ويكيبيديا</a>
+  </div>
+
+  <h2>روابط سريعة</h2>
+  <div class="grid">
+    <a href="https://www.youtube.com">▶️ يوتيوب</a>
+    <a href="https://www.facebook.com">📘 فيسبوك</a>
+    <a href="https://web.whatsapp.com">💬 واتساب</a>
+    <a href="https://web.telegram.org">✈️ تيليجرام</a>
+    <a href="https://www.instagram.com">📸 إنستغرام</a>
+    <a href="https://ar.wikipedia.org">📚 ويكيبيديا</a>
+    <a href="https://x.com">𝕏 إكس</a>
+    <a href="https://www.google.com/maps">🗺 خرائط</a>
+    <a href="https://mail.google.com">✉️ بريد</a>
+  </div>
+
+  <h2>تحميل متصفح برق الكامل</h2>
+  <div class="dl">
+    <a class="btn" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/barq-android.apk">⬇ أندرويد — APK (دائماً أحدث إصدار)</a>
+    <a class="btn" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Setup-1.4.4-x64.exe">⬇ ويندوز 64-bit — مثبّت</a>
+    <a class="btn" href="https://github.com/ehessan1974-maker/browser/releases/download/stable/Barq-Setup-1.4.4-ia32.exe">⬇ ويندوز 32-bit — للأجهزة القديمة</a>
+    <a class="btn ghost" href="https://github.com/ehessan1974-maker/browser/releases/latest">🌐 كل الإصدارات — ويندوز وماك ولينكس</a>
+    <a class="btn ghost" href="https://ehessan1974-maker.github.io/browser/">⚡ الواجهة الكاملة لموقع برق</a>
+  </div>
+  <p class="note">
+    <b>ملاحظات:</b> ملفات ويندوز أعلاه من الإصدار المستقر المنشور — أحدث نسخة
+    دائماً عبر «كل الإصدارات». عند التنزيل من كروم وظهر تحذير: اضغط
+    <b>الاحتفاظ ← الاحتفاظ على أي حال</b>. وعلى أندرويد: اسمح بالتثبيت من
+    «مصادر غير معروفة» مرة واحدة.
+  </p>
+
+  <div class="foot">
+    برق — متصفح خفيف بحجب حقيقي للمتعقّبات<br>
+    هذه الصفحة ملف HTML واحد بلا أي برامج — احفظها وافتحها من أي متصفح،
+    وتعمل حتى بلا إنترنت (عدا البحث والروابط)
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var sf = document.getElementById("sf");
+  var row = document.getElementById("erow");
+  var links = row.getElementsByTagName("a");
+  for (var i = 0; i < links.length; i++) {
+    links[i].onclick = (function (a) {
+      return function () {
+        sf.action = a.getAttribute("data-a");
+        for (var j = 0; j < links.length; j++) {
+          links[j].className = "";
+        }
+        a.className = "on";
+        document.getElementById("q").focus();
+        return false;
+      };
+    })(links[i]);
+  }
+})();
+</script>
+</body>
+</html>

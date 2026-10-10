@@ -130,6 +130,82 @@
     color: #6f877e; font-size: 10.5px; margin-top: 8px;
     border-top: 1px solid rgba(255,255,255,.06); padding-top: 6px;
   }
+
+  /* 1.4.5 — خانة التنزيلات مثل كروم: قائمة منبثقة من الشريط */
+  .dpop {
+    position: absolute; top: 42px; left: 10px; z-index: 60;
+    width: 372px; display: flex; flex-direction: column;
+    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 10px 12px;
+  }
+  .dpop-h { color: #34d399; font-weight: 800; font-size: 13px; margin-bottom: 8px; }
+  .dlist { overflow-y: auto; max-height: 300px; }
+  .drow { border-bottom: 1px solid rgba(255,255,255,.05); padding: 7px 0; }
+  .drow:last-child { border-bottom: none; }
+  .drow-t {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .drow-f {
+    color: #e7f0ec; font-size: 12.5px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr;
+  }
+  .drow-s { color: #93a8a0; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+  .dbar {
+    height: 4px; border-radius: 4px; background: rgba(255,255,255,.08);
+    margin-top: 6px; overflow: hidden;
+  }
+  .dbar > i {
+    display: block; height: 100%; background: #34d399; border-radius: 4px;
+    transition: width .2s linear;
+  }
+  .drow-a { display: flex; gap: 6px; margin-top: 7px; }
+  .drow-a button {
+    width: auto; height: 24px; padding: 0 10px; border-radius: 8px;
+    font-size: 11px; font-family: inherit;
+  }
+  .dempty { color: #6f877e; font-size: 12px; padding: 8px 2px; line-height: 1.9; }
+  .dfoot { border-top: 1px solid rgba(255,255,255,.06); margin-top: 8px; padding-top: 8px; text-align: left; }
+  .dfoot button {
+    width: auto; height: 26px; padding: 0 12px; border-radius: 8px; font-size: 11.5px;
+    font-family: inherit;
+  }
+  /* شارة التنزيل الجارية على زر الشريط */
+  #dlbtn { position: relative; }
+  #dlbtn .dl-dot {
+    position: absolute; top: 4px; left: 4px; width: 8px; height: 8px;
+    border-radius: 999px; background: #34d399;
+    box-shadow: 0 0 6px rgba(52,211,153,.8); display: none;
+  }
+  #dlbtn.busy .dl-dot { display: block; }
+
+  /* 1.4.5 — قائمة 3 نقاط للإعدادات */
+  .menu3 {
+    position: absolute; top: 42px; left: 10px; z-index: 60;
+    width: 284px; display: flex; flex-direction: column;
+    background: #14201b; border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.55); padding: 6px;
+  }
+  .mrow {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 9px 10px; border-radius: 9px; cursor: pointer;
+    font-size: 13px; color: #cfe0d9; background: none; border: none;
+    text-align: right; font-family: inherit;
+  }
+  .mrow:hover:not(:disabled) { background: rgba(52,211,153,.1); color: #34d399; }
+  .mrow:disabled { opacity: .4; cursor: default; }
+  .mrow .mi { width: 17px; text-align: center; flex-shrink: 0; }
+  .mrow .mk {
+    margin-inline-start: auto; color: #6f877e; font-size: 10.5px;
+    direction: ltr; font-family: Consolas, monospace;
+  }
+  .mrow.zoom-label { cursor: default; }
+  .mrow.zoom-label:hover { background: none; color: #cfe0d9; }
+  .mrow.zoom-label .zoom-pct { color: #34d399; font-weight: 800; margin-inline-start: auto; font-size: 12px; direction: ltr; }
+  .msep { height: 1px; background: rgba(255,255,255,.07); margin: 5px 8px; }
+  .mfoot {
+    color: #6f877e; font-size: 10.5px; text-align: center;
+    padding: 7px 8px 3px; direction: ltr; font-family: Consolas, monospace;
+  }
   </style>
 </head>
 <body>
@@ -195,6 +271,65 @@
       <div class="tpop-sub" id="shieldSub"></div>
       <div class="tpop-list" id="shieldList"></div>
       <div class="tpop-note">كل طلب من هذه النطاقات أُلغي قبل الاتصال — حجب مؤكد على مستوى الشبكة</div>
+    </div>
+
+    <!-- 1.4.5 — خانة التنزيلات مثل كروم -->
+    <button id="dlbtn" title="التنزيلات" aria-label="التنزيلات">
+      <svg viewBox="0 0 24 24"><path d="M12 3v11M6.5 9.5l5.5 5 5.5-5"/><path d="M4 20h16"/></svg>
+      <span class="dl-dot"></span>
+    </button>
+    <div class="dpop" id="dlPop" hidden>
+      <div class="dpop-h">⬇ التنزيلات</div>
+      <div class="dlist" id="dlList"></div>
+      <div class="dfoot">
+        <button id="dlClear" type="button">مسح المكتملة</button>
+      </div>
+    </div>
+
+    <!-- 1.4.5 — قائمة 3 نقاط للإعدادات -->
+    <button id="menuBtn" title="الإعدادات والمزيد" aria-label="الإعدادات والمزيد">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <div class="menu3" id="menuPop" hidden>
+      <button class="mrow zoom-label" id="zoomLabelRow" type="button" disabled>
+        <span class="mi">🔎</span>
+        حجم الصفحة
+        <span class="zoom-pct" id="zoomPct">100%</span>
+      </button>
+      <button class="mrow" id="zoomIn" type="button">
+        <span class="mi">➕</span>
+        تكبير الخط
+        <span class="mk">Ctrl + +</span>
+      </button>
+      <button class="mrow" id="zoomOut" type="button">
+        <span class="mi">➖</span>
+        تصغير الخط
+        <span class="mk">Ctrl + -</span>
+      </button>
+      <button class="mrow" id="zoomReset" type="button">
+        <span class="mi">↺</span>
+        الحجم الأصلي
+        <span class="mk">Ctrl + 0</span>
+      </button>
+      <div class="msep"></div>
+      <button class="mrow" id="translateRow" type="button">
+        <span class="mi">🌐</span>
+        ترجمة الصفحة عبر غوغل
+      </button>
+      <button class="mrow" id="dlRow" type="button">
+        <span class="mi">⬇</span>
+        التنزيلات
+      </button>
+      <div class="msep"></div>
+      <button class="mrow" id="lightRow" type="button">
+        <span class="mi">⚡</span>
+        نسخة برق الخفيفة (HTML)
+      </button>
+      <button class="mrow" id="cacheRow" type="button">
+        <span class="mi">🧹</span>
+        مسح الكاش المؤقت
+      </button>
+      <div class="mfoot" id="aboutRow">برق</div>
     </div>
   </div>
 

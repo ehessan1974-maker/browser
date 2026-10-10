@@ -33,6 +33,12 @@
 //         ببرق يمُح مع السجل — «مسح الكل» يعطّل الزرين فوراً ويقفّل سجل كروم الداخلي،
 //         وحذف مدخل واحد يزيله من مسار الرجوع والتقدم (بالاتجاهين) حتى لو كانت
 //         الجلسة نفسها، مع استبدال إعادة التوجيه السريعة لنفس الموقع بدل تكديسها.
+// 1.4.5 — خاصيات كروم في الشريط الفوقاني وقائمة 3 نقاط:
+//         تكبير/تصغير خط الصفحة (أزرار + Ctrl+= / Ctrl+- / Ctrl+0)،
+//         ترجمة الصفحة عبر غوغل (translate.goog)، خانة تنزيلات كاملة مثل كروم
+//         (قائمة منبثقة: تقدم حي، فتح، إظهار بالمجلد، إلغاء، مسح — تُفتح تلقائياً
+//         عند بدء أي تنزيل)، وقائمة 3 نقاط للإعدادات (تكبير، ترجمة، تنزيلات،
+//         النسخة الخفيفة HTML، مسح الكاش، حول برق).
 // 1.4.2 — حساب برق: زر تسجيل دخول اختياري تماماً — من لا يريد حساباً
 //         يعمل على برق بشكل طبيعي 100% بلا أي قفل ولا شاشة دخول.
 //         الزر يفتح لوحة «الحساب»: دخول أو إنشاء حساب محلي على الجهاز
@@ -524,6 +530,116 @@ function saveOmniEnabled(arr) {
   } catch {}
 }
 
+/* ---------------- تكبير/تصغير خط الصفحة مثل كروم (1.4.5) ---------------- */
+// درجات كروم نفسها (100% ↔ 110% ↔ 125%…) عبر zoomLevel الكرومي
+// (1.2^level). يُطبّق على صفحة العرض الرئيسي ويُعاد تطبيقه بعد كل تنقل،
+// وباختصارات كروم نفسها: Ctrl+= تكبير، Ctrl+- تصغير، Ctrl+0 الحجم الأصلي.
+
+const ZOOM_MIN = -3;   // ≈ 58%
+const ZOOM_MAX = 5;    // ≈ 249%
+let zoomLevel = 0;
+
+function zoomPercent() {
+  return Math.round(Math.pow(1.2, zoomLevel) * 100);
+}
+
+function applyZoom(level) {
+  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, level));
+  try {
+    if (view && !view.webContents.isDestroyed()) {
+      view.webContents.setZoomLevel(zoomLevel);
+    }
+  } catch {}
+  try {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("barq:zoom-changed", { percent: zoomPercent() });
+    }
+  } catch {}
+}
+
+// اختصارات كروم — تعمل في الشريط وفي الصفحة وفي اللوحة الجانبية
+function bindZoomKeys(wc) {
+  try {
+    wc.on("before-input-event", (e, input) => {
+      if (input.type !== "keyDown" || !(input.control || input.meta)) return;
+      const k = String(input.key || "").toLowerCase();
+      if (k === "=" || k === "+") { e.preventDefault(); applyZoom(zoomLevel + 0.5); }
+      else if (k === "-") { e.preventDefault(); applyZoom(zoomLevel - 0.5); }
+      else if (k === "0") { e.preventDefault(); applyZoom(0); }
+    });
+  } catch {}
+}
+
+/* ----------------- خانة التنزيلات مثل كروم (1.4.5) ----------------- */
+// كل تنزيل يبدأ من أي صفحة يُتابع هنا: تقدم حي بالقائمة المنبثقة من الشريط،
+// القائمة تُفتح تلقائياً عند بدء التنزيل (سلوك كروم) وفيها فتح الملف /
+// إظهاره في المجلد / إلغاء جارٍ / مسح المكتملة. الحد 30 عنصراً.
+
+let dlSeq = 0;
+let downloads = []; // { id, item, file, url, state, received, total, path }
+let dlPushTimer = null;
+
+function downloadsList() {
+  return downloads.map((d) => ({
+    id: d.id,
+    file: d.file,
+    url: d.url,
+    state: d.state,
+    received: d.received,
+    total: d.total,
+    path: d.path || "",
+  }));
+}
+
+function pushDownloads() {
+  if (dlPushTimer) return; // تسطيح تحديثات updated المتلاحقة — قائمة صغيرة لا تحتاج أسرع
+  dlPushTimer = setTimeout(() => {
+    dlPushTimer = null;
+    try {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send("barq:downloads", { list: downloadsList() });
+      }
+    } catch {}
+  }, 200);
+}
+
+function attachDownloads(ses) {
+  ses.on("will-download", (_e, item) => {
+    const rec = {
+      id: ++dlSeq,
+      item,
+      file: String(item.getFilename() || "ملف").slice(0, 120),
+      url: String(item.getURL() || "").slice(0, 300),
+      state: "progressing",
+      received: 0,
+      total: Number(item.getTotalBytes()) || 0,
+      path: "",
+    };
+    downloads.unshift(rec);
+    if (downloads.length > 30) downloads.length = 30;
+    pushDownloads();
+    // سلوك كروم: فقاعة التنزيل تُفتح تلقائياً عند بدء التنزيل
+    try {
+      if (win && !win.isDestroyed()) win.webContents.send("barq:download-start");
+    } catch {}
+    item.on("updated", (_e2, st) => {
+      rec.received = item.getReceivedBytes();
+      rec.total = Number(item.getTotalBytes()) || rec.total;
+      if (st === "interrupted") rec.state = "interrupted";
+      pushDownloads();
+    });
+    item.on("done", (_e2, st) => {
+      rec.received = item.getReceivedBytes();
+      rec.total = Number(item.getTotalBytes()) || rec.total;
+      rec.state =
+        st === "completed" ? "completed" : st === "cancelled" ? "cancelled" : "interrupted";
+      rec.path = item.getSavePath() || "";
+      rec.item = null; // اكتمل — لا نحمل مرجع العنصر زيادة على الذاكرة
+      pushDownloads();
+    });
+  });
+}
+
 /* ------------ حساب برق — تسجيل دخول اختياري تماماً (1.4.2) ------------ */
 // زر الحساب يفتح لوحة «الحساب»: الدخول اختياري — من لا يريد حساباً
 // يعمل على برق بشكل طبيعي 100% بلا أي قفل ولا شاشة دخول.
@@ -968,6 +1084,8 @@ function attachViewEvents() {
     closeUiPop(); // 1.4.4: أي تنقل يغلق قائمة المحركات/نافذة المتعقبات المفتوحة
     trackNav(url); // 1.4.1: تحديث مسار رجوع/تقدم (يمسح مع السجل)
     logVisit(url); // 1.4.0: كل تنقل يدخل السجل — نقرة رابط، عنوان، رجوع، تقدم
+    // 1.4.5: كروم يحفظ حجم الخط عبر التنقلات — نعيد التطبيق بعد كل تنقل
+    try { wc.setZoomLevel(zoomLevel); } catch {}
     pushStats();
   });
   wc.on("did-navigate-in-page", (_e, url) => {
@@ -1121,6 +1239,8 @@ function setupAutoUpdater() {
 
     // حظر المتعقبات قبل أي اتصال
     const ses = session.defaultSession;
+    // 1.4.5 — خانة التنزيلات: كل تنزيل من أي صفحة يُتابع هنا
+    attachDownloads(ses);
     ses.webRequest.onBeforeRequest({ urls: ["*://*/*"] }, (details, cb) => {
       if (details.resourceType !== "mainFrame" && isBlocked(details.url)) {
         blockedTotal += 1;
@@ -1175,6 +1295,11 @@ function setupAutoUpdater() {
       },
     });
     panelView.webContents.loadFile(path.join(__dirname, "chrome", "panel.html"));
+
+    // 1.4.5 — اختصارات تكبير الخط تعمل في الشريط والصفحة واللوحة معاً
+    bindZoomKeys(win.webContents);
+    bindZoomKeys(view.webContents);
+    bindZoomKeys(panelView.webContents);
 
     layout();
     win.on("resize", layout);
@@ -1517,3 +1642,66 @@ ipcMain.handle("barq:star", () => toggleBookmark());
 ipcMain.on("barq:remove-bookmark", (_e, url) => {
   removeBookmark(url);
 });
+
+/* ------------------- خاصيات كروم: IPC (1.4.5) ------------------- */
+
+/* تكبير/تصغير خط الصفحة — درجات كروم نفسها */
+ipcMain.on("barq:zoom", (_e, dir) => {
+  if (dir === "reset") applyZoom(0);
+  else if (dir === "in") applyZoom(zoomLevel + 0.5);
+  else if (dir === "out") applyZoom(zoomLevel - 0.5);
+});
+ipcMain.handle("barq:zoom-get", () => ({ percent: zoomPercent() }));
+
+/* ترجمة الصفحة عبر غوغل — نفس آلية كروم (translate.goog) بالعربية */
+ipcMain.on("barq:translate", () => {
+  if (!view || view.webContents.isDestroyed()) return;
+  const url = view.webContents.getURL() || "";
+  if (!/^https?:\/\//i.test(url) || url.indexOf(".translate.goog/") !== -1) return;
+  let u;
+  try { u = new URL(url); } catch { return; }
+  // عناوين IP وlocalhost لا تُترجم عبر translate.goog
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(u.hostname) || u.hostname === "localhost") return;
+  const host = u.hostname.replace(/-/g, "--").replace(/\./g, "-");
+  u.searchParams.set("_x_tr_sl", "auto");
+  u.searchParams.set("_x_tr_tl", "ar");
+  u.searchParams.set("_x_tr_hl", "ar");
+  navigate("https://" + host + ".translate.goog" + u.pathname + u.search);
+});
+
+/* خانة التنزيلات مثل كروم: قائمة/فتح/إظهار بالمجلد/إلغاء/مسح */
+ipcMain.handle("barq:downloads", () => ({ list: downloadsList() }));
+ipcMain.on("barq:download-open", (_e, id) => {
+  const d = downloads.find((x) => x.id === id);
+  if (d && d.path && d.state === "completed") {
+    try { shell.openPath(d.path); } catch {}
+  }
+});
+ipcMain.on("barq:download-show", (_e, id) => {
+  const d = downloads.find((x) => x.id === id);
+  if (d && d.path && d.state === "completed") {
+    try { shell.showItemInFolder(d.path); } catch {}
+  }
+});
+ipcMain.on("barq:download-cancel", (_e, id) => {
+  const d = downloads.find((x) => x.id === id);
+  if (d && d.item && d.state === "progressing") {
+    try { d.item.cancel(); } catch {}
+  }
+});
+ipcMain.on("barq:downloads-clear", () => {
+  downloads = downloads.filter((d) => d.state === "progressing");
+  pushDownloads();
+});
+
+/* قائمة 3 نقاط: مسح الكاش + النسخة الخفيفة HTML + حول برق */
+ipcMain.on("barq:clear-cache", () => {
+  try { session.defaultSession.clearCache(); } catch {}
+});
+ipcMain.on("barq:light", () => {
+  if (!view || view.webContents.isDestroyed()) return;
+  view.webContents
+    .loadFile(path.join(__dirname, "chrome", "light.html"))
+    .catch(() => {});
+});
+ipcMain.handle("barq:about", () => ({ version: app.getVersion() }));
