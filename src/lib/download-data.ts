@@ -21,7 +21,7 @@ export type Platform = {
 };
 
 /** الإصدار الحالي المنشور على release المستقر — يتحدث مع كل إصدار جديد */
-export const BARQ_VERSION = "1.4.6";
+export const BARQ_VERSION = "1.4.7";
 
 const STABLE =
   "https://github.com/ehessan1974-maker/browser/releases/download/stable";
@@ -140,31 +140,31 @@ export const androidInstallSteps: readonly string[] = [
   "اضغط تثبيت، ثم افتح برق وابدأ التصفح بسرعة برق",
 ];
 
-/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.6 (بعد آخر إعادة رفع clobber للسيرات) */
+/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.7 (بعد آخر إعادة رفع clobber للسيرات) */
 export const checksums: { os: string; hash: string }[] = [
   {
     os: "Android — barq-android.apk",
-    hash: "0505e379f0d4cf753072051d62d532626387202add5bff48f0f00ab85c99b8c9",
+    hash: "aaf253b844dd501c4648878ecdeb7184e74a89f2c261b55b4d42f92be2136be0",
   },
   {
     os: `Windows x64 — Barq-Setup-${BARQ_VERSION}-x64.exe`,
-    hash: "35fa6f9f3f63cfef3cc32e7bc92ee1055d2369c908378f2395abe193d3c3a896",
+    hash: "5bbed0830c543cae5a9732d04b6035d348f4e56b914a275086005155ff114c63",
   },
   {
     os: `Windows 32-bit — Barq-Setup-${BARQ_VERSION}-ia32.exe`,
-    hash: "d58810c2fd7e3289afdd7ac86aaff08f7031adf6b8e395ab31aed169ba13da2e",
+    hash: "1be0fb20881b91de3203ba8ac78b73577fc2e5983911a13f9d568c21ebcf1fe9",
   },
   {
     os: `Windows 7 — Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
-    hash: "25a6e5105b8a8dea7c267e9d8a7fe58267e5559bd39a9721e7acd2d96af7c2e3",
+    hash: "604af8f04a980478d0eb882de54f1620a6716a57c4a76b2c68934c79ce3e9a87",
   },
   {
     os: `macOS — Barq-${BARQ_VERSION}.dmg`,
-    hash: "41f04a32284fdc786d52f19c2391fe8316d7d9e36b46c7ca237df7223a33ff8e",
+    hash: "f01a9fc4f8b22e7a489fbe4e4d053ad8055ccb4e5631e9a75b145da24ab5748f",
   },
   {
     os: `Linux — Barq-${BARQ_VERSION}.AppImage`,
-    hash: "9320be5969385eab2ba57f87d7e8e59ce682447509ed4e45f46e9feb68e21d24",
+    hash: "45586a27fb9977ff0ae046843b4871d8b3ab6c26e9444bd3c945ada7518531ae",
   },
 ];
 
