@@ -102,31 +102,31 @@ export const androidInstallSteps: readonly string[] = [
   "اضغط تثبيت، ثم افتح برق وابدأ التصفح بسرعة برق",
 ];
 
-/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.6 */
+/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.6 (بعد آخر إعادة رفع clobber للسيرات) */
 export const checksums: { os: string; hash: string }[] = [
   {
     os: "Android — barq-android.apk",
-    hash: "29b4709d8cb79c5162d0ed77b6dca4750399ca7e62c014bdb54765f207fa13fe",
+    hash: "0505e379f0d4cf753072051d62d532626387202add5bff48f0f00ab85c99b8c9",
   },
   {
     os: `Windows x64 — Barq-Setup-${BARQ_VERSION}-x64.exe`,
-    hash: "1594c3dbefcc09e4cece7af2c7a3c7f92bf2d7f977fb8eb1f3e660064ed87024",
+    hash: "35fa6f9f3f63cfef3cc32e7bc92ee1055d2369c908378f2395abe193d3c3a896",
   },
   {
     os: `Windows 32-bit — Barq-Setup-${BARQ_VERSION}-ia32.exe`,
-    hash: "dc27ed95e86b96aaf1961d7a48f0b943f5d4107a898c57b0bb54c803399901fb",
+    hash: "d58810c2fd7e3289afdd7ac86aaff08f7031adf6b8e395ab31aed169ba13da2e",
   },
   {
     os: `Windows 7 — Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
-    hash: "09e57ea75ac61a8578f36ddcd7c31c6d5cabe5b9669daf3cf32dcdb22fd04085",
+    hash: "25a6e5105b8a8dea7c267e9d8a7fe58267e5559bd39a9721e7acd2d96af7c2e3",
   },
   {
     os: `macOS — Barq-${BARQ_VERSION}.dmg`,
-    hash: "276e6c434a9e2459731fd3aaf4f2a2ff2fb2b807c35cfc0c7de2149fabdafda4",
+    hash: "41f04a32284fdc786d52f19c2391fe8316d7d9e36b46c7ca237df7223a33ff8e",
   },
   {
     os: `Linux — Barq-${BARQ_VERSION}.AppImage`,
-    hash: "6a954d1cb78efecf61936fdf3275a65e1f247f3e7a114e2a456e61c85186bd92",
+    hash: "9320be5969385eab2ba57f87d7e8e59ce682447509ed4e45f46e9feb68e21d24",
   },
 ];
 
