@@ -21,7 +21,7 @@ export type Platform = {
 };
 
 /** الإصدار الحالي المنشور على release المستقر — يتحدث مع كل إصدار جديد */
-export const BARQ_VERSION = "1.4.5";
+export const BARQ_VERSION = "1.4.6";
 
 const STABLE =
   "https://github.com/ehessan1974-maker/browser/releases/download/stable";
@@ -33,7 +33,7 @@ export const platforms: Platform[] = [
     os: "أندرويد",
     logo: "android",
     file: "barq-android.apk",
-    size: "‎16KB",
+    size: "‎18KB",
     req: "أندرويد 4.0 فما فوق",
     arch: "APK · كل المعالجات",
     url: `${STABLE}/barq-android.apk`,
@@ -102,31 +102,31 @@ export const androidInstallSteps: readonly string[] = [
   "اضغط تثبيت، ثم افتح برق وابدأ التصفح بسرعة برق",
 ];
 
-/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.5 */
+/* بصمات SHA-256 حقيقية — محسوبة من ملفات release المستقر v1.4.6 */
 export const checksums: { os: string; hash: string }[] = [
   {
     os: "Android — barq-android.apk",
-    hash: "a0aaf099a74ed97932ee49c52b20f6b4f79dacf5be3b23c9abada90db3c61868",
+    hash: "29b4709d8cb79c5162d0ed77b6dca4750399ca7e62c014bdb54765f207fa13fe",
   },
   {
     os: `Windows x64 — Barq-Setup-${BARQ_VERSION}-x64.exe`,
-    hash: "2fc827203d8b6717e706c77a95bad69a07a9fbd5376207294efc02a1ab3c4e3e",
+    hash: "1594c3dbefcc09e4cece7af2c7a3c7f92bf2d7f977fb8eb1f3e660064ed87024",
   },
   {
     os: `Windows 32-bit — Barq-Setup-${BARQ_VERSION}-ia32.exe`,
-    hash: "dbd602aa3e04580becd4c6929c83b8664e9d27c826b446843f134c4ba2199794",
+    hash: "dc27ed95e86b96aaf1961d7a48f0b943f5d4107a898c57b0bb54c803399901fb",
   },
   {
     os: `Windows 7 — Barq-Setup-win7-${BARQ_VERSION}-ia32.exe`,
-    hash: "35a3a696b53947be72c03fddb2b049eb3f7a75192256a48f41a5acf8cefb4404",
+    hash: "09e57ea75ac61a8578f36ddcd7c31c6d5cabe5b9669daf3cf32dcdb22fd04085",
   },
   {
     os: `macOS — Barq-${BARQ_VERSION}.dmg`,
-    hash: "749f82d099fe8f32f760be4fc4d330b28a12b527a00258eacf86dabb6d0228ca",
+    hash: "276e6c434a9e2459731fd3aaf4f2a2ff2fb2b807c35cfc0c7de2149fabdafda4",
   },
   {
     os: `Linux — Barq-${BARQ_VERSION}.AppImage`,
-    hash: "aa4d584f4fb4e3579d09295a2bf35082387ed92982d3d676db8386c5acba4f3c",
+    hash: "6a954d1cb78efecf61936fdf3275a65e1f247f3e7a114e2a456e61c85186bd92",
   },
 ];
 
