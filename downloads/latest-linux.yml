@@ -1,0 +1,9 @@
+version: 1.4.11
+files:
+  - url: Barq-1.4.11.AppImage
+    sha512: Gnzrz4AcpiIyg8k2+jYPwohiONP2c+kvvazUxwS4tFjjVwfMPp9TfmHxldZNacl6LSANV4oFajIO3XU2XmBu7Q==
+    size: 108593497
+    blockMapSize: 115053
+path: Barq-1.4.11.AppImage
+sha512: Gnzrz4AcpiIyg8k2+jYPwohiONP2c+kvvazUxwS4tFjjVwfMPp9TfmHxldZNacl6LSANV4oFajIO3XU2XmBu7Q==
+releaseDate: '2026-10-12T12:04:43.128Z'

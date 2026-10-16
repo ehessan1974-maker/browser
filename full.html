@@ -1,0 +1,1132 @@
+<!doctype html>
+<!--
+  ============================================================
+  برق — النسخة الكاملة | ملف HTML واحد بلا أي برامج أو اتصال
+  كل شيء داخله: بحث، روابط، مفضلة، سجل، أدوات، تنزيلات، إعدادات
+  يعمل من أي متصفح وحتى بلا إنترنت (عدا البحث وفتح الروابط)
+  عند إصدار جديد: غيّر var VER في آخر الملف فقط — كل الروابط
+  تُحدَّث تلقائياً منه، والروابط المكتوبة في HTML احتياط لمن
+  يعطّل الجافاسكربت.
+  ============================================================
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="برق — النسخة الكاملة: بحث، مفضلة، سجل، أدوات، وتنزيل متصفح برق — ملف واحد يعمل من أي متصفح وحتى بلا إنترنت">
+<title>برق — النسخة الكاملة</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0c1210; --panel:#121b17; --card:rgba(255,255,255,.045); --card2:rgba(255,255,255,.07);
+    --border:rgba(255,255,255,.12); --border2:rgba(52,211,153,.45);
+    --text:#e7f0ec; --muted:#93a8a0; --dim:#6f877e;
+    --acc:#34d399; --acc-soft:rgba(52,211,153,.14); --acc-ink:#34d399;
+    --danger:#f87171; --amber:#fbbf24;
+  }
+  body.light {
+    --bg:#eef4f0; --panel:#ffffff; --card:rgba(10,40,28,.04); --card2:rgba(10,40,28,.08);
+    --border:rgba(10,40,28,.15); --border2:rgba(13,148,99,.5);
+    --text:#14201a; --muted:#43604f; --dim:#6b8377;
+    --acc:#0d9463; --acc-soft:rgba(13,148,99,.12); --acc-ink:#0b7a52;
+    --danger:#dc2626; --amber:#b45309;
+  }
+  body {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    padding: 14px 12px 60px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  /* ===== الترويسة ===== */
+  .head { text-align: center; padding: 10px 0 16px; }
+  .logo { font-size: 34px; font-weight: 800; color: var(--acc); letter-spacing: .5px; }
+  .logo small { font-size: 14px; color: var(--dim); font-weight: 600; }
+  .tag { color: var(--muted); font-size: 13.5px; margin-top: 6px; line-height: 1.9; }
+  .badges { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .badge {
+    padding: 5px 14px; border-radius: 999px; font-size: 12px; text-decoration: none;
+    border: 1px solid var(--border2); color: var(--acc); background: var(--acc-soft);
+    cursor: pointer; font-family: inherit;
+  }
+  .badge.ghost { border-color: var(--border); color: var(--muted); background: transparent; }
+  .badge:active { filter: brightness(1.3); }
+
+  /* ===== شريط الأقسام ===== */
+  .tabs {
+    position: sticky; top: 0; z-index: 50; display: flex; gap: 6px;
+    background: var(--bg); padding: 10px 2px; margin: 0 -2px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .tabs button {
+    flex: 1 0 auto; padding: 10px 14px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    font-size: 13.5px; font-weight: 700; font-family: inherit; white-space: nowrap;
+  }
+  .tabs button.on { border-color: var(--border2); background: var(--acc-soft); color: var(--acc); }
+  section.sec { display: none; padding-top: 16px; }
+  section.sec.on { display: block; }
+
+  h2.t { font-size: 16px; color: var(--acc); margin: 18px 0 10px; }
+  h2.t:first-child { margin-top: 4px; }
+  .hint { color: var(--dim); font-size: 12px; line-height: 2; margin-bottom: 10px; }
+
+  /* ===== الساعة ===== */
+  .clockbox {
+    text-align: center; padding: 14px 10px; border-radius: 16px; margin-bottom: 14px;
+    border: 1px solid var(--border); background: var(--card);
+  }
+  .clock { font-size: 30px; font-weight: 800; letter-spacing: 1px; }
+  .dates { color: var(--muted); font-size: 12.5px; margin-top: 4px; line-height: 2; }
+
+  /* ===== البحث ===== */
+  form.s { display: flex; gap: 8px; margin-bottom: 10px; }
+  form.s input {
+    flex: 1; height: 50px; min-width: 0; border-radius: 25px;
+    border: 1px solid var(--border); background: var(--panel);
+    color: var(--text); padding: 0 18px; font-size: 15px; outline: none; font-family: inherit;
+  }
+  form.s input:focus { border-color: var(--border2); }
+  form.s button {
+    height: 50px; padding: 0 22px; border-radius: 25px; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--acc-soft);
+    color: var(--acc); font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  form.s button:active { filter: brightness(1.35); }
+  .erow { text-align: center; margin-bottom: 16px; }
+  .erow span { color: var(--dim); font-size: 11.5px; display: block; margin-bottom: 6px; }
+  .erow a {
+    display: inline-block; margin: 3px 2px; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--card);
+    color: var(--muted); font-size: 12.5px; text-decoration: none; cursor: pointer;
+  }
+  .erow a.on { border-color: var(--border2); color: var(--acc); background: var(--acc-soft); }
+
+  /* ===== شبكات الروابط ===== */
+  .grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .grid a {
+    flex: 1 1 30%; min-width: 30%; padding: 14px 6px; text-align: center;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); font-size: 13.5px; font-weight: 700; text-decoration: none;
+  }
+  .grid a:active { background: var(--acc-soft); }
+  .grid a small { display: block; color: var(--dim); font-weight: 400; font-size: 10.5px; margin-top: 3px; }
+
+  /* ===== شريط الحجب ===== */
+  .brag {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;
+  }
+  .brag div {
+    flex: 1 1 30%; min-width: 30%; text-align: center; padding: 12px 6px;
+    border: 1px dashed var(--border); border-radius: 12px;
+  }
+  .brag b { display: block; color: var(--acc); font-size: 17px; }
+  .brag span { color: var(--dim); font-size: 11px; }
+
+  /* ===== بطاقات عامة ===== */
+  .panel {
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 16px; padding: 14px; margin-bottom: 14px;
+  }
+  .panel h3 { font-size: 14.5px; color: var(--text); margin-bottom: 10px; }
+  .panel h3 em { color: var(--dim); font-style: normal; font-size: 11.5px; font-weight: 400; }
+
+  /* ===== النماذج ===== */
+  .frow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .frow input[type=text], .frow input[type=url], .frow input[type=password], select, textarea {
+    flex: 1; min-width: 140px; padding: 11px 14px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    font-size: 13.5px; outline: none; font-family: inherit;
+  }
+  .frow input:focus, textarea:focus, select:focus { border-color: var(--border2); }
+  textarea { width: 100%; resize: vertical; }
+  .btn {
+    padding: 11px 18px; border-radius: 12px; cursor: pointer; font-family: inherit;
+    border: 1px solid var(--border2); background: var(--acc-soft); color: var(--acc);
+    font-size: 13.5px; font-weight: 700;
+  }
+  .btn:active { filter: brightness(1.35); }
+  .btn.ghost { border-color: var(--border); background: var(--card); color: var(--muted); }
+  .btn.red { border-color: rgba(248,113,113,.5); background: rgba(248,113,113,.12); color: var(--danger); }
+  .btn.small { padding: 6px 12px; font-size: 12px; border-radius: 9px; }
+
+  /* ===== قوائم (مفضلة/سجل) ===== */
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item {
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+  }
+  .item .txt { flex: 1; min-width: 0; text-decoration: none; color: var(--text); }
+  .item .txt b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .txt small { color: var(--dim); font-size: 11px; display: block; direction: ltr; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .del {
+    border: 1px solid rgba(248,113,113,.4); background: transparent; color: var(--danger);
+    border-radius: 9px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-family: inherit;
+  }
+  .empty { text-align: center; color: var(--dim); font-size: 12.5px; padding: 22px 8px; line-height: 2.2; }
+
+  /* ===== الحاسبة ===== */
+  .calc { direction: ltr; max-width: 340px; margin: 0 auto; }
+  .calc input {
+    width: 100%; height: 54px; border-radius: 12px; margin-bottom: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    font-size: 20px; text-align: right; padding: 0 14px; outline: none; font-family: inherit;
+  }
+  .calc .res { min-height: 22px; color: var(--acc); font-size: 14px; text-align: right; margin-bottom: 8px; font-weight: 700; }
+  .calc .keys { display: flex; flex-wrap: wrap; gap: 6px; }
+  .calc .keys button {
+    flex: 1 1 21%; min-height: 46px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    font-size: 16px; font-weight: 700; font-family: inherit;
+  }
+  .calc .keys button.op { color: var(--acc); border-color: var(--border2); }
+  .calc .keys button.eq { background: var(--acc-soft); color: var(--acc); }
+  .calc .err { color: var(--danger); }
+
+  /* ===== كلمات السر ===== */
+  .pwout {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .pwout output {
+    flex: 1; direction: ltr; text-align: left; padding: 12px 12px; border-radius: 12px;
+    border: 1px dashed var(--border2); background: var(--panel); color: var(--acc);
+    font-size: 14px; word-break: break-all; min-height: 44px;
+  }
+  .optrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 12.5px; color: var(--muted); margin: 8px 0; }
+  .optrow label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .optrow input[type=range] { accent-color: var(--acc); }
+  .strength { font-size: 11.5px; color: var(--dim); margin-top: 6px; }
+  .strength b.ok { color: var(--acc); } .strength b.mid { color: var(--amber); } .strength b.no { color: var(--danger); }
+
+  /* ===== المحوّل ===== */
+  .conv .crow { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .conv .crow input { flex: 1; min-width: 110px; }
+  .conv .crow select { flex: 1; min-width: 100px; }
+  .conv .arrow { color: var(--acc); font-weight: 800; }
+  .conv .out { color: var(--acc); font-weight: 800; font-size: 14px; min-height: 20px; }
+
+  /* ===== التنزيلات ===== */
+  .dl a.btn2 {
+    display: block; margin: 0 0 10px; padding: 14px 12px; border-radius: 12px;
+    background: var(--acc-soft); border: 1px solid var(--border2);
+    color: var(--acc); font-size: 14px; font-weight: 800; text-align: center; text-decoration: none;
+  }
+  .dl a.btn2 small { display: block; color: var(--muted); font-weight: 400; font-size: 11px; margin-top: 3px; }
+  .dl a.btn2:active { filter: brightness(1.3); }
+  .dl a.btn2.ghost { background: var(--card); border-color: var(--border); color: var(--muted); font-weight: 600; }
+  .warn {
+    color: var(--dim); font-size: 11.5px; margin-top: 12px; line-height: 2;
+    border-top: 1px dashed var(--border); padding-top: 10px;
+  }
+  .warn b { color: var(--muted); }
+
+  /* ===== الإعدادات ===== */
+  .setrow {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 12px 2px; border-bottom: 1px dashed var(--border); flex-wrap: wrap;
+  }
+  .setrow:last-child { border-bottom: 0; }
+  .setrow .lbl b { display: block; font-size: 13.5px; }
+  .setrow .lbl span { color: var(--dim); font-size: 11.5px; }
+  .setrow select { min-width: 150px; }
+  .switch { position: relative; width: 46px; height: 26px; flex: 0 0 46px; cursor: pointer; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch i {
+    position: absolute; inset: 0; border-radius: 999px; background: var(--card2);
+    border: 1px solid var(--border); transition: background .15s;
+  }
+  .switch i:before {
+    content: ""; position: absolute; top: 2px; right: 3px; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--dim); transition: all .15s;
+  }
+  .switch input:checked + i { background: var(--acc-soft); border-color: var(--border2); }
+  .switch input:checked + i:before { background: var(--acc); transform: translateX(-19px); }
+  .storebadge { font-size: 11.5px; color: var(--dim); }
+  .storebadge b.ok { color: var(--acc); } .storebadge b.no { color: var(--amber); }
+
+  /* ===== تذييل ===== */
+  .foot {
+    text-align: center; color: var(--dim); font-size: 12px; margin-top: 26px;
+    border-top: 1px solid var(--border); padding-top: 14px; line-height: 2.1;
+  }
+  .foot a { color: var(--acc); text-decoration: none; }
+
+  /* ===== تنبيه ===== */
+  #toast {
+    position: fixed; bottom: 18px; right: 50%; transform: translateX(50%);
+    background: var(--panel); color: var(--text); border: 1px solid var(--border2);
+    padding: 11px 20px; border-radius: 999px; font-size: 13px; font-weight: 700;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4); opacity: 0; pointer-events: none;
+    transition: opacity .2s; z-index: 99; max-width: 90vw; text-align: center;
+  }
+  #toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="logo">⚡ برق <small id="ver"></small></div>
+    <div class="tag">النسخة الكاملة — كل شيء في ملف واحد: بحث، مفضلة، سجل، أدوات، وتنزيلات.<br>تفتح من أي متصفح، وتعمل حتى بلا إنترنت (عدا البحث وفتح الروابط).</div>
+    <div class="badges">
+      <a class="badge" href="https://ehessan1974-maker.github.io/browser/">موقع برق الكامل</a>
+      <a class="badge ghost" href="https://ehessan1974-maker.github.io/browser/light.html">النسخة الخفيفة</a>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs" aria-label="الأقسام">
+    <button data-sec="home" class="on" type="button">🏠 الرئيسية</button>
+    <button data-sec="marks" type="button">⭐ المفضلة</button>
+    <button data-sec="log" type="button">🕘 السجل</button>
+    <button data-sec="tools" type="button">🧰 أدوات</button>
+    <button data-sec="get" type="button">⬇ التنزيلات</button>
+    <button data-sec="set" type="button">⚙ الإعدادات</button>
+  </nav>
+
+  <!-- ============ الرئيسية ============ -->
+  <section class="sec on" id="sec-home">
+    <div class="clockbox">
+      <div class="clock" id="clock" dir="ltr">--:--:--</div>
+      <div class="dates"><span id="gdate"></span> <span id="hdate"></span></div>
+    </div>
+
+    <form class="s" id="sf" action="https://www.google.com/search" method="get" target="_blank" rel="noopener">
+      <input id="q" type="text" name="q" placeholder="ابحث في الويب…" aria-label="البحث" autocomplete="off">
+      <button type="submit">ابحث</button>
+    </form>
+    <div class="erow" id="erow">
+      <span>محرك البحث — اختيارك محفوظ تلقائياً:</span>
+      <a data-a="https://www.google.com/search?q=" data-n="جوجل" class="on">جوجل</a>
+      <a data-a="https://duckduckgo.com/?q=" data-n="دك دك جو">دك دك جو</a>
+      <a data-a="https://www.bing.com/search?q=" data-n="بينج">بينج</a>
+      <a data-a="https://www.youtube.com/results?search_query=" data-n="يوتيوب">يوتيوب</a>
+      <a data-a="https://ar.wikipedia.org/w/index.php?search=" data-n="ويكيبيديا">ويكيبيديا</a>
+      <a data-a="https://translate.google.com/?sl=auto&tl=ar&text=" data-n="ترجمة">ترجمة</a>
+    </div>
+
+    <h2 class="t">روابط سريعة</h2>
+    <div class="grid" id="qlinks">
+      <a href="https://www.youtube.com" target="_blank" rel="noopener">▶️ يوتيوب</a>
+      <a href="https://www.facebook.com" target="_blank" rel="noopener">📘 فيسبوك</a>
+      <a href="https://web.whatsapp.com" target="_blank" rel="noopener">💬 واتساب</a>
+      <a href="https://web.telegram.org" target="_blank" rel="noopener">✈️ تيليجرام</a>
+      <a href="https://www.instagram.com" target="_blank" rel="noopener">📸 إنستغرام</a>
+      <a href="https://x.com" target="_blank" rel="noopener">𝕏 إكس</a>
+      <a href="https://ar.wikipedia.org" target="_blank" rel="noopener">📚 ويكيبيديا</a>
+      <a href="https://www.google.com/maps" target="_blank" rel="noopener">🗺 خرائط</a>
+      <a href="https://mail.google.com" target="_blank" rel="noopener">✉️ بريد جوجل</a>
+      <a href="https://www.aljazeera.net" target="_blank" rel="noopener">📰 الجزيرة</a>
+      <a href="https://translate.google.com" target="_blank" rel="noopener">🌐 الترجمة</a>
+      <a href="https://chatgpt.com" target="_blank" rel="noopener">🤖 ChatGPT</a>
+    </div>
+
+    <div class="brag">
+      <div><b>85ms</b><span>تحميل الصفحات داخل برق</span></div>
+      <div><b>30MB</b><span>استهلاك الذاكرة</span></div>
+      <div><b>3,500+</b><span>متعقّب محجوب تلقائياً</span></div>
+    </div>
+  </section>
+
+  <!-- ============ المفضلة ============ -->
+  <section class="sec" id="sec-marks">
+    <h2 class="t">⭐ المفضلة</h2>
+    <p class="hint">احفظ روابطك المهمة هنا داخل هذا الملف — محفوظة في متصفحك ولا تُرسل لأي مكان.</p>
+    <div class="panel">
+      <h3>أضف رابطاً <em>— الاسم والرابط ثم «أضف»</em></h3>
+      <div class="frow">
+        <input type="text" id="mk-name" placeholder="الاسم — مثال: موقع العمل" maxlength="60">
+        <input type="url" id="mk-url" placeholder="https://…" dir="ltr" style="text-align:left">
+        <button class="btn" id="mk-add" type="button">أضف</button>
+      </div>
+    </div>
+    <div class="list" id="mk-list"></div>
+    <div class="panel" style="margin-top:14px">
+      <h3>نسخ احتياطي <em>— صدّر مفضلتك كنص واحفظه، أو استوردها في أي جهاز</em></h3>
+      <textarea id="mk-io" rows="4" dir="ltr" style="text-align:left" placeholder='[{"n":"الاسم","u":"https://…"}]'></textarea>
+      <div class="frow" style="margin-top:8px">
+        <button class="btn small" id="mk-export" type="button">تصدير ↑</button>
+        <button class="btn small ghost" id="mk-import" type="button">استيراد ↓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ السجل ============ -->
+  <section class="sec" id="sec-log">
+    <h2 class="t">🕘 السجل</h2>
+    <p class="hint">آخر ما بحثت عنه وآخر الروابط التي فتحت من هذه الصفحة — محفوظ محلياً فقط. يمكن إيقاف التسجيل من الإعدادات.</p>
+    <div class="frow" style="margin-bottom:12px">
+      <button class="btn small red" id="log-clear" type="button">🗑 امسح السجل كله</button>
+    </div>
+    <div class="list" id="log-list"></div>
+  </section>
+  <!-- ============ أدوات ============ -->
+  <section class="sec" id="sec-tools">
+    <h2 class="t">🧰 أدوات</h2>
+
+    <div class="panel">
+      <h3>🧮 حاسبة <em>— تعمل بلا إنترنت</em></h3>
+      <div class="calc">
+        <input id="cx" type="text" inputmode="decimal" placeholder="0" aria-label="الحساب" autocomplete="off">
+        <div class="res" id="cres">&nbsp;</div>
+        <div class="keys" id="ckeys">
+          <button type="button" data-k="7">7</button>
+          <button type="button" data-k="8">8</button>
+          <button type="button" data-k="9">9</button>
+          <button type="button" class="op" data-k="/">÷</button>
+          <button type="button" data-k="4">4</button>
+          <button type="button" data-k="5">5</button>
+          <button type="button" data-k="6">6</button>
+          <button type="button" class="op" data-k="*">×</button>
+          <button type="button" data-k="1">1</button>
+          <button type="button" data-k="2">2</button>
+          <button type="button" data-k="3">3</button>
+          <button type="button" class="op" data-k="-">−</button>
+          <button type="button" data-k="0">0</button>
+          <button type="button" data-k=".">.</button>
+          <button type="button" data-k="%">%</button>
+          <button type="button" class="op" data-k="+">+</button>
+          <button type="button" class="op" data-k="(">(</button>
+          <button type="button" class="op" data-k=")">)</button>
+          <button type="button" class="op" data-k="C">C</button>
+          <button type="button" class="eq" data-k="=">=</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>🔑 مولّد كلمات السر <em>— يولَّد في جهازك ولا يُرسل لأي مكان</em></h3>
+      <div class="pwout">
+        <output id="pw-out">اضغط «ولّد»</output>
+        <button class="btn small" id="pw-copy" type="button">انسخ</button>
+      </div>
+      <div class="optrow">
+        <label>الطول <input type="range" id="pw-len" min="8" max="64" value="16"> <b id="pw-len-v" dir="ltr">16</b></label>
+        <label><input type="checkbox" id="pw-up" checked> ABC</label>
+        <label><input type="checkbox" id="pw-dg" checked> 123</label>
+        <label><input type="checkbox" id="pw-sy" checked> !@#</label>
+        <button class="btn small" id="pw-gen" type="button">🔄 ولّد</button>
+      </div>
+      <div class="strength" id="pw-strength">القوة: —</div>
+    </div>
+
+    <div class="panel">
+      <h3>📝 ملاحظات سريعة <em>— تُحفظ تلقائياً أثناء الكتابة</em></h3>
+      <textarea id="note" rows="6" placeholder="اكتب ما تشاء… يُحفظ هنا في هذا الملف تلقائياً."></textarea>
+      <div class="frow" style="margin-top:8px">
+        <button class="btn small" id="note-copy" type="button">انسخ</button>
+        <button class="btn small ghost" id="note-dl" type="button">نزّل كملف نصي</button>
+        <button class="btn small red" id="note-clear" type="button">امسح</button>
+        <span class="storebadge" style="margin-inline-start:auto" id="note-count"></span>
+      </div>
+    </div>
+
+    <div class="panel conv">
+      <h3>⚖ محوّل الوحدات <em>— أطوال، أوزان، حرارة</em></h3>
+      <div class="crow">
+        <input id="cv-in" type="text" inputmode="decimal" placeholder="القيمة" autocomplete="off">
+        <select id="cv-cat">
+          <option value="len">طول</option>
+          <option value="wgt">وزن</option>
+          <option value="tmp">حرارة</option>
+        </select>
+      </div>
+      <div class="crow">
+        <select id="cv-from"></select>
+        <span class="arrow">←</span>
+        <select id="cv-to"></select>
+      </div>
+      <div class="out" id="cv-out">&nbsp;</div>
+    </div>
+  </section>
+
+  <!-- ============ التنزيلات ============ -->
+  <section class="sec" id="sec-get">
+    <h2 class="t">⬇ تحميل متصفح برق الكامل</h2>
+    <p class="hint">كل الروابط من موقع برق نفسه — تعمل حتى حيث يكون نطاق تحميلات جيت هاب محجوباً أو متقطعاً.</p>
+    <div class="dl">
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/barq-android.apk">⬇ أندرويد — APK <small>دائماً أحدث إصدار · 35KB</small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-Setup-1.4.11-x64.exe">⬇ ويندوز 64-bit — مثبّت <small id="dw"></small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-Setup-1.4.11-ia32.exe">⬇ ويندوز 32-bit — للأجهزة القديمة <small>ويندوز 10/11</small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-Setup-win7-1.4.11-ia32.exe">⬇ ويندوز 7 — مثبّت <small>32 بت</small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-Setup-win7-1.4.11-ia32.zip">⬇ ويندوز 7 — نسخة محمولة <small>ZIP بدون تثبيت</small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-1.4.11.dmg">⬇ ماك — DMG <small>Apple Silicon · macOS 12+</small></a>
+      <a class="btn2" data-dl href="https://ehessan1974-maker.github.io/browser/downloads/Barq-1.4.11.AppImage">⬇ لينكس — AppImage <small>x64 · يعمل مباشرة</small></a>
+      <a class="btn2 ghost" href="https://github.com/ehessan1974-maker/browser/releases/latest" target="_blank" rel="noopener">🌐 كل الإصدارات على جيت هاب</a>
+      <a class="btn2 ghost" href="https://ehessan1974-maker.github.io/browser/" target="_blank" rel="noopener">⚡ الواجهة الكاملة لموقع برق</a>
+    </div>
+    <p class="warn">
+      <b>ملاحظات:</b> عند التنزيل من كروم وظهر تحذير: اضغط <b>الاحتفاظ ← الاحتفاظ على أي حال</b>.
+      وعلى أندرويد: اسمح بالتثبيت من «مصادر غير معروفة» مرة واحدة. بصمات SHA-256 لكل ملف
+      معروضة في <a href="https://ehessan1974-maker.github.io/browser/" style="color:var(--acc)">صفحة التحميل الرسمية</a>.
+      <br><b>ولحفظ هذه النسخة:</b> اضغط Ctrl+S (أو مشاركة ← حفظ) واحفظ الملف — يفتح من أي مكان بلا إنترنت.
+    </p>
+  </section>
+
+  <!-- ============ الإعدادات ============ -->
+  <section class="sec" id="sec-set">
+    <h2 class="t">⚙ الإعدادات</h2>
+    <div class="panel">
+      <div class="setrow">
+        <div class="lbl"><b>المظهر</b><span>داكن أو فاتح — اختيارك محفوظ</span></div>
+        <select id="st-theme">
+          <option value="dark">داكن</option>
+          <option value="light">فاتح</option>
+        </select>
+      </div>
+      <div class="setrow">
+        <div class="lbl"><b>محرك البحث الافتراضي</b><span>يُستخدم عند كل فتح للصفحة</span></div>
+        <select id="st-engine">
+          <option value="0">جوجل</option>
+          <option value="1">دك دك جو</option>
+          <option value="2">بينج</option>
+          <option value="3">يوتيوب</option>
+          <option value="4">ويكيبيديا</option>
+          <option value="5">ترجمة</option>
+        </select>
+      </div>
+      <div class="setrow">
+        <div class="lbl"><b>تسجيل السجل</b><span>تسجيل ما تبحث عنه وما تفتحه</span></div>
+        <label class="switch"><input type="checkbox" id="st-record" checked><i></i></label>
+      </div>
+      <div class="setrow">
+        <div class="lbl"><b>حالة التخزين</b><span>أين تُحفظ مفضلتك وسجلك وملاحظاتك</span></div>
+        <span class="storebadge" id="st-store"></span>
+      </div>
+      <div class="setrow">
+        <div class="lbl"><b>مسح كل البيانات</b><span>يحذف المفضلة والسجل والملاحظات والإعدادات</span></div>
+        <button class="btn small red" id="st-wipe" type="button">🗑 مسح نهائي</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    برق — متصفح خفيف بحجب حقيقي للمتعقّبات · النسخة الكاملة <span id="ver2"></span><br>
+    هذه الصفحة ملف HTML واحد بلا أي برامج أو خوادم — بياناتك تبقى في متصفحك فقط.<br>
+    <a href="https://ehessan1974-maker.github.io/browser/">الموقع الرسمي</a> ·
+    <a href="https://ehessan1974-maker.github.io/browser/light.html">النسخة الخفيفة</a> ·
+    <a href="https://github.com/ehessan1974-maker/browser" target="_blank" rel="noopener">جيت هاب</a>
+  </div>
+
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  "use strict";
+
+  /* ===== الإصدار — نقطة التعديل الوحيدة عند كل إصدار جديد ===== */
+  var VER = "1.4.11";
+  window.__BQ_VER = VER;
+
+  /* ===== تخزين آمن: localStorage مع بديل في الذاكرة للمتصفحات المقيدة ===== */
+  var mem = {};
+  var LS_OK = false;
+  try {
+    localStorage.setItem("__bq_t", "1");
+    localStorage.removeItem("__bq_t");
+    LS_OK = true;
+  } catch (e) { LS_OK = false; }
+  function sget(k, d) {
+    if (LS_OK) {
+      try {
+        var v = localStorage.getItem("bq_" + k);
+        return v === null ? d : JSON.parse(v);
+      } catch (e) { return d; }
+    }
+    return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : d;
+  }
+  function sset(k, v) {
+    if (LS_OK) {
+      try { localStorage.setItem("bq_" + k, JSON.stringify(v)); return; } catch (e) {}
+    }
+    mem[k] = v;
+  }
+  function sdel(k) {
+    if (LS_OK) { try { localStorage.removeItem("bq_" + k); } catch (e) {} }
+    delete mem[k];
+  }
+
+  /* ===== أدوات مساعدة ===== */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var toastT = null;
+  function toast(msg) {
+    var t = $("toast");
+    t.innerHTML = esc(msg);
+    t.className = "on";
+    if (toastT) window.clearTimeout(toastT);
+    toastT = window.setTimeout(function () { t.className = ""; }, 2200);
+  }
+  function copyText(txt, okMsg) {
+    var done = function () { toast(okMsg || "تم النسخ ✓"); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(txt, done); });
+        return;
+      }
+    } catch (e) {}
+    fallbackCopy(txt, done);
+  }
+  function fallbackCopy(txt, done) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = txt;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      done();
+    } catch (e) { toast("تعذّر النسخ — انسخ يدوياً"); }
+  }
+
+  /* ===== الإصدار: الشارة + إعادة كتابة روابط التنزيل المعلّمة ===== */
+  function applyVersion() {
+    var v = "v" + VER;
+    if ($("ver")) $("ver").innerHTML = esc(v);
+    if ($("ver2")) $("ver2").innerHTML = esc(v);
+    var links = document.getElementsByTagName("a");
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute("data-dl") !== null) {
+        var h = links[i].getAttribute("href") || "";
+        links[i].setAttribute("href", h.replace(/1\.4\.11/g, VER));
+      }
+    }
+    if ($("dw")) $("dw").innerHTML = esc("الإصدار " + VER + " · ~78MB");
+  }
+
+  /* ===== المظهر ===== */
+  function applyTheme(t) {
+    document.body.className = t === "light" ? "light" : "";
+  }
+
+  /* ===== التنقل بين الأقسام ===== */
+  var SECS = ["home", "marks", "log", "tools", "get", "set"];
+  function go(name) {
+    if (SECS.indexOf(name) === -1) name = "home";
+    var tabs = $("tabs").getElementsByTagName("button");
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].className = tabs[i].getAttribute("data-sec") === name ? "on" : "";
+    }
+    for (var j = 0; j < SECS.length; j++) {
+      $("sec-" + SECS[j]).className = "sec" + (SECS[j] === name ? " on" : "");
+    }
+  }
+  function initTabs() {
+    var tabs = $("tabs").getElementsByTagName("button");
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].onclick = (function (b) {
+        return function () { window.location.hash = b.getAttribute("data-sec"); };
+      })(tabs[i]);
+    }
+    var route = function () {
+      go((window.location.hash || "#home").replace("#", ""));
+    };
+    if ("onhashchange" in window) { window.onhashchange = route; }
+    route();
+  }
+
+  /* ===== الساعة والتاريخ ===== */
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function tickClock() {
+    var d = new Date();
+    $("clock").innerHTML = two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds());
+    try {
+      $("gdate").innerHTML = esc(d.toLocaleDateString("ar", { weekday: "long", year: "numeric", month: "long", day: "numeric" }));
+    } catch (e) {}
+    var hij = "";
+    try {
+      hij = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { year: "numeric", month: "long", day: "numeric" }).format(d);
+    } catch (e1) {
+      try { hij = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", { year: "numeric", month: "long", day: "numeric" }).format(d); } catch (e2) { hij = ""; }
+    }
+    $("hdate").innerHTML = hij ? esc(" · " + hij + " هـ") : "";
+  }
+
+  /* ===== البحث: اختيار المحرك + الحفظ + التسجيل ===== */
+  var ENGINES = [];
+  function initSearch() {
+    var sf = $("sf"), row = $("erow"), links = row.getElementsByTagName("a");
+    for (var i = 0; i < links.length; i++) { ENGINES.push({ u: links[i].getAttribute("data-a"), n: links[i].getAttribute("data-n") }); }
+    var pick = function (idx, save) {
+      sf.action = ENGINES[idx].u;
+      for (var j = 0; j < links.length; j++) { links[j].className = ""; }
+      links[idx].className = "on";
+      if (save) { sset("engine", idx); if ($("st-engine")) $("st-engine").value = String(idx); }
+      $("q").focus();
+    };
+    for (var k = 0; k < links.length; k++) {
+      links[k].onclick = (function (a, idx) {
+        return function () { pick(idx, true); return false; };
+      })(links[k], k);
+    }
+    var saved = parseInt(sget("engine", "0"), 10);
+    if (isNaN(saved) || saved < 0 || saved >= ENGINES.length) saved = 0;
+    pick(saved, false);
+    sf.onsubmit = function () {
+      var q = $("q").value.replace(/^\s+|\s+$/g, "");
+      if (!q) { $("q").focus(); return false; }
+      logPush("بحث", ENGINES[parseInt(sf.getAttribute("data-ei") || sget("engine", "0"), 10)].n + ": " + q, "");
+      return true;
+    };
+    /* احفظ محرك الفعلية لحظة الإرسال */
+    var syncEI = function () { sf.setAttribute("data-ei", String(sget("engine", "0"))); };
+    for (var m = 0; m < links.length; m++) {
+      links[m].addEventListener("click", syncEI);
+    }
+  }
+
+  /* ===== التسجيل في السجل ===== */
+  function logPush(kind, title, url) {
+    if (!sget("record", true)) return;
+    var lg = sget("log", []);
+    lg.unshift({ t: Date.now(), k: kind, q: title, u: url });
+    if (lg.length > 300) lg.length = 300;
+    sset("log", lg);
+    if ($("sec-log").className.indexOf("on") !== -1) renderLog();
+  }
+  function fmtTime(ts) {
+    try {
+      var d = new Date(ts);
+      return d.toLocaleDateString("ar", { month: "short", day: "numeric" }) + " · " +
+             two(d.getHours()) + ":" + two(d.getMinutes());
+    } catch (e) { return ""; }
+  }
+  function renderLog() {
+    var lg = sget("log", []);
+    var box = $("log-list");
+    if (!lg.length) {
+      box.innerHTML = '<div class="empty">لا شيء بعد — ابحث أو افتح رابطاً وسيظهر هنا.<br>السجل في جهازك فقط ولا يخرج منه.</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < lg.length; i++) {
+      var it = lg[i];
+      var inner = "<b>" + (it.k === "بحث" ? "🔍 " : it.k === "تنزيل" ? "⬇ " : "🔗 ") + esc(it.q) + "</b>" +
+                  "<small>" + esc(fmtTime(it.t)) + (it.u ? " · " + esc(it.u) : "") + "</small>";
+      html += '<div class="item"><div class="txt" style="cursor:default">' + inner + "</div></div>";
+    }
+    box.innerHTML = html;
+  }
+  function initLog() {
+    $("log-clear").onclick = function () {
+      sdel("log");
+      renderLog();
+      toast("امسح السجل ✓");
+    };
+    renderLog();
+  }
+
+  /* ===== تشغيل النواة ===== */
+  applyVersion();
+  applyTheme(sget("theme", "dark"));
+  if ($("st-theme")) $("st-theme").value = sget("theme", "dark");
+  initTabs();
+  tickClock();
+  window.setInterval(tickClock, 1000);
+  initSearch();
+  initLog();
+
+  /* كشف واجهات للأجزاء التالية */
+  window.__BQ = {
+    sget: sget, sset: sset, sdel: sdel, toast: toast, copyText: copyText,
+    logPush: logPush, esc: esc, VER: VER
+  };
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var B = window.__BQ;
+  var $ = function (id) { return document.getElementById(id); };
+  if (!B) return;
+
+  /* ===== المفضلة ===== */
+  var DEFAULT_MARKS = [
+    { n: "برق — الموقع الرسمي", u: "https://ehessan1974-maker.github.io/browser/" },
+    { n: "برق — النسخة الخفيفة", u: "https://ehessan1974-maker.github.io/browser/light.html" }
+  ];
+  function normUrl(u) {
+    u = String(u || "").replace(/^\s+|\s+$/g, "");
+    if (!u) return "";
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    return u;
+  }
+  function validUrl(u) { return /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(u); }
+
+  function renderMarks() {
+    var marks = B.sget("marks", DEFAULT_MARKS.slice());
+    var box = $("mk-list");
+    if (!marks.length) {
+      box.innerHTML = '<div class="empty">لا مفضلة بعد — أضف أول رابط من الخانة أعلاه.</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < marks.length; i++) {
+      html += '<div class="item">' +
+        '<a class="txt" target="_blank" rel="noopener" data-mi="' + i + '" href="' + B.esc(marks[i].u) + '">' +
+        "<b>⭐ " + B.esc(marks[i].n) + "</b><small>" + B.esc(marks[i].u) + "</small></a>" +
+        '<button class="del" type="button" data-mdel="' + i + '">حذف</button></div>';
+    }
+    box.innerHTML = html;
+    var dels = box.getElementsByTagName("button");
+    for (var d = 0; d < dels.length; d++) {
+      dels[d].onclick = (function (idx) {
+        return function () {
+          var marks2 = B.sget("marks", DEFAULT_MARKS.slice());
+          marks2.splice(idx, 1);
+          B.sset("marks", marks2);
+          renderMarks();
+          B.toast("حُذف من المفضلة ✓");
+        };
+      })(parseInt(dels[d].getAttribute("data-mdel"), 10));
+    }
+    var as = box.getElementsByTagName("a");
+    for (var a = 0; a < as.length; a++) {
+      as[a].addEventListener("click", (function (el) {
+        return function () {
+          var marks3 = B.sget("marks", DEFAULT_MARKS.slice());
+          var it = marks3[parseInt(el.getAttribute("data-mi"), 10)];
+          if (it) B.logPush("فتح", it.n, it.u);
+        };
+      })(as[a]));
+    }
+  }
+  function initMarks() {
+    if (!B.sget("marks", null)) B.sset("marks", DEFAULT_MARKS.slice());
+    renderMarks();
+    $("mk-add").onclick = function () {
+      var n = $("mk-name").value.replace(/^\s+|\s+$/g, "");
+      var u = normUrl($("mk-url").value);
+      if (!n) { B.toast("اكتب اسماً للرابط"); $("mk-name").focus(); return; }
+      if (!validUrl(u)) { B.toast("الرابط غير صالح — مثال: example.com"); $("mk-url").focus(); return; }
+      var marks = B.sget("marks", DEFAULT_MARKS.slice());
+      marks.unshift({ n: n, u: u });
+      B.sset("marks", marks);
+      $("mk-name").value = ""; $("mk-url").value = "";
+      renderMarks();
+      B.toast("أُضيف إلى المفضلة ⭐");
+    };
+    $("mk-export").onclick = function () {
+      $("mk-io").value = JSON.stringify(B.sget("marks", DEFAULT_MARKS.slice()), null, 1);
+      B.copyText($("mk-io").value, "صُدّرت المفضلة — انسخها واحفظها ✓");
+    };
+    $("mk-import").onclick = function () {
+      try {
+        var arr = JSON.parse($("mk-io").value);
+        if (!arr || typeof arr.length !== "number") throw 0;
+        var clean = [], i;
+        for (i = 0; i < arr.length; i++) {
+          if (arr[i] && arr[i].n && arr[i].u && validUrl(normUrl(arr[i].u))) {
+            clean.push({ n: String(arr[i].n).slice(0, 60), u: normUrl(arr[i].u) });
+          }
+        }
+        if (!clean.length) throw 0;
+        B.sset("marks", clean);
+        renderMarks();
+        B.toast("استُوردت " + clean.length + " مفضلة ✓");
+      } catch (e) { B.toast("نص غير صالح — الصق مخرجات التصدير فقط"); }
+    };
+  }
+
+  /* ===== تسجيل فتح الروابط السريعة ===== */
+  function initQLog() {
+    var qs = $("qlinks").getElementsByTagName("a");
+    for (var i = 0; i < qs.length; i++) {
+      qs[i].addEventListener("click", (function (el) {
+        return function () { B.logPush("فتح", el.innerHTML.replace(/<[^>]*>/g, ""), el.href); };
+      })(qs[i]));
+    }
+    var dls = document.getElementsByTagName("a");
+    for (var d = 0; d < dls.length; d++) {
+      if (dls[d].getAttribute("data-dl") !== null) {
+        dls[d].addEventListener("click", (function (el) {
+          return function () { B.logPush("تنزيل", el.innerHTML.replace(/<[^>]*>/g, "").replace(/\s+/g, " "), el.href); };
+        })(dls[d]));
+      }
+    }
+  }
+
+  /* ===== الحاسبة — محلّل آمن بدون eval ===== */
+  function calcEval(src) {
+    src = String(src).replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-");
+    if (!/^[0-9+\-*/%(). ]+$/.test(src)) throw 0;
+    var i = 0;
+    function ws() { while (src[i] === " ") { i++; } }
+    function num() {
+      ws(); var s = i;
+      while (i < src.length && ((src[i] >= "0" && src[i] <= "9") || src[i] === ".")) { i++; }
+      if (s === i) throw 0;
+      var v = parseFloat(src.slice(s, i));
+      if (isNaN(v) || !isFinite(v)) throw 0;
+      return v;
+    }
+    function factor() {
+      ws(); var c = src[i];
+      if (c === "(") { i++; var v = expr(); ws(); if (src[i] !== ")") throw 0; i++; return v; }
+      if (c === "-") { i++; return -factor(); }
+      if (c === "+") { i++; return factor(); }
+      return num();
+    }
+    function term() {
+      var v = factor();
+      for (;;) {
+        ws(); var c = src[i];
+        if (c === "*") { i++; v = v * factor(); }
+        else if (c === "/") { i++; var d = factor(); if (d === 0) throw "÷0"; v = v / d; }
+        else if (c === "%") { i++; v = v % factor(); }
+        else return v;
+      }
+    }
+    function expr() {
+      var v = term();
+      for (;;) {
+        ws(); var c = src[i];
+        if (c === "+") { i++; v = v + term(); }
+        else if (c === "-") { i++; v = v - term(); }
+        else return v;
+      }
+    }
+    var r = expr(); ws();
+    if (i !== src.length) throw 0;
+    return r;
+  }
+  function fmtNum(n) {
+    var s = (Math.round(n * 1e10) / 1e10).toString();
+    return s;
+  }
+  function initCalc() {
+    var inp = $("cx"), res = $("cres");
+    function run() {
+      var v = inp.value.replace(/^\s+|\s+$/g, "");
+      if (!v) { res.innerHTML = "&nbsp;"; res.className = "res"; return; }
+      try {
+        res.innerHTML = B.esc(fmtNum(calcEval(v)));
+        res.className = "res";
+      } catch (e) {
+        res.innerHTML = e === "÷0" ? "لا يمكن القسمة على صفر" : "صيغة غير صحيحة";
+        res.className = "res err";
+      }
+    }
+    inp.oninput = run;
+    var keys = $("ckeys").getElementsByTagName("button");
+    for (var i = 0; i < keys.length; i++) {
+      keys[i].onclick = (function (b) {
+        return function () {
+          var k = b.getAttribute("data-k");
+          if (k === "C") { inp.value = ""; run(); inp.focus(); return; }
+          if (k === "=") { run(); return; }
+          inp.value += k;
+          run();
+          inp.focus();
+        };
+      })(keys[i]);
+    }
+  }
+
+  /* ===== مولّد كلمات السر ===== */
+  function randInt(max) {
+    try {
+      var a = new Uint32Array(1);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(a);
+        return a[0] % max;
+      }
+    } catch (e) {}
+    return Math.floor(Math.random() * max);
+  }
+  function pwStrength(len, sets) {
+    var pool = 26 + (sets.up ? 26 : 0) + (sets.dg ? 10 : 0) + (sets.sy ? 24 : 0);
+    if (pool <= 0) return 0;
+    var bits = Math.round(len * Math.log(pool) / Math.log(2));
+    return bits;
+  }
+  function initPw() {
+    var out = $("pw-out"), len = $("pw-len"), lenV = $("pw-len-v");
+    len.oninput = function () { lenV.innerHTML = len.value; };
+    function gen() {
+      var sets = { up: $("pw-up").checked, dg: $("pw-dg").checked, sy: $("pw-sy").checked };
+      var chars = "abcdefghijklmnopqrstuvwxyz" +
+        (sets.up ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "") +
+        (sets.dg ? "0123456789" : "") +
+        (sets.sy ? "!@#$%^&*()-_=+[]{};:,.<>?" : "");
+      if (!chars.length) { B.toast("اختر مجموعة واحدة على الأقل"); return; }
+      var n = parseInt(len.value, 10) || 16, s = "";
+      for (var i = 0; i < n; i++) { s += chars.charAt(randInt(chars.length)); }
+      out.innerHTML = B.esc(s);
+      var bits = pwStrength(n, sets);
+      var st = bits >= 100 ? '<b class="ok">قوية جداً (' + bits + " بت)</b>"
+             : bits >= 60 ? '<b class="mid">جيدة (' + bits + " بت)</b>"
+             : '<b class="no">ضعيفة (' + bits + " بت)</b>";
+      $("pw-strength").innerHTML = "القوة: " + st;
+      out.setAttribute("data-pw", s);
+    }
+    $("pw-gen").onclick = gen;
+    $("pw-copy").onclick = function () {
+      var v = out.getAttribute("data-pw");
+      if (!v) { gen(); v = out.getAttribute("data-pw"); }
+      B.copyText(v, "نُسخت كلمة السر ✓");
+    };
+    gen();
+  }
+
+  /* ===== الملاحظات ===== */
+  function initNote() {
+    var ta = $("note"), cnt = $("note-count");
+    ta.value = B.sget("note", "");
+    var upd = function () {
+      cnt.innerHTML = B.esc(ta.value.length + " حرف");
+    };
+    upd();
+    ta.oninput = function () {
+      B.sset("note", ta.value);
+      upd();
+    };
+    $("note-copy").onclick = function () { B.copyText(ta.value, "نُسخت الملاحظة ✓"); };
+    $("note-clear").onclick = function () {
+      ta.value = ""; B.sset("note", ""); upd(); B.toast("مُسحت الملاحظة ✓");
+    };
+    $("note-dl").onclick = function () {
+      if (!ta.value) { B.toast("لا شيء لتنزيله بعد"); return; }
+      try {
+        var a = document.createElement("a");
+        a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(ta.value);
+        a.download = "barq-note.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        B.toast("بدأ تنزيل الملف ✓");
+      } catch (e) { B.toast("المتصفح منع التنزيل — انسخ يدوياً"); }
+    };
+  }
+
+  /* ===== محوّل الوحدات ===== */
+  var UNITS = {
+    len: [
+      { v: "m", n: "متر" }, { v: "km", n: "كيلومتر" }, { v: "cm", n: "سنتيمتر" },
+      { v: "mi", n: "ميل" }, { v: "ft", n: "قدم" }, { v: "in", n: "بوصة" }
+    ],
+    wgt: [
+      { v: "kg", n: "كيلوغرام" }, { v: "g", n: "غرام" }, { v: "t", n: "طن" },
+      { v: "lb", n: "رطل (باوند)" }, { v: "oz", n: "أونصة" }
+    ],
+    tmp: [
+      { v: "C", n: "مئوية °C" }, { v: "F", n: "فهرنهايت °F" }, { v: "K", n: "كلفن K" }
+    ]
+  };
+  var TO_M = { m: 1, km: 1000, cm: 0.01, mi: 1609.344, ft: 0.3048, "in": 0.0254, yd: 0.9144 };
+  var TO_KG = { kg: 1, g: 0.001, t: 1000, lb: 0.45359237, oz: 0.028349523 };
+  function convVal(v, from, to) {
+    if (from === to) return v;
+    if (from === "C") return to === "F" ? v * 9 / 5 + 32 : v + 273.15;
+    if (from === "F") { var c = (v - 32) * 5 / 9; return to === "C" ? c : c + 273.15; }
+    if (from === "K") { var c2 = v - 273.15; return to === "C" ? c2 : c2 * 9 / 5 + 32; }
+    if (TO_M[from] != null && TO_M[to] != null) return v * TO_M[from] / TO_M[to];
+    if (TO_KG[from] != null && TO_KG[to] != null) return v * TO_KG[from] / TO_KG[to];
+    return NaN;
+  }
+  function fillUnits(cat, keep) {
+    var from = $("cv-from"), to = $("cv-to");
+    var opts = "";
+    for (var i = 0; i < UNITS[cat].length; i++) {
+      opts += '<option value="' + UNITS[cat][i].v + '">' + UNITS[cat][i].n + "</option>";
+    }
+    from.innerHTML = opts;
+    to.innerHTML = opts;
+    if (!keep) {
+      from.selectedIndex = 0;
+      to.selectedIndex = Math.min(1, UNITS[cat].length - 1);
+    } else {
+      from.selectedIndex = Math.min(from.selectedIndex, UNITS[cat].length - 1);
+      to.selectedIndex = Math.min(to.selectedIndex, UNITS[cat].length - 1);
+    }
+  }
+  function initConv() {
+    var cat = $("cv-cat");
+    function run() {
+      var raw = $("cv-in").value.replace(/^\s+|\s+$/g, "");
+      var v = parseFloat(raw);
+      var out = $("cv-out");
+      if (raw === "" || isNaN(v)) { out.innerHTML = "&nbsp;"; return; }
+      var r = convVal(v, $("cv-from").value, $("cv-to").value);
+      if (isNaN(r)) { out.innerHTML = "—"; return; }
+      out.innerHTML = B.esc(fmtNum(r) + " " + ($("cv-to").selectedOptions ? $("cv-to").selectedOptions[0].text : $("cv-to").value));
+    }
+    cat.onchange = function () { fillUnits(cat.value, false); run(); };
+    $("cv-from").onchange = run;
+    $("cv-to").onchange = run;
+    $("cv-in").oninput = run;
+    fillUnits("len", false);
+    run();
+  }
+
+  /* ===== الإعدادات ===== */
+  function initSettings() {
+    var theme = $("st-theme");
+    theme.value = B.sget("theme", "dark");
+    theme.onchange = function () {
+      B.sset("theme", theme.value);
+      document.body.className = theme.value === "light" ? "light" : "";
+      B.toast("حُفظ المظهر ✓");
+    };
+    var eng = $("st-engine");
+    eng.value = String(B.sget("engine", "0"));
+    eng.onchange = function () {
+      B.sset("engine", parseInt(eng.value, 10));
+      /* أعِد تطبيق المحرك على النموذج */
+      var links = $("erow").getElementsByTagName("a");
+      var idx = parseInt(eng.value, 10);
+      $("sf").action = links[idx].getAttribute("data-a");
+      for (var j = 0; j < links.length; j++) { links[j].className = ""; }
+      links[idx].className = "on";
+      B.toast("حُفظ محرك البحث ✓");
+    };
+    var rec = $("st-record");
+    rec.checked = B.sget("record", true);
+    rec.onchange = function () {
+      B.sset("record", rec.checked);
+      B.toast(rec.checked ? "التسجيل مفعّل ✓" : "أُوقف التسجيل ✓");
+    };
+    $("st-store").innerHTML = LS_OK
+      ? '<b class="ok">محلي آمن ✓ localStorage</b>'
+      : '<b class="no">ذاكرة مؤقتة — البيانات تُفقد عند الإغلاق (متصفحك يمنع الحفظ المحلي)</b>';
+    var wiped = false;
+    $("st-wipe").onclick = function () {
+      if (!wiped) {
+        wiped = true;
+        B.toast("متأكد؟ اضغط مرة ثانية للتأكيد النهائي");
+        window.setTimeout(function () { wiped = false; }, 4000);
+        return;
+      }
+      try {
+        var keys = [], i;
+        for (i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("bq_") === 0) keys.push(k);
+        }
+        for (i = 0; i < keys.length; i++) { localStorage.removeItem(keys[i]); }
+      } catch (e) {}
+      B.sdel("marks"); B.sdel("log"); B.sdel("note"); B.sdel("theme");
+      B.sdel("engine"); B.sdel("record");
+      B.toast("مُسحت كل البيانات ✓");
+      window.setTimeout(function () { window.location.hash = "#home"; window.location.reload(); }, 800);
+    };
+  }
+
+  initMarks();
+  initQLog();
+  initCalc();
+  initPw();
+  initNote();
+  initConv();
+  initSettings();
+})();
+</script>
+</body>
+</html>

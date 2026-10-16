@@ -1,0 +1,14 @@
+version: 1.4.11
+files:
+  - url: Barq-Setup-1.4.11.exe
+    sha512: Fi7wRexPOaOBrXqyOE/j5bsau9IuABhqeu2tVt2wq4XYSxHLtbaU/isZ1WtUNjwM1T/oNlIzRilhbvXDwWmzIQ==
+    size: 157926790
+  - url: Barq-Setup-1.4.11-x64.exe
+    sha512: WaceY2mDpgAYWzBs7BDV3oEiaIPEtNjIJB42TqgyC8eeX5dncnmNIDSU+5Y5FeWazXV2/Hn9LOka+TyAk3XJ4A==
+    size: 82061790
+  - url: Barq-Setup-1.4.11-ia32.exe
+    sha512: QXcDvpqEqwPqP6mndG8Xi7mQ1KwxjwKRvDdm4udZnMbg503HGCEj45BUAHyv0725zOvcWb+K16KMocPoENYmAQ==
+    size: 76430324
+path: Barq-Setup-1.4.11.exe
+sha512: Fi7wRexPOaOBrXqyOE/j5bsau9IuABhqeu2tVt2wq4XYSxHLtbaU/isZ1WtUNjwM1T/oNlIzRilhbvXDwWmzIQ==
+releaseDate: '2026-10-12T12:05:58.338Z'
